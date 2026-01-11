@@ -1,31 +1,176 @@
 /**
  * ARC Investment Factory - ResearchPacket Completion Criteria
  * 
- * Per Operating Parameters, a ResearchPacket is COMPLETE only when:
- * 1. All 7 research modules have been executed
- * 2. Each module meets its mandatory field requirements
- * 3. The decision brief has been generated
- * 4. All evidence is properly linked
+ * IC-GRADE MANDATORY SECTIONS (from Operating Parameters):
  * 
- * MANDATORY FIELDS PER MODULE:
- * - business_model: revenue_model, cost_structure, unit_economics, competitive_position
- * - industry_moat: industry_structure, moat_sources, moat_durability, competitive_threats
- * - financial_forensics: earnings_quality, accruals_analysis, cash_conversion, red_flags
- * - capital_allocation: reinvestment_rate, roic_trend, capital_priorities, shareholder_returns
- * - management_quality: track_record, incentive_alignment, capital_allocation_skill, communication_quality
- * - valuation: primary_method, secondary_method, key_assumptions, sensitivity_analysis
- * - risk_stress: key_risks, stress_scenarios, downside_protection, risk_reward_ratio
+ * 1. All 7 research modules completed
+ * 2. Bull/Base/Bear scenarios with probabilities summing to 1.0
+ * 3. Decision brief with verdict and conviction
+ * 4. Variant perception statement (non-trivial)
+ * 5. Historical parallels (at least 2) with base rate implications and key differences
+ * 6. Pre-mortem with early warnings (at least 3)
+ * 7. Monitoring plan with KPIs (at least 5) and invalidation triggers (at least 3)
+ * 8. Evidence grounding spot check flag
+ * 
+ * A packet CANNOT appear in the weekly IC bundle unless ALL above are satisfied.
  */
 
 import { z } from 'zod';
 
 // ============================================================================
-// MODULE COMPLETION SCHEMAS
+// IC-GRADE MANDATORY SECTION SCHEMAS
 // ============================================================================
 
 /**
- * Business Model Module - Mandatory Fields
+ * Variant Perception Schema (MANDATORY)
+ * Must be non-trivial - cannot agree with consensus
  */
+export const VariantPerceptionSchema = z.object({
+  consensus_view: z.string().min(20, 'Consensus view must be at least 20 characters'),
+  our_view: z.string().min(20, 'Our view must be at least 20 characters'),
+  why_we_differ: z.string().min(30, 'Why we differ must be at least 30 characters'),
+  evidence_supporting_variant: z.array(z.string()).min(2, 'Need at least 2 pieces of evidence'),
+  what_would_change_our_mind: z.string().min(20, 'What would change our mind must be at least 20 characters'),
+});
+
+export type VariantPerception = z.infer<typeof VariantPerceptionSchema>;
+
+/**
+ * Historical Parallel Schema (MANDATORY: at least 2)
+ * Each must have base_rate_implication and key_differences
+ */
+export const HistoricalParallelSchema = z.object({
+  company_or_situation: z.string().min(1),
+  time_period: z.string().min(1),
+  similarity_description: z.string().min(20),
+  base_rate_implication: z.string().min(20, 'Base rate implication is MANDATORY'),
+  key_differences: z.array(z.string()).min(1, 'Key differences are MANDATORY'),
+  outcome: z.string().min(10),
+  relevance_score: z.number().min(0).max(1).optional(),
+});
+
+export type HistoricalParallel = z.infer<typeof HistoricalParallelSchema>;
+
+/**
+ * Pre-Mortem Schema (MANDATORY)
+ * Must have at least 3 early warnings
+ */
+export const PreMortemSchema = z.object({
+  failure_scenario: z.string().min(20, 'Failure scenario must be at least 20 characters'),
+  root_causes: z.array(z.string()).min(1, 'Need at least 1 root cause'),
+  early_warnings: z.array(z.string()).min(3, 'MANDATORY: Need at least 3 early warnings'),
+  probability_estimate: z.number().min(0).max(1),
+  timeline_to_failure: z.string().optional(),
+});
+
+export type PreMortem = z.infer<typeof PreMortemSchema>;
+
+/**
+ * KPI Schema for Monitoring Plan
+ */
+export const KPISchema = z.object({
+  name: z.string().min(1),
+  current_value: z.union([z.string(), z.number()]),
+  target_value: z.union([z.string(), z.number()]),
+  frequency: z.enum(['daily', 'weekly', 'monthly', 'quarterly']),
+  source: z.string().min(1),
+  alert_threshold: z.union([z.string(), z.number()]).optional(),
+});
+
+/**
+ * Invalidation Trigger Schema
+ */
+export const InvalidationTriggerSchema = z.object({
+  trigger: z.string().min(10, 'Trigger description must be at least 10 characters'),
+  action: z.string().min(10, 'Action must be at least 10 characters'),
+  severity: z.enum(['exit_immediately', 'reduce_position', 'review_thesis']).optional(),
+});
+
+/**
+ * Monitoring Plan Schema (MANDATORY)
+ * Must have at least 5 KPIs and 3 invalidation triggers
+ */
+export const MonitoringPlanSchema = z.object({
+  kpis: z.array(KPISchema).min(5, 'MANDATORY: Need at least 5 KPIs'),
+  signposts: z.array(
+    z.object({
+      description: z.string().min(10),
+      bullish_signal: z.string().min(10),
+      bearish_signal: z.string().min(10),
+    })
+  ).min(2, 'Need at least 2 signposts'),
+  invalidation_triggers: z.array(InvalidationTriggerSchema).min(3, 'MANDATORY: Need at least 3 invalidation triggers'),
+  review_schedule: z.object({
+    frequency: z.enum(['weekly', 'bi-weekly', 'monthly']),
+    next_review_date: z.string(),
+    key_questions: z.array(z.string()).min(3, 'Need at least 3 key questions'),
+  }),
+});
+
+export type MonitoringPlan = z.infer<typeof MonitoringPlanSchema>;
+
+/**
+ * Bull/Base/Bear Scenario Schema
+ */
+export const ScenarioSchema = z.object({
+  probability: z.number().min(0).max(1),
+  target_price: z.number().positive(),
+  description: z.string().min(20),
+  key_assumptions: z.array(z.string()).min(2),
+  timeline: z.string().min(5),
+});
+
+export const BullBaseBearSchema = z.object({
+  bull: ScenarioSchema,
+  base: ScenarioSchema,
+  bear: ScenarioSchema,
+}).refine(
+  (data) => {
+    const sum = data.bull.probability + data.base.probability + data.bear.probability;
+    return Math.abs(sum - 1.0) < 0.01;
+  },
+  { message: 'Bull + Base + Bear probabilities must sum to 1.0' }
+);
+
+export type BullBaseBear = z.infer<typeof BullBaseBearSchema>;
+
+/**
+ * Decision Brief Schema
+ */
+export const DecisionBriefSchema = z.object({
+  verdict: z.enum(['strong_buy', 'buy', 'hold', 'sell', 'strong_sell']),
+  conviction: z.number().min(1).max(5),
+  thesis_summary: z.string().min(50),
+  expected_return: z.number(),
+  time_horizon: z.string().min(5),
+  position_sizing_recommendation: z.string().min(10),
+});
+
+export type DecisionBrief = z.infer<typeof DecisionBriefSchema>;
+
+/**
+ * Evidence Grounding Check Schema
+ */
+export const EvidenceGroundingCheckSchema = z.object({
+  total_claims: z.number().min(0),
+  grounded_claims: z.number().min(0),
+  grounding_rate: z.number().min(0).max(1),
+  spot_check_passed: z.boolean(),
+  spot_check_details: z.array(
+    z.object({
+      claim: z.string(),
+      source_locator: z.string().optional(),
+      verified: z.boolean(),
+    })
+  ),
+});
+
+export type EvidenceGroundingCheck = z.infer<typeof EvidenceGroundingCheckSchema>;
+
+// ============================================================================
+// MODULE COMPLETION SCHEMAS (existing)
+// ============================================================================
+
 export const BusinessModelCompletionSchema = z.object({
   revenue_model: z.object({
     description: z.string().min(100),
@@ -38,7 +183,7 @@ export const BusinessModelCompletionSchema = z.object({
     pricing_power: z.enum(['strong', 'moderate', 'weak']),
   }),
   cost_structure: z.object({
-    fixed_vs_variable: z.number().min(0).max(100), // % fixed
+    fixed_vs_variable: z.number().min(0).max(100),
     operating_leverage: z.enum(['high', 'moderate', 'low']),
     key_cost_drivers: z.array(z.string()).min(2),
     margin_trajectory: z.enum(['expanding', 'stable', 'contracting']),
@@ -59,9 +204,6 @@ export const BusinessModelCompletionSchema = z.object({
   }),
 });
 
-/**
- * Industry & Moat Module - Mandatory Fields
- */
 export const IndustryMoatCompletionSchema = z.object({
   industry_structure: z.object({
     market_size_usd: z.number(),
@@ -72,13 +214,7 @@ export const IndustryMoatCompletionSchema = z.object({
     supplier_power: z.enum(['high', 'moderate', 'low']),
   }),
   moat_sources: z.array(z.object({
-    type: z.enum([
-      'network_effects',
-      'switching_costs',
-      'cost_advantages',
-      'intangible_assets',
-      'efficient_scale',
-    ]),
+    type: z.enum(['network_effects', 'switching_costs', 'cost_advantages', 'intangible_assets', 'efficient_scale']),
     strength: z.enum(['wide', 'narrow', 'none']),
     evidence: z.string().min(50),
     durability_years: z.number().min(0).max(30),
@@ -97,9 +233,6 @@ export const IndustryMoatCompletionSchema = z.object({
   })).min(1),
 });
 
-/**
- * Financial Forensics Module - Mandatory Fields
- */
 export const FinancialForensicsCompletionSchema = z.object({
   earnings_quality: z.object({
     score: z.number().min(0).max(100),
@@ -129,9 +262,6 @@ export const FinancialForensicsCompletionSchema = z.object({
   })),
 });
 
-/**
- * Capital Allocation Module - Mandatory Fields
- */
 export const CapitalAllocationCompletionSchema = z.object({
   reinvestment_rate: z.object({
     current: z.number(),
@@ -162,9 +292,6 @@ export const CapitalAllocationCompletionSchema = z.object({
   }),
 });
 
-/**
- * Management Quality Module - Mandatory Fields
- */
 export const ManagementQualityCompletionSchema = z.object({
   track_record: z.object({
     tenure_years: z.number(),
@@ -197,9 +324,6 @@ export const ManagementQualityCompletionSchema = z.object({
   }),
 });
 
-/**
- * Valuation Module - Mandatory Fields
- */
 export const ValuationCompletionSchema = z.object({
   primary_method: z.object({
     method: z.enum(['dcf', 'comps', 'sum_of_parts', 'asset_based', 'lbo']),
@@ -238,9 +362,6 @@ export const ValuationCompletionSchema = z.object({
   }),
 });
 
-/**
- * Risk & Stress Module - Mandatory Fields
- */
 export const RiskStressCompletionSchema = z.object({
   key_risks: z.array(z.object({
     risk: z.string(),
@@ -276,7 +397,21 @@ export const RiskStressCompletionSchema = z.object({
 });
 
 // ============================================================================
-// COMPLETION CHECKER
+// REQUIRED MODULES (LOCKED)
+// ============================================================================
+
+export const REQUIRED_MODULES = [
+  'business_model',
+  'industry_moat',
+  'financial_forensics',
+  'capital_allocation',
+  'management_quality',
+  'valuation',
+  'risk_stress',
+] as const;
+
+// ============================================================================
+// COMPLETION CHECKER TYPES
 // ============================================================================
 
 export interface ModuleCompletionResult {
@@ -286,19 +421,20 @@ export interface ModuleCompletionResult {
   errors: string[];
 }
 
-export interface PacketCompletionResult {
-  isComplete: boolean;
-  completedModules: string[];
-  incompleteModules: string[];
-  moduleResults: ModuleCompletionResult[];
-  hasDecisionBrief: boolean;
-  evidenceCount: number;
-  overallScore: number; // 0-100
+export interface ICGradeCompletionResult {
+  is_complete: boolean;
+  can_include_in_ic_bundle: boolean;
+  missing_sections: string[];
+  warnings: string[];
+  details: Record<string, { passed: boolean; message: string }>;
+  module_results: ModuleCompletionResult[];
+  overall_score: number;
 }
 
-/**
- * Check if a research module is complete
- */
+// ============================================================================
+// MODULE COMPLETION CHECKER
+// ============================================================================
+
 export function checkModuleCompletion(
   module: string,
   data: unknown
@@ -359,32 +495,49 @@ export function checkModuleCompletion(
   return result;
 }
 
+// ============================================================================
+// IC-GRADE PACKET COMPLETION CHECKER
+// ============================================================================
+
 /**
- * Check if a ResearchPacket is complete
+ * Check if a ResearchPacket meets IC-grade completion requirements
+ * 
+ * A packet is COMPLETE only when ALL of the following are satisfied:
+ * 1. All 7 research modules completed
+ * 2. Bull/Base/Bear scenarios with probabilities summing to 1.0
+ * 3. Decision brief with verdict and conviction
+ * 4. Variant perception statement (non-trivial)
+ * 5. Historical parallels (at least 2) with base rate implications
+ * 6. Pre-mortem with early warnings (at least 3)
+ * 7. Monitoring plan with KPIs (at least 5) and invalidation triggers (at least 3)
+ * 8. Evidence grounding spot check passed
  */
 export function checkPacketCompletion(packet: {
   modules: Record<string, unknown>;
-  decisionBrief?: unknown;
+  bull_base_bear?: unknown;
+  decision_brief?: unknown;
+  variant_perception?: unknown;
+  historical_parallels?: unknown[];
+  pre_mortem?: unknown;
+  monitoring_plan?: unknown;
+  evidence_grounding_check?: unknown;
   evidence?: unknown[];
-}): PacketCompletionResult {
-  const requiredModules = [
-    'business_model',
-    'industry_moat',
-    'financial_forensics',
-    'capital_allocation',
-    'management_quality',
-    'valuation',
-    'risk_stress',
-  ];
+}): ICGradeCompletionResult {
+  const missing_sections: string[] = [];
+  const warnings: string[] = [];
+  const details: Record<string, { passed: boolean; message: string }> = {};
+  const module_results: ModuleCompletionResult[] = [];
 
-  const moduleResults: ModuleCompletionResult[] = [];
+  // -------------------------------------------------------------------------
+  // 1. All 7 research modules completed
+  // -------------------------------------------------------------------------
   const completedModules: string[] = [];
   const incompleteModules: string[] = [];
 
-  for (const module of requiredModules) {
+  for (const module of REQUIRED_MODULES) {
     const moduleData = packet.modules?.[module];
     const result = checkModuleCompletion(module, moduleData);
-    moduleResults.push(result);
+    module_results.push(result);
 
     if (result.isComplete) {
       completedModules.push(module);
@@ -393,56 +546,268 @@ export function checkPacketCompletion(packet: {
     }
   }
 
-  const hasDecisionBrief = !!packet.decisionBrief && 
-    typeof packet.decisionBrief === 'object' &&
-    Object.keys(packet.decisionBrief).length > 0;
+  if (incompleteModules.length === 0) {
+    details['modules'] = { passed: true, message: 'All 7 modules completed' };
+  } else {
+    details['modules'] = { passed: false, message: `Missing modules: ${incompleteModules.join(', ')}` };
+    missing_sections.push(`Research modules: ${incompleteModules.join(', ')}`);
+  }
 
-  const evidenceCount = packet.evidence?.length ?? 0;
+  // -------------------------------------------------------------------------
+  // 2. Bull/Base/Bear scenarios with probabilities summing to 1.0
+  // -------------------------------------------------------------------------
+  if (packet.bull_base_bear) {
+    const result = BullBaseBearSchema.safeParse(packet.bull_base_bear);
+    if (result.success) {
+      details['bull_base_bear'] = { passed: true, message: 'Valid scenarios with correct probabilities' };
+    } else {
+      details['bull_base_bear'] = { passed: false, message: result.error.issues[0]?.message || 'Invalid' };
+      missing_sections.push('Bull/Base/Bear scenarios (invalid or probabilities do not sum to 1.0)');
+    }
+  } else {
+    details['bull_base_bear'] = { passed: false, message: 'Missing Bull/Base/Bear scenarios' };
+    missing_sections.push('Bull/Base/Bear scenarios');
+  }
 
+  // -------------------------------------------------------------------------
+  // 3. Decision brief with verdict and conviction
+  // -------------------------------------------------------------------------
+  if (packet.decision_brief) {
+    const result = DecisionBriefSchema.safeParse(packet.decision_brief);
+    if (result.success) {
+      details['decision_brief'] = { passed: true, message: 'Valid decision brief' };
+    } else {
+      details['decision_brief'] = { passed: false, message: result.error.issues[0]?.message || 'Invalid' };
+      missing_sections.push('Decision brief (invalid format)');
+    }
+  } else {
+    details['decision_brief'] = { passed: false, message: 'Missing decision brief' };
+    missing_sections.push('Decision brief');
+  }
+
+  // -------------------------------------------------------------------------
+  // 4. Variant perception statement (non-trivial)
+  // -------------------------------------------------------------------------
+  if (packet.variant_perception) {
+    const result = VariantPerceptionSchema.safeParse(packet.variant_perception);
+    if (result.success) {
+      const vp = packet.variant_perception as VariantPerception;
+      // Check non-triviality
+      if (vp.why_we_differ.length >= 30 && !vp.why_we_differ.toLowerCase().includes('we agree')) {
+        details['variant_perception'] = { passed: true, message: 'Valid and non-trivial variant perception' };
+      } else {
+        details['variant_perception'] = { passed: false, message: 'Variant perception is trivial or agrees with consensus' };
+        missing_sections.push('Variant perception (trivial)');
+      }
+    } else {
+      details['variant_perception'] = { passed: false, message: result.error.issues[0]?.message || 'Invalid' };
+      missing_sections.push('Variant perception (invalid format)');
+    }
+  } else {
+    details['variant_perception'] = { passed: false, message: 'Missing variant perception' };
+    missing_sections.push('Variant perception');
+  }
+
+  // -------------------------------------------------------------------------
+  // 5. Historical parallels (at least 2) with base rate implications
+  // -------------------------------------------------------------------------
+  if (packet.historical_parallels && Array.isArray(packet.historical_parallels)) {
+    const validParallels = packet.historical_parallels.filter((p) => {
+      const result = HistoricalParallelSchema.safeParse(p);
+      return result.success;
+    });
+    if (validParallels.length >= 2) {
+      details['historical_parallels'] = { passed: true, message: `${validParallels.length} valid historical parallels with base rate implications` };
+    } else {
+      details['historical_parallels'] = { passed: false, message: `Only ${validParallels.length} valid parallels (need 2+ with base rate implications)` };
+      missing_sections.push('Historical parallels (need at least 2 with base rate implications and key differences)');
+    }
+  } else {
+    details['historical_parallels'] = { passed: false, message: 'Missing historical parallels' };
+    missing_sections.push('Historical parallels (need at least 2)');
+  }
+
+  // -------------------------------------------------------------------------
+  // 6. Pre-mortem with early warnings (at least 3)
+  // -------------------------------------------------------------------------
+  if (packet.pre_mortem) {
+    const result = PreMortemSchema.safeParse(packet.pre_mortem);
+    if (result.success) {
+      const pm = packet.pre_mortem as PreMortem;
+      if (pm.early_warnings.length >= 3) {
+        details['pre_mortem'] = { passed: true, message: `Pre-mortem with ${pm.early_warnings.length} early warnings` };
+      } else {
+        details['pre_mortem'] = { passed: false, message: `Only ${pm.early_warnings.length} early warnings (need 3+)` };
+        missing_sections.push('Pre-mortem (need at least 3 early warnings)');
+      }
+    } else {
+      details['pre_mortem'] = { passed: false, message: result.error.issues[0]?.message || 'Invalid' };
+      missing_sections.push('Pre-mortem (invalid format)');
+    }
+  } else {
+    details['pre_mortem'] = { passed: false, message: 'Missing pre-mortem' };
+    missing_sections.push('Pre-mortem');
+  }
+
+  // -------------------------------------------------------------------------
+  // 7. Monitoring plan with KPIs (5+) and invalidation triggers (3+)
+  // -------------------------------------------------------------------------
+  if (packet.monitoring_plan) {
+    const result = MonitoringPlanSchema.safeParse(packet.monitoring_plan);
+    if (result.success) {
+      const mp = packet.monitoring_plan as MonitoringPlan;
+      const kpiCount = mp.kpis.length;
+      const triggerCount = mp.invalidation_triggers.length;
+      if (kpiCount >= 5 && triggerCount >= 3) {
+        details['monitoring_plan'] = { passed: true, message: `${kpiCount} KPIs, ${triggerCount} invalidation triggers` };
+      } else {
+        details['monitoring_plan'] = { passed: false, message: `KPIs: ${kpiCount}/5, Triggers: ${triggerCount}/3` };
+        if (kpiCount < 5) missing_sections.push('Monitoring plan (need at least 5 KPIs)');
+        if (triggerCount < 3) missing_sections.push('Monitoring plan (need at least 3 invalidation triggers)');
+      }
+    } else {
+      details['monitoring_plan'] = { passed: false, message: result.error.issues[0]?.message || 'Invalid' };
+      missing_sections.push('Monitoring plan (invalid format)');
+    }
+  } else {
+    details['monitoring_plan'] = { passed: false, message: 'Missing monitoring plan' };
+    missing_sections.push('Monitoring plan');
+  }
+
+  // -------------------------------------------------------------------------
+  // 8. Evidence grounding spot check
+  // -------------------------------------------------------------------------
+  if (packet.evidence_grounding_check) {
+    const result = EvidenceGroundingCheckSchema.safeParse(packet.evidence_grounding_check);
+    if (result.success) {
+      const egc = packet.evidence_grounding_check as EvidenceGroundingCheck;
+      if (egc.spot_check_passed && egc.grounding_rate >= 0.9) {
+        details['evidence_grounding'] = { passed: true, message: `Grounding rate: ${(egc.grounding_rate * 100).toFixed(0)}%` };
+      } else {
+        details['evidence_grounding'] = { passed: false, message: `Grounding rate: ${(egc.grounding_rate * 100).toFixed(0)}% (need 90%+)` };
+        warnings.push('Evidence grounding spot check failed - review source citations');
+      }
+    } else {
+      details['evidence_grounding'] = { passed: false, message: 'Invalid evidence grounding check' };
+      warnings.push('Evidence grounding check format invalid');
+    }
+  } else {
+    details['evidence_grounding'] = { passed: false, message: 'Evidence grounding check not performed' };
+    warnings.push('Evidence grounding check not performed');
+  }
+
+  // -------------------------------------------------------------------------
   // Calculate overall score
-  const moduleScore = (completedModules.length / requiredModules.length) * 70;
-  const briefScore = hasDecisionBrief ? 20 : 0;
-  const evidenceScore = Math.min(evidenceCount / 10, 1) * 10;
-  const overallScore = Math.round(moduleScore + briefScore + evidenceScore);
+  // -------------------------------------------------------------------------
+  const moduleScore = (completedModules.length / REQUIRED_MODULES.length) * 40;
+  const icGradeSections = [
+    'bull_base_bear',
+    'decision_brief',
+    'variant_perception',
+    'historical_parallels',
+    'pre_mortem',
+    'monitoring_plan',
+    'evidence_grounding',
+  ];
+  const passedSections = icGradeSections.filter((s) => details[s]?.passed).length;
+  const sectionScore = (passedSections / icGradeSections.length) * 60;
+  const overall_score = Math.round(moduleScore + sectionScore);
 
-  const isComplete = 
-    completedModules.length === requiredModules.length &&
-    hasDecisionBrief &&
-    evidenceCount >= 5;
+  // -------------------------------------------------------------------------
+  // Final result
+  // -------------------------------------------------------------------------
+  const is_complete = missing_sections.length === 0;
+  const can_include_in_ic_bundle = is_complete && details['evidence_grounding']?.passed !== false;
 
   return {
-    isComplete,
-    completedModules,
-    incompleteModules,
-    moduleResults,
-    hasDecisionBrief,
-    evidenceCount,
-    overallScore,
+    is_complete,
+    can_include_in_ic_bundle,
+    missing_sections,
+    warnings,
+    details,
+    module_results,
+    overall_score,
   };
+}
+
+/**
+ * Validate that a packet can be included in IC Bundle
+ */
+export function canIncludeInICBundle(packet: Parameters<typeof checkPacketCompletion>[0]): {
+  eligible: boolean;
+  reason?: string;
+} {
+  const completion = checkPacketCompletion(packet);
+
+  if (!completion.can_include_in_ic_bundle) {
+    return {
+      eligible: false,
+      reason: completion.missing_sections.length > 0
+        ? `Incomplete: ${completion.missing_sections.join(', ')}`
+        : 'Evidence grounding check failed',
+    };
+  }
+
+  return { eligible: true };
 }
 
 /**
  * Get human-readable completion summary
  */
-export function getCompletionSummary(result: PacketCompletionResult): string {
+export function getCompletionSummary(result: ICGradeCompletionResult): string {
   const lines: string[] = [];
   
-  lines.push(`ResearchPacket Completion: ${result.overallScore}%`);
-  lines.push(`Status: ${result.isComplete ? 'COMPLETE' : 'INCOMPLETE'}`);
+  lines.push(`ResearchPacket IC-Grade Completion: ${result.overall_score}%`);
+  lines.push(`Status: ${result.is_complete ? 'COMPLETE' : 'INCOMPLETE'}`);
+  lines.push(`IC Bundle Eligible: ${result.can_include_in_ic_bundle ? 'YES' : 'NO'}`);
   lines.push('');
-  lines.push('Module Status:');
   
-  for (const moduleResult of result.moduleResults) {
+  lines.push('Module Status:');
+  for (const moduleResult of result.module_results) {
     const status = moduleResult.isComplete ? '✓' : '✗';
     lines.push(`  ${status} ${moduleResult.module}`);
-    if (!moduleResult.isComplete && moduleResult.missingFields.length > 0) {
-      lines.push(`    Missing: ${moduleResult.missingFields.slice(0, 3).join(', ')}${moduleResult.missingFields.length > 3 ? '...' : ''}`);
-    }
   }
   
   lines.push('');
-  lines.push(`Decision Brief: ${result.hasDecisionBrief ? 'Present' : 'Missing'}`);
-  lines.push(`Evidence Items: ${result.evidenceCount}`);
+  lines.push('IC-Grade Sections:');
+  for (const [section, detail] of Object.entries(result.details)) {
+    if (section !== 'modules') {
+      const status = detail.passed ? '✓' : '✗';
+      lines.push(`  ${status} ${section}: ${detail.message}`);
+    }
+  }
+  
+  if (result.missing_sections.length > 0) {
+    lines.push('');
+    lines.push('Missing Sections:');
+    for (const section of result.missing_sections) {
+      lines.push(`  - ${section}`);
+    }
+  }
+  
+  if (result.warnings.length > 0) {
+    lines.push('');
+    lines.push('Warnings:');
+    for (const warning of result.warnings) {
+      lines.push(`  ⚠ ${warning}`);
+    }
+  }
   
   return lines.join('\n');
 }
+
+export default {
+  REQUIRED_MODULES,
+  checkPacketCompletion,
+  canIncludeInICBundle,
+  getCompletionSummary,
+  checkModuleCompletion,
+  // Schema exports
+  VariantPerceptionSchema,
+  HistoricalParallelSchema,
+  PreMortemSchema,
+  MonitoringPlanSchema,
+  BullBaseBearSchema,
+  DecisionBriefSchema,
+  EvidenceGroundingCheckSchema,
+};

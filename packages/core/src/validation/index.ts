@@ -18,6 +18,9 @@ export * from './research-packet-completion.js';
 // Re-export evidence traceability
 export * from './evidence-traceability.js';
 
+// Re-export evidence locator
+export * from './evidence-locator.js';
+
 // ============================================================================
 // TYPES
 // ============================================================================
