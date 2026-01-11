@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "paths": {
+      "@arc/core": ["./packages/core/src"],
+      "@arc/database": ["./packages/database/src"],
+      "@arc/llm-client": ["./packages/llm-client/src"],
+      "@arc/retriever": ["./packages/retriever/src"],
+      "@arc/worker": ["./packages/worker/src"],
+      "@arc/shared": ["./packages/shared/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist", ".next"]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@arc/worker",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "daily:discovery": "tsx src/jobs/daily-discovery-run.ts",
+    "daily:lane-b": "tsx src/jobs/daily-lane-b-deep-research.ts",
+    "weekly:bundle": "tsx src/jobs/weekly-ic-bundle.ts",
+    "monthly:audit": "tsx src/jobs/monthly-process-audit.ts"
+  },
+  "dependencies": {
+    "bullmq": "^5.1.0",
+    "ioredis": "^5.3.0",
+    "cron": "^3.1.0",
+    "@arc/core": "workspace:*",
+    "@arc/database": "workspace:*",
+    "@arc/llm-client": "workspace:*",
+    "@arc/retriever": "workspace:*",
+    "@arc/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  }
+}
