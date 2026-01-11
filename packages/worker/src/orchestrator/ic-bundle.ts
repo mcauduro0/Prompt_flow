@@ -3,7 +3,7 @@
  * Weekly Investment Committee bundle generation
  * 
  * DAG: weekly_ic_bundle
- * Schedule: 08:00 America/Sao_Paulo every Friday (WEEKDAY ONLY)
+ * Schedule: 18:00 America/Sao_Paulo every Friday (after QA Report at 17:00)
  * Content: Last 7 CALENDAR DAYS of completed ResearchPackets
  * 
  * Following Operating Parameters exactly:
@@ -30,10 +30,10 @@ import {
  * CRITICAL: Uses America/Sao_Paulo timezone, NOT UTC
  */
 const IC_BUNDLE_CONFIG = {
-  // Schedule: Friday 08:00 America/Sao_Paulo
+  // Schedule: Friday 18:00 America/Sao_Paulo (after QA Report at 17:00)
   SCHEDULE: {
     DAY_OF_WEEK: 5, // Friday (0 = Sunday)
-    HOUR: 8,
+    HOUR: 18,
     MINUTE: 0,
     TIMEZONE: OPERATING_PARAMETERS.TIMEZONE, // 'America/Sao_Paulo'
   },

@@ -1,10 +1,11 @@
 /**
  * ARC Investment Factory - Job Scheduler
  * 
- * Schedules (LOCKED):
- * - Lane A (daily_discovery_run): 06:00 America/Sao_Paulo, Mon-Fri ONLY
- * - Lane B (daily_lane_b): 08:00 America/Sao_Paulo, Mon-Fri ONLY
- * - IC Bundle (weekly_ic_bundle): 08:00 America/Sao_Paulo, Fridays ONLY
+ * Schedules (LOCKED - America/Sao_Paulo timezone):
+ * - Lane A (daily_discovery_run): 06:00 Mon-Fri
+ * - Lane B (daily_lane_b): 08:00 Mon-Fri
+ * - Weekly QA Report: 17:00 Fridays
+ * - IC Bundle (weekly_ic_bundle): 18:00 Fridays (after QA Report)
  * 
  * IMPORTANT: All schedules use America/Sao_Paulo timezone (NOT UTC)
  * IMPORTANT: All schedules are weekday-only (Mon-Fri)
@@ -34,6 +35,30 @@ interface ScheduledJob {
 }
 
 // ============================================================================
+// CRON EXPRESSIONS (LOCKED PARAMETERS)
+// ============================================================================
+
+/**
+ * Cron expressions for all scheduled jobs
+ * Format: minute hour day-of-month month day-of-week
+ * 
+ * All times are in America/Sao_Paulo timezone
+ */
+const CRON_EXPRESSIONS = {
+  // Lane A: 06:00 Mon-Fri
+  LANE_A: '0 6 * * 1-5',
+  
+  // Lane B: 08:00 Mon-Fri
+  LANE_B: '0 8 * * 1-5',
+  
+  // Weekly QA Report: 17:00 Fridays (before IC Bundle)
+  QA_REPORT: '0 17 * * 5',
+  
+  // IC Bundle: 18:00 Fridays (after QA Report)
+  IC_BUNDLE: '0 18 * * 5',
+} as const;
+
+// ============================================================================
 // SCHEDULED JOBS (LOCKED PARAMETERS)
 // ============================================================================
 
@@ -43,12 +68,13 @@ interface ScheduledJob {
 function createScheduledJobs(handlers: {
   laneA: () => Promise<void>;
   laneB: () => Promise<void>;
+  qaReport: () => Promise<void>;
   icBundle: () => Promise<void>;
 }): ScheduledJob[] {
   return [
     {
       name: 'daily_discovery',
-      cron: SCHEDULES.LANE_A_CRON, // "0 6 * * 1-5" - 06:00 Mon-Fri
+      cron: CRON_EXPRESSIONS.LANE_A,
       timezone: SYSTEM_TIMEZONE, // America/Sao_Paulo
       weekdaysOnly: true,
       handler: handlers.laneA,
@@ -56,17 +82,25 @@ function createScheduledJobs(handlers: {
     },
     {
       name: 'daily_lane_b',
-      cron: SCHEDULES.LANE_B_CRON, // "0 8 * * 1-5" - 08:00 Mon-Fri
+      cron: CRON_EXPRESSIONS.LANE_B,
       timezone: SYSTEM_TIMEZONE, // America/Sao_Paulo
       weekdaysOnly: true,
       handler: handlers.laneB,
       enabled: true,
     },
     {
-      name: 'weekly_ic_bundle',
-      cron: SCHEDULES.IC_BUNDLE_CRON, // "0 8 * * 5" - 08:00 Fridays
+      name: 'weekly_qa_report',
+      cron: CRON_EXPRESSIONS.QA_REPORT,
       timezone: SYSTEM_TIMEZONE, // America/Sao_Paulo
-      weekdaysOnly: true,
+      weekdaysOnly: true, // Friday only
+      handler: handlers.qaReport,
+      enabled: true,
+    },
+    {
+      name: 'weekly_ic_bundle',
+      cron: CRON_EXPRESSIONS.IC_BUNDLE,
+      timezone: SYSTEM_TIMEZONE, // America/Sao_Paulo
+      weekdaysOnly: true, // Friday only
       handler: handlers.icBundle,
       enabled: true,
     },
@@ -94,6 +128,14 @@ function isWeekdayInSaoPaulo(): boolean {
   const saoPauloDate = getCurrentTimeInSaoPaulo();
   const day = saoPauloDate.getDay();
   return day >= 1 && day <= 5; // Monday = 1, Friday = 5
+}
+
+/**
+ * Check if current day is Friday
+ */
+function isFridayInSaoPaulo(): boolean {
+  const saoPauloDate = getCurrentTimeInSaoPaulo();
+  return saoPauloDate.getDay() === 5; // Friday = 5
 }
 
 /**
@@ -143,6 +185,7 @@ export class JobScheduler {
   constructor(handlers: {
     laneA: () => Promise<void>;
     laneB: () => Promise<void>;
+    qaReport: () => Promise<void>;
     icBundle: () => Promise<void>;
   }) {
     this.jobs = createScheduledJobs(handlers);
@@ -197,12 +240,15 @@ export class JobScheduler {
     console.log(`[Scheduler] Timezone: ${SYSTEM_TIMEZONE}`);
     console.log(`[Scheduler] Current time: ${getCurrentTimeInSaoPaulo().toISOString()}`);
     console.log(`[Scheduler] Is weekday: ${isWeekdayInSaoPaulo()}`);
+    console.log(`[Scheduler] Is Friday: ${isFridayInSaoPaulo()}`);
     console.log(`${'='.repeat(60)}\n`);
 
     // Log registered jobs
+    console.log('[Scheduler] Registered jobs:');
     for (const job of this.jobs) {
-      console.log(`[Scheduler] ${job.name}: ${job.cron} (${job.timezone}) - ${job.enabled ? 'ENABLED' : 'DISABLED'}`);
+      console.log(`  - ${job.name}: ${job.cron} (${job.timezone}) - ${job.enabled ? 'ENABLED' : 'DISABLED'}`);
     }
+    console.log('');
 
     // Run immediately
     this.checkAndRunJobs();
@@ -211,7 +257,7 @@ export class JobScheduler {
     this.intervalId = setInterval(() => this.checkAndRunJobs(), 60 * 1000);
     this.running = true;
 
-    console.log('\n[Scheduler] Scheduler started. Checking every minute...\n');
+    console.log('[Scheduler] Scheduler started. Checking every minute...\n');
   }
 
   /**
@@ -294,6 +340,9 @@ export function startScheduler(): NodeJS.Timeout {
     laneB: async () => {
       console.log('[Scheduler] Lane B placeholder - import actual handler');
     },
+    qaReport: async () => {
+      console.log('[Scheduler] QA Report placeholder - import actual handler');
+    },
     icBundle: async () => {
       console.log('[Scheduler] IC Bundle placeholder - import actual handler');
     },
@@ -323,5 +372,5 @@ export function getScheduledJobs(): Array<{ name: string; cron: string; enabled:
   }));
 }
 
-export { JobScheduler };
+export { JobScheduler, CRON_EXPRESSIONS };
 export default JobScheduler;

@@ -18,6 +18,7 @@
  * Gate 3: DOWNSIDE_SANITY
  *   - Downside scenario is realistic and bounded
  *   - Must have defined loss limit
+ *   - BINARY OVERRIDE: Fails if leverage/liquidity/regulatory risk is dominant
  * 
  * Gate 4: STYLE_FIT
  *   - Idea fits the assigned style bucket
@@ -77,6 +78,12 @@ export const GATE_DEFINITIONS = {
       'Key risks are identified',
       'Stop-loss or exit trigger defined',
     ],
+    // BINARY OVERRIDES - These cause immediate failure regardless of score
+    binary_overrides: [
+      'leverage_risk_dominant',
+      'liquidity_risk_dominant',
+      'regulatory_cliff_dominant',
+    ],
   },
   GATE_4: {
     id: 4,
@@ -118,6 +125,90 @@ export const GATE_DEFINITIONS = {
 } as const;
 
 // ============================================================================
+// GATE 3 BINARY OVERRIDE DEFINITIONS
+// ============================================================================
+
+/**
+ * GATE 3 BINARY OVERRIDES
+ * 
+ * These risks cause IMMEDIATE Gate 3 failure regardless of numeric score.
+ * This aligns with real IC behavior and prevents gaming the score.
+ * 
+ * LLM optimism is most dangerous in downside risk assessment.
+ * These overrides ensure catastrophic risks cannot be masked by good scores.
+ */
+export const GATE_3_BINARY_OVERRIDES = {
+  /**
+   * LEVERAGE RISK DOMINANT
+   * Triggers when:
+   * - Net debt / EBITDA > 4x
+   * - Interest coverage < 2x
+   * - Significant debt maturities in next 18 months
+   * - Covenant risk identified
+   */
+  leverage_risk_dominant: {
+    name: 'Leverage Risk Dominant',
+    description: 'Excessive leverage creates existential risk',
+    triggers: [
+      'Net debt / EBITDA > 4x',
+      'Interest coverage < 2x',
+      'Debt maturities > 30% of market cap in 18 months',
+      'Covenant breach risk identified',
+      'Negative free cash flow with high debt',
+    ],
+    severity: 'critical',
+  },
+  
+  /**
+   * LIQUIDITY RISK DOMINANT
+   * Triggers when:
+   * - Current ratio < 0.8
+   * - Quick ratio < 0.5
+   * - Cash runway < 12 months at current burn
+   * - Revolver fully drawn
+   * - Going concern warning
+   */
+  liquidity_risk_dominant: {
+    name: 'Liquidity Risk Dominant',
+    description: 'Insufficient liquidity threatens survival',
+    triggers: [
+      'Current ratio < 0.8',
+      'Quick ratio < 0.5',
+      'Cash runway < 12 months',
+      'Revolver fully drawn or unavailable',
+      'Going concern warning in audit',
+      'Supplier payment delays reported',
+    ],
+    severity: 'critical',
+  },
+  
+  /**
+   * REGULATORY CLIFF DOMINANT
+   * Triggers when:
+   * - Major regulatory decision pending with binary outcome
+   * - Patent cliff > 30% of revenue
+   * - License renewal at risk
+   * - Antitrust action pending
+   * - Sanctions or export control risk
+   */
+  regulatory_cliff_dominant: {
+    name: 'Regulatory Cliff Dominant',
+    description: 'Regulatory event creates binary risk',
+    triggers: [
+      'FDA/EMA decision pending with >30% revenue impact',
+      'Patent cliff > 30% of revenue in 24 months',
+      'License/permit renewal at risk',
+      'Antitrust investigation with breakup risk',
+      'Sanctions or export control exposure',
+      'Environmental liability > 20% of market cap',
+    ],
+    severity: 'critical',
+  },
+} as const;
+
+export type Gate3BinaryOverrideType = keyof typeof GATE_3_BINARY_OVERRIDES;
+
+// ============================================================================
 // GATE RESULT SCHEMA
 // ============================================================================
 
@@ -136,6 +227,8 @@ export const GateResultSchema = z.object({
     checks_passed: z.array(z.string()),
     checks_failed: z.array(z.string()),
     notes: z.string().optional(),
+    binary_override: z.string().optional(), // For Gate 3
+    binary_override_reason: z.string().optional(), // For Gate 3
   }),
 });
 
@@ -149,9 +242,42 @@ export const GateResultsSchema = z.object({
   gate_4_style_fit: GateResultSchema,
   all_passed: z.boolean(),
   first_failed_gate: z.number().nullable(),
+  binary_override_triggered: z.boolean().optional(),
+  binary_override_type: z.string().optional(),
 });
 
 export type GateResults = z.infer<typeof GateResultsSchema>;
+
+// ============================================================================
+// RISK FLAGS SCHEMA (for Gate 3 binary override)
+// ============================================================================
+
+export const RiskFlagsSchema = z.object({
+  // Leverage risk indicators
+  leverage_risk_dominant: z.boolean().default(false),
+  net_debt_to_ebitda: z.number().optional(),
+  interest_coverage: z.number().optional(),
+  debt_maturity_pct_18m: z.number().optional(),
+  covenant_risk: z.boolean().optional(),
+  
+  // Liquidity risk indicators
+  liquidity_risk_dominant: z.boolean().default(false),
+  current_ratio: z.number().optional(),
+  quick_ratio: z.number().optional(),
+  cash_runway_months: z.number().optional(),
+  revolver_utilization: z.number().optional(),
+  going_concern_warning: z.boolean().optional(),
+  
+  // Regulatory risk indicators
+  regulatory_cliff_dominant: z.boolean().default(false),
+  pending_regulatory_decision: z.boolean().optional(),
+  patent_cliff_revenue_pct: z.number().optional(),
+  license_renewal_risk: z.boolean().optional(),
+  antitrust_risk: z.boolean().optional(),
+  sanctions_exposure: z.boolean().optional(),
+});
+
+export type RiskFlags = z.infer<typeof RiskFlagsSchema>;
 
 // ============================================================================
 // GATE EVALUATION FUNCTIONS
@@ -179,6 +305,8 @@ interface IdeaForGating {
   roic?: number;
   revenue_growth?: number;
   margin_of_safety?: number;
+  // Risk flags for Gate 3 binary override
+  risk_flags?: RiskFlags;
 }
 
 /**
@@ -334,10 +462,82 @@ export function evaluateGate2(idea: IdeaForGating): GateResult {
 
 /**
  * Gate 3: Downside Sanity
+ * 
+ * ============================================================================
+ * BINARY OVERRIDE LOGIC
+ * ============================================================================
+ * 
+ * If leverage_risk OR liquidity_risk OR regulatory_cliff is flagged as dominant,
+ * Gate 3 fails REGARDLESS of numeric score.
+ * 
+ * This aligns with real IC behavior and prevents gaming the score.
+ * LLM optimism is most dangerous in downside risk assessment.
+ * ============================================================================
  */
 export function evaluateGate3(idea: IdeaForGating): GateResult {
   const checks_passed: string[] = [];
   const checks_failed: string[] = [];
+  let binary_override: string | undefined;
+  let binary_override_reason: string | undefined;
+
+  // ============================================================================
+  // BINARY OVERRIDE CHECK (FIRST - before any numeric checks)
+  // ============================================================================
+  const riskFlags = idea.risk_flags;
+  
+  if (riskFlags) {
+    // Check leverage risk
+    if (riskFlags.leverage_risk_dominant) {
+      binary_override = 'leverage_risk_dominant';
+      binary_override_reason = buildLeverageRiskReason(riskFlags);
+      checks_failed.push(`BINARY OVERRIDE: ${binary_override_reason}`);
+    }
+    
+    // Check liquidity risk
+    if (riskFlags.liquidity_risk_dominant) {
+      binary_override = 'liquidity_risk_dominant';
+      binary_override_reason = buildLiquidityRiskReason(riskFlags);
+      checks_failed.push(`BINARY OVERRIDE: ${binary_override_reason}`);
+    }
+    
+    // Check regulatory cliff
+    if (riskFlags.regulatory_cliff_dominant) {
+      binary_override = 'regulatory_cliff_dominant';
+      binary_override_reason = buildRegulatoryRiskReason(riskFlags);
+      checks_failed.push(`BINARY OVERRIDE: ${binary_override_reason}`);
+    }
+    
+    // Auto-detect binary overrides from numeric indicators
+    if (!binary_override) {
+      const autoDetected = autoDetectBinaryOverrides(riskFlags);
+      if (autoDetected) {
+        binary_override = autoDetected.type;
+        binary_override_reason = autoDetected.reason;
+        checks_failed.push(`BINARY OVERRIDE (auto-detected): ${binary_override_reason}`);
+      }
+    }
+  }
+
+  // If binary override triggered, fail immediately
+  if (binary_override) {
+    return {
+      gate_id: 3,
+      gate_name: 'DOWNSIDE_SANITY',
+      passed: false,
+      score: 0,
+      details: {
+        checks_passed,
+        checks_failed,
+        binary_override,
+        binary_override_reason,
+        notes: 'Gate 3 failed due to binary override - catastrophic risk identified',
+      },
+    };
+  }
+
+  // ============================================================================
+  // NUMERIC CHECKS (only if no binary override)
+  // ============================================================================
 
   // Check downside protection score
   if (idea.downside_protection >= 0.5) {
@@ -380,6 +580,133 @@ export function evaluateGate3(idea: IdeaForGating): GateResult {
     score,
     details: { checks_passed, checks_failed },
   };
+}
+
+/**
+ * Build leverage risk reason string
+ */
+function buildLeverageRiskReason(flags: RiskFlags): string {
+  const reasons: string[] = [];
+  
+  if (flags.net_debt_to_ebitda !== undefined && flags.net_debt_to_ebitda > 4) {
+    reasons.push(`Net debt/EBITDA ${flags.net_debt_to_ebitda.toFixed(1)}x (>4x)`);
+  }
+  if (flags.interest_coverage !== undefined && flags.interest_coverage < 2) {
+    reasons.push(`Interest coverage ${flags.interest_coverage.toFixed(1)}x (<2x)`);
+  }
+  if (flags.debt_maturity_pct_18m !== undefined && flags.debt_maturity_pct_18m > 30) {
+    reasons.push(`${flags.debt_maturity_pct_18m.toFixed(0)}% debt maturing in 18m`);
+  }
+  if (flags.covenant_risk) {
+    reasons.push('Covenant breach risk');
+  }
+  
+  return reasons.length > 0 
+    ? `Leverage risk dominant: ${reasons.join(', ')}`
+    : 'Leverage risk flagged as dominant';
+}
+
+/**
+ * Build liquidity risk reason string
+ */
+function buildLiquidityRiskReason(flags: RiskFlags): string {
+  const reasons: string[] = [];
+  
+  if (flags.current_ratio !== undefined && flags.current_ratio < 0.8) {
+    reasons.push(`Current ratio ${flags.current_ratio.toFixed(2)} (<0.8)`);
+  }
+  if (flags.quick_ratio !== undefined && flags.quick_ratio < 0.5) {
+    reasons.push(`Quick ratio ${flags.quick_ratio.toFixed(2)} (<0.5)`);
+  }
+  if (flags.cash_runway_months !== undefined && flags.cash_runway_months < 12) {
+    reasons.push(`Cash runway ${flags.cash_runway_months} months (<12)`);
+  }
+  if (flags.revolver_utilization !== undefined && flags.revolver_utilization > 90) {
+    reasons.push(`Revolver ${flags.revolver_utilization.toFixed(0)}% utilized`);
+  }
+  if (flags.going_concern_warning) {
+    reasons.push('Going concern warning');
+  }
+  
+  return reasons.length > 0 
+    ? `Liquidity risk dominant: ${reasons.join(', ')}`
+    : 'Liquidity risk flagged as dominant';
+}
+
+/**
+ * Build regulatory risk reason string
+ */
+function buildRegulatoryRiskReason(flags: RiskFlags): string {
+  const reasons: string[] = [];
+  
+  if (flags.pending_regulatory_decision) {
+    reasons.push('Pending regulatory decision');
+  }
+  if (flags.patent_cliff_revenue_pct !== undefined && flags.patent_cliff_revenue_pct > 30) {
+    reasons.push(`Patent cliff ${flags.patent_cliff_revenue_pct.toFixed(0)}% of revenue`);
+  }
+  if (flags.license_renewal_risk) {
+    reasons.push('License renewal at risk');
+  }
+  if (flags.antitrust_risk) {
+    reasons.push('Antitrust investigation');
+  }
+  if (flags.sanctions_exposure) {
+    reasons.push('Sanctions exposure');
+  }
+  
+  return reasons.length > 0 
+    ? `Regulatory cliff dominant: ${reasons.join(', ')}`
+    : 'Regulatory cliff flagged as dominant';
+}
+
+/**
+ * Auto-detect binary overrides from numeric indicators
+ * This catches cases where the flag wasn't explicitly set but metrics indicate risk
+ */
+function autoDetectBinaryOverrides(flags: RiskFlags): { type: Gate3BinaryOverrideType; reason: string } | null {
+  // Auto-detect leverage risk
+  if (
+    (flags.net_debt_to_ebitda !== undefined && flags.net_debt_to_ebitda > 4) ||
+    (flags.interest_coverage !== undefined && flags.interest_coverage < 2) ||
+    (flags.debt_maturity_pct_18m !== undefined && flags.debt_maturity_pct_18m > 30) ||
+    flags.covenant_risk
+  ) {
+    return {
+      type: 'leverage_risk_dominant',
+      reason: buildLeverageRiskReason({ ...flags, leverage_risk_dominant: true }),
+    };
+  }
+  
+  // Auto-detect liquidity risk
+  if (
+    (flags.current_ratio !== undefined && flags.current_ratio < 0.8) ||
+    (flags.quick_ratio !== undefined && flags.quick_ratio < 0.5) ||
+    (flags.cash_runway_months !== undefined && flags.cash_runway_months < 12) ||
+    (flags.revolver_utilization !== undefined && flags.revolver_utilization > 90) ||
+    flags.going_concern_warning
+  ) {
+    return {
+      type: 'liquidity_risk_dominant',
+      reason: buildLiquidityRiskReason({ ...flags, liquidity_risk_dominant: true }),
+    };
+  }
+  
+  // Auto-detect regulatory cliff
+  if (
+    flags.pending_regulatory_decision ||
+    (flags.patent_cliff_revenue_pct !== undefined && flags.patent_cliff_revenue_pct > 30) ||
+    flags.license_renewal_risk ||
+    flags.antitrust_risk ||
+    flags.sanctions_exposure
+  ) {
+    return {
+      type: 'regulatory_cliff_dominant',
+      reason: buildRegulatoryRiskReason({ ...flags, regulatory_cliff_dominant: true }),
+    };
+  }
+  
+  return null;
 }
 
 /**
@@ -514,6 +841,10 @@ export function evaluateAllGates(idea: IdeaForGating): GateResults {
   const all_passed = gates.every((g) => g.passed);
   const first_failed = gates.find((g) => !g.passed);
 
+  // Check if Gate 3 binary override was triggered
+  const binary_override_triggered = gate_3.details.binary_override !== undefined;
+  const binary_override_type = gate_3.details.binary_override;
+
   return {
     gate_0_data_sufficiency: gate_0,
     gate_1_coherence: gate_1,
@@ -522,6 +853,8 @@ export function evaluateAllGates(idea: IdeaForGating): GateResults {
     gate_4_style_fit: gate_4,
     all_passed,
     first_failed_gate: first_failed ? first_failed.gate_id : null,
+    binary_override_triggered,
+    binary_override_type,
   };
 }
 
@@ -553,6 +886,7 @@ export function createRejectionShadow(
   failed_gate_id: number;
   failed_gate_name: string;
   gate_results: GateResults;
+  binary_override?: string;
 } | null {
   if (gateResults.all_passed) {
     return null;
@@ -565,11 +899,13 @@ export function createRejectionShadow(
     failed_gate_id: gateResults.first_failed_gate!,
     failed_gate_name: getGateName(gateResults.first_failed_gate!),
     gate_results: gateResults,
+    binary_override: gateResults.binary_override_type,
   };
 }
 
 export default {
   GATE_DEFINITIONS,
+  GATE_3_BINARY_OVERRIDES,
   evaluateGate0,
   evaluateGate1,
   evaluateGate2,

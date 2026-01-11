@@ -11,6 +11,7 @@ import {
   BarChart3,
   Lightbulb,
   Brain,
+  ClipboardCheck,
 } from 'lucide-react';
 
 /**
@@ -21,6 +22,7 @@ import {
  * 4. Run History - Audit trail of all DAG runs
  * 5. Settings - System configuration
  * 6. Memory Search - Rejection shadows and reappearance deltas
+ * 7. QA Report - Weekly quality assurance metrics
  * 
  * Additional:
  * - Idea Detail page (/ideas/[id]) - Full evidence and action buttons
@@ -49,6 +51,12 @@ const NAV_ITEMS = [
     href: '/memory',
     icon: Brain,
     description: 'Rejection shadows & reappearance deltas',
+  },
+  {
+    name: 'QA Report',
+    href: '/qa',
+    icon: ClipboardCheck,
+    description: 'Weekly quality assurance metrics',
   },
   {
     name: 'Run History',
