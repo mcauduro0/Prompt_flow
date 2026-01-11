@@ -1,72 +1,128 @@
 /**
  * ARC Investment Factory - Operating Parameters
- * These constants are locked as per the Build Pack specification
- * CORRECTED to match exact Operating Parameters
+ * LOCKED PARAMETERS - DO NOT MODIFY WITHOUT APPROVAL
+ * 
+ * These constants define the operational boundaries of the system.
+ * All values are derived from the Operating Parameters specification.
  */
 
 // ============================================================================
-// TIMEZONE AND SCHEDULE - CORRECTED
+// CORE LOCKED PARAMETERS
 // ============================================================================
+
+/**
+ * Asset class and optimization mode - LOCKED
+ */
+export const ASSET_CLASS = 'global_equities' as const;
+export const DEFAULT_OPTIMIZATION = 'novelty_first' as const;
+export const HOLDING_HORIZON = '1_3_years' as const;
 
 /**
  * System timezone - America/Sao_Paulo
  */
 export const SYSTEM_TIMEZONE = 'America/Sao_Paulo';
 
-/**
- * Schedule configuration
- * All times in America/Sao_Paulo timezone
- * Weekdays only (Monday-Friday)
- */
+// ============================================================================
+// LANE A PARAMETERS - LOCKED
+// ============================================================================
+
+/** Daily target for Idea Inbox */
+export const LANE_A_DAILY_TARGET = 120;
+
+/** Daily cap - max tickers to enrich */
+export const LANE_A_DAILY_CAP = 200;
+
+/** Max tickers for LLM enrichment after novelty shortlist */
+export const LANE_A_LLM_ENRICHMENT_CAP = 200;
+
+/** Exploration rate - random selection for diversity */
+export const LANE_A_EXPLORATION_RATE = 0.10;
+
+/** Time budget per idea (minutes) */
+export const LANE_A_TIME_PER_IDEA_MIN = 2;
+export const LANE_A_TIME_PER_IDEA_MAX = 6;
+
+// Backward compatibility
+export const LANE_A_DAILY_LIMIT = LANE_A_DAILY_TARGET;
+
+// ============================================================================
+// LANE B PARAMETERS - LOCKED
+// ============================================================================
+
+/** Daily promotions target: 2-3 */
+export const LANE_B_DAILY_PROMOTIONS_TARGET = 3;
+
+/** Daily promotions hard cap: 4 */
+export const LANE_B_DAILY_PROMOTIONS_MAX = 4;
+
+/** Weekly deep packets hard cap: 10 */
+export const LANE_B_WEEKLY_DEEP_PACKETS = 10;
+
+/** Max concurrent research jobs */
+export const LANE_B_MAX_CONCURRENCY = 3;
+
+/** Time budget per name (minutes) */
+export const LANE_B_TIME_PER_NAME_MIN = 60;
+export const LANE_B_TIME_PER_NAME_MAX = 120;
+
+// Backward compatibility
+export const LANE_B_DAILY_LIMIT = LANE_B_DAILY_PROMOTIONS_MAX;
+export const LANE_B_WEEKLY_LIMIT = LANE_B_WEEKLY_DEEP_PACKETS;
+
+// ============================================================================
+// NOVELTY WINDOWS - LOCKED
+// ============================================================================
+
+/** Ticker is "new" if not seen in 90 days */
+export const NOVELTY_NEW_TICKER_DAYS = 90;
+
+/** Repetition penalty window: 30 days */
+export const NOVELTY_PENALTY_WINDOW_DAYS = 30;
+
+// Backward compatibility
+export const NOVELTY_DECAY_DAYS = NOVELTY_NEW_TICKER_DAYS;
+
+// ============================================================================
+// SCHEDULE CONFIGURATION - LOCKED
+// ============================================================================
+
 export const SCHEDULES = {
   // Lane A: Daily Discovery - 06:00 Sao Paulo, weekdays only
-  LANE_A_CRON: '0 6 * * 1-5', // Mon-Fri at 06:00
+  LANE_A_CRON: '0 6 * * 1-5',
   LANE_A_HOUR: 6,
   
   // Lane B: Deep Research - 08:00 Sao Paulo, weekdays only
-  LANE_B_CRON: '0 8 * * 1-5', // Mon-Fri at 08:00
+  LANE_B_CRON: '0 8 * * 1-5',
   LANE_B_HOUR: 8,
   
   // IC Bundle: Weekly - 09:00 Sao Paulo, Fridays only
-  IC_BUNDLE_CRON: '0 9 * * 5', // Friday at 09:00
+  IC_BUNDLE_CRON: '0 9 * * 5',
   
   // Monthly Process Audit - 10:00 Sao Paulo, first weekday of month
   MONTHLY_AUDIT_CRON: '0 10 1-7 * 1-5',
 } as const;
 
 // ============================================================================
-// CORE OPERATING PARAMETERS (LOCKED)
+// OPERATING PARAMETERS (AGGREGATED)
 // ============================================================================
 
 export const OPERATING_PARAMETERS = {
-  // Asset class and horizon
-  ASSET_CLASS: 'global_equities' as const,
-  HOLDING_HORIZON: '1_3_years' as const,
-  DEFAULT_OPTIMIZATION: 'novelty' as const,
-
-  // Daily Lane A targets
-  LANE_A_DAILY_TARGET: 120,
-  LANE_A_DAILY_CAP: 200,
-  LANE_A_LLM_ENRICHMENT_CAP: 200, // Max tickers for LLM after novelty shortlist
-  LANE_A_EXPLORATION_RATE: 0.10, // 10% random exploration
-
-  // Lane B targets - CORRECTED
-  LANE_B_DAILY_PROMOTIONS_TARGET: 3,  // Target: 2-3
-  LANE_B_DAILY_PROMOTIONS_MAX: 4,     // Hard cap: 4
-  LANE_B_WEEKLY_DEEP_PACKETS: 10,     // Weekly hard cap: 10 (was 15)
-  LANE_B_MAX_CONCURRENCY: 3,
-
-  // Time budgets (in minutes)
-  LANE_A_TIME_PER_IDEA_MIN: 2,
-  LANE_A_TIME_PER_IDEA_MAX: 6,
-  LANE_B_TIME_PER_NAME_MIN: 60,
-  LANE_B_TIME_PER_NAME_MAX: 120,
+  ASSET_CLASS,
+  HOLDING_HORIZON,
+  DEFAULT_OPTIMIZATION,
+  LANE_A_DAILY_TARGET,
+  LANE_A_DAILY_CAP,
+  LANE_A_LLM_ENRICHMENT_CAP,
+  LANE_A_EXPLORATION_RATE,
+  LANE_B_DAILY_PROMOTIONS_TARGET,
+  LANE_B_DAILY_PROMOTIONS_MAX,
+  LANE_B_WEEKLY_DEEP_PACKETS,
+  LANE_B_MAX_CONCURRENCY,
+  LANE_A_TIME_PER_IDEA_MIN,
+  LANE_A_TIME_PER_IDEA_MAX,
+  LANE_B_TIME_PER_NAME_MIN,
+  LANE_B_TIME_PER_NAME_MAX,
 } as const;
-
-// Backward compatibility exports
-export const LANE_A_DAILY_LIMIT = OPERATING_PARAMETERS.LANE_A_DAILY_TARGET;
-export const LANE_B_DAILY_LIMIT = OPERATING_PARAMETERS.LANE_B_DAILY_PROMOTIONS_MAX;
-export const LANE_B_WEEKLY_LIMIT = OPERATING_PARAMETERS.LANE_B_WEEKLY_DEEP_PACKETS;
 
 // ============================================================================
 // STYLE MIX TARGETS (WEEKLY)
@@ -82,47 +138,37 @@ export const STYLE_TAGS = ['quality_compounder', 'garp', 'cigar_butt'] as const;
 export type StyleTag = typeof STYLE_TAGS[number];
 
 // ============================================================================
-// NOVELTY SCORING PARAMETERS - CORRECTED
+// NOVELTY SCORING PARAMETERS
 // ============================================================================
 
 export const NOVELTY_SCORING = {
-  // Ticker is "new" if not seen in 90 days (was 30)
-  TICKER_NEW_IF_NOT_SEEN_DAYS: 90,
+  TICKER_NEW_IF_NOT_SEEN_DAYS: NOVELTY_NEW_TICKER_DAYS,
   TICKER_NEW_BONUS: 30,
-  
-  // Repetition penalty window: 30 days
-  REPETITION_PENALTY_WINDOW_DAYS: 30,
-  
-  // Positive novelty factors
+  REPETITION_PENALTY_WINDOW_DAYS: NOVELTY_PENALTY_WINDOW_DAYS,
   NEW_EDGE_TYPE_BONUS: 20,
   STYLE_TAG_CHANGED_BONUS: 10,
   NEW_CATALYST_WINDOW_BONUS: 10,
   NEW_THEME_INTERSECTION_BONUS: 10,
   NOVELTY_SCORE_CAP: 60,
-
-  // Repetition penalties (applied if seen in last 30 days with NO new edge)
   SEEN_IN_LAST_30_DAYS_NO_NEW_EDGE_PENALTY: -15,
   SEEN_MORE_THAN_3_TIMES_IN_90_DAYS_PENALTY: -10,
-  
-  // Per-appearance penalty
   REPETITION_PENALTY_PER_APPEARANCE: 0.15,
   MAX_REPETITION_PENALTY: 0.45,
   MIN_NOVELTY_SCORE: 0.10,
-
-  // Disclosure friction penalties
   MISSING_FILINGS_OR_TRANSCRIPT_PENALTY: -5,
   MISSING_PEER_SET_PENALTY: -3,
 } as const;
-
-// Backward compatibility
-export const NOVELTY_DECAY_DAYS = NOVELTY_SCORING.TICKER_NEW_IF_NOT_SEEN_DAYS;
 
 // ============================================================================
 // IDEA INBOX RANKING WEIGHTS
 // ============================================================================
 
+/**
+ * Ranking weights for Idea Inbox display
+ * Uses WEIGHTED SUM (additive), NOT multiplicative
+ */
 export const RANKING_WEIGHTS = {
-  NOVELTY_SCORE: 0.45,  // For display only
+  NOVELTY_SCORE: 0.45,
   EDGE_CLARITY: 0.15,
   VALUATION_TENSION: 0.10,
   CATALYST_TIMING: 0.10,
@@ -132,29 +178,19 @@ export const RANKING_WEIGHTS = {
 } as const;
 
 // ============================================================================
-// PROMOTION THRESHOLDS - CORRECTED WITH FULL STYLE-SPECIFIC LOGIC
+// PROMOTION THRESHOLDS
 // ============================================================================
 
 export const PROMOTION_THRESHOLDS = {
-  // Default threshold: 70/100
   DEFAULT_TOTAL_SCORE: 70,
-  
-  // Quality Compounder: can promote at 68 if edge_clarity >= 16/20
   QUALITY_OR_GARP_HIGH_EDGE_SCORE: 68,
-  HIGH_EDGE_THRESHOLD: 16, // out of 20
-  
-  // Cigar Butt: requires 72 unless downside_protection >= 13/15
+  HIGH_EDGE_THRESHOLD: 16,
   CIGAR_BUTT_DEFAULT_SCORE: 72,
-  CIGAR_BUTT_DOWNSIDE_PROTECTION_OVERRIDE_MIN: 13, // out of 15
-  
-  // Weekly quota adjustment: +3 when style overweight by >10pp
+  CIGAR_BUTT_DOWNSIDE_PROTECTION_OVERRIDE_MIN: 13,
   WEEKLY_QUOTA_OVERWEIGHT_PP_THRESHOLD: 0.10,
   WEEKLY_QUOTA_THRESHOLD_ADD: 3,
 } as const;
 
-/**
- * Get promotion threshold for a specific idea
- */
 export function getPromotionThreshold(
   styleTag: StyleTag,
   edgeClarity: number,
@@ -166,24 +202,19 @@ export function getPromotionThreshold(
   switch (styleTag) {
     case 'quality_compounder':
     case 'garp':
-      // Can promote at 68 if edge_clarity >= 16
       threshold = edgeClarity >= PROMOTION_THRESHOLDS.HIGH_EDGE_THRESHOLD
         ? PROMOTION_THRESHOLDS.QUALITY_OR_GARP_HIGH_EDGE_SCORE
         : PROMOTION_THRESHOLDS.DEFAULT_TOTAL_SCORE;
       break;
-      
     case 'cigar_butt':
-      // Requires 72 unless downside_protection >= 13
       threshold = downsideProtection >= PROMOTION_THRESHOLDS.CIGAR_BUTT_DOWNSIDE_PROTECTION_OVERRIDE_MIN
         ? PROMOTION_THRESHOLDS.DEFAULT_TOTAL_SCORE
         : PROMOTION_THRESHOLDS.CIGAR_BUTT_DEFAULT_SCORE;
       break;
-      
     default:
       threshold = PROMOTION_THRESHOLDS.DEFAULT_TOTAL_SCORE;
   }
   
-  // Add +3 if style is overweight by >10pp
   if (styleOverweightPp > PROMOTION_THRESHOLDS.WEEKLY_QUOTA_OVERWEIGHT_PP_THRESHOLD) {
     threshold += PROMOTION_THRESHOLDS.WEEKLY_QUOTA_THRESHOLD_ADD;
   }
@@ -202,8 +233,8 @@ export const LANE_A_SCORE_RANGES = {
   VALUATION_TENSION: { min: 0, max: 15 },
   CATALYST_CLARITY: { min: 0, max: 10 },
   INFORMATION_AVAILABILITY: { min: 0, max: 10 },
-  COMPLEXITY_PENALTY: { min: 0, max: 10 }, // subtracted
-  DISCLOSURE_FRICTION_PENALTY: { min: 0, max: 5 }, // subtracted
+  COMPLEXITY_PENALTY: { min: 0, max: 10 },
+  DISCLOSURE_FRICTION_PENALTY: { min: 0, max: 5 },
 } as const;
 
 export const SCORING_WEIGHTS = LANE_A_SCORE_RANGES;
@@ -218,24 +249,17 @@ export const DECAY_HALF_LIVES = {
 } as const;
 
 // ============================================================================
-// RESEARCH PACKET COMPLETION CRITERIA - NEW
+// RESEARCH PACKET COMPLETION CRITERIA
 // ============================================================================
 
-/**
- * Required fields for a ResearchPacket to be considered complete
- * If any are missing, packet is marked incomplete and does not count toward weekly limit
- */
 export const RESEARCH_PACKET_REQUIRED_FIELDS = [
-  'bull_base_bear',           // Bull/Base/Bear with probabilities and targets
-  'variant_perception',       // Variant perception statement
-  'historical_parallels',     // Historical parallels with base rate implication
-  'pre_mortem',              // Pre-mortem with early warnings
-  'monitoring_plan',         // Monitoring plan with KPIs and invalidation triggers
+  'bull_base_bear',
+  'variant_perception',
+  'historical_parallels',
+  'pre_mortem',
+  'monitoring_plan',
 ] as const;
 
-/**
- * Bull/Base/Bear scenario requirements
- */
 export const SCENARIO_REQUIREMENTS = {
   required_scenarios: ['bull', 'base', 'bear'] as const,
   probability_sum: 1.0,
@@ -243,90 +267,50 @@ export const SCENARIO_REQUIREMENTS = {
 } as const;
 
 // ============================================================================
-// REJECTION SHADOW - NEW
+// REJECTION SHADOW
 // ============================================================================
 
-/**
- * Rejection shadow configuration
- * Track why ideas were rejected for future reference
- */
 export const REJECTION_SHADOW = {
   retention_days: 365,
-  
-  // Blocking reasons prevent re-promotion
-  blocking_reasons: [
-    'fundamental_flaw',
-    'thesis_invalidated',
-    'permanent_impairment',
-  ] as const,
-  
-  // Soft reasons allow re-promotion with new edge
-  soft_reasons: [
-    'timing',
-    'valuation',
-    'position_sizing',
-    'style_quota',
-  ] as const,
+  blocking_reasons: ['fundamental_flaw', 'thesis_invalidated', 'permanent_impairment'] as const,
+  soft_reasons: ['timing', 'valuation', 'position_sizing', 'style_quota'] as const,
 } as const;
 
 // ============================================================================
-// WHAT IS NEW SINCE LAST TIME - NEW
+// WHAT IS NEW SINCE LAST TIME
 // ============================================================================
 
-/**
- * Configuration for "what is new since last time" tracking
- */
 export const WHATS_NEW_CONFIG = {
-  tracked_fields: [
-    'edge_type',
-    'catalysts',
-    'signposts',
-    'quick_metrics',
-    'one_sentence_hypothesis',
-  ] as const,
-  
-  numeric_change_threshold: 0.05, // 5%
-  text_change_threshold: 0.20,    // 20% Levenshtein distance
+  tracked_fields: ['edge_type', 'catalysts', 'signposts', 'quick_metrics', 'one_sentence_hypothesis'] as const,
+  numeric_change_threshold: 0.05,
+  text_change_threshold: 0.20,
 } as const;
 
 // ============================================================================
-// EVIDENCE AND TRACEABILITY - NEW
+// EVIDENCE AND TRACEABILITY
 // ============================================================================
 
-/**
- * Evidence requirements for numeric claims
- */
 export const EVIDENCE_REQUIREMENTS = {
   require_source_locator: true,
-  source_locator_pattern: /^[a-zA-Z0-9_-]+:(page|table):\d+$/,
+  source_locator_pattern: /^[a-zA-Z0-9_-]+:(page|table|section):\d+$/,
   max_snippet_length: 500,
   min_evidence_per_module: 3,
+  numeric_claim_requires_evidence: true,
+  estimate_label: 'estimate',
 } as const;
 
 // ============================================================================
-// THESIS VERSION IMMUTABILITY - NEW
+// THESIS VERSION IMMUTABILITY
 // ============================================================================
 
-/**
- * Thesis versioning configuration
- * Versions are immutable - never overwrite, always create new version
- */
 export const THESIS_VERSIONING = {
   immutable: true,
   max_versions_per_ticker: 50,
-  diff_fields: [
-    'one_sentence_hypothesis',
-    'mechanism',
-    'edge_type',
-    'catalysts',
-    'signposts',
-    'quick_metrics',
-    'score',
-  ] as const,
+  diff_fields: ['one_sentence_hypothesis', 'mechanism', 'edge_type', 'catalysts', 'signposts', 'quick_metrics', 'score'] as const,
 } as const;
 
 // ============================================================================
-// GATES CONFIGURATION - ENHANCED
+// GATES CONFIGURATION
 // ============================================================================
 
 export const GATES = {
@@ -337,50 +321,28 @@ export const GATES = {
     min_catalysts: 1,
     required_metrics: ['market_cap_usd', 'ev_to_ebitda'],
   },
-  
   gate_1_coherence: {
     mechanism_hypothesis_ratio: 2.0,
   },
-  
   gate_2_edge_claim: {
-    valid_edge_types: [
-      'variant_perception',
-      'unit_economics_inflection',
-      'mispriced_risk',
-      'reinvestment_runway',
-      'rerating_catalyst',
-      'underfollowed',
-    ] as const,
+    valid_edge_types: ['variant_perception', 'unit_economics_inflection', 'mispriced_risk', 'reinvestment_runway', 'rerating_catalyst', 'underfollowed'] as const,
     min_edge_types: 1,
   },
-  
-  // Gate 3: Downside Shape (Sanity) - ENFORCED
   gate_3_downside_shape: {
     max_net_debt_to_ebitda: 5.0,
     cigar_butt_max_net_debt_to_ebitda: 7.0,
     min_current_ratio: 0.8,
     require_positive_fcf_or_explanation: true,
   },
-  
-  // Gate 4: Style Fit - ENFORCED
   gate_4_style_fit: {
-    quality_compounder: {
-      min_ebit_margin: 0.10,
-      min_roic: 0.12,
-    },
-    garp: {
-      max_pe: 50,
-      max_ev_to_ebitda: 25,
-    },
-    cigar_butt: {
-      max_ev_to_ebitda: 15,
-      max_price_to_book: 2.0,
-    },
+    quality_compounder: { min_ebit_margin: 0.10, min_roic: 0.12 },
+    garp: { max_pe: 50, max_ev_to_ebitda: 25 },
+    cigar_butt: { max_ev_to_ebitda: 15, max_price_to_book: 2.0 },
   },
 } as const;
 
 // ============================================================================
-// NOTIFICATION CONFIGURATION - NEW
+// NOTIFICATION CONFIGURATION
 // ============================================================================
 
 export const NOTIFICATIONS = {
@@ -396,71 +358,32 @@ export const NOTIFICATIONS = {
 } as const;
 
 // ============================================================================
-// EDGE TYPES
+// ENUMS AND TYPES
 // ============================================================================
 
-export const EDGE_TYPES = [
-  'variant_perception',
-  'unit_economics_inflection',
-  'mispriced_risk',
-  'reinvestment_runway',
-  'rerating_catalyst',
-  'underfollowed',
-] as const;
+export const EDGE_TYPES = ['variant_perception', 'unit_economics_inflection', 'mispriced_risk', 'reinvestment_runway', 'rerating_catalyst', 'underfollowed'] as const;
 export type EdgeType = typeof EDGE_TYPES[number];
-
-// ============================================================================
-// IDEA STATUS
-// ============================================================================
 
 export const IDEA_STATUS = ['new', 'monitoring', 'promoted', 'rejected'] as const;
 export type IdeaStatus = typeof IDEA_STATUS[number];
 
-// ============================================================================
-// NEXT ACTIONS
-// ============================================================================
-
 export const NEXT_ACTIONS = ['monitor', 'request_data', 'promote_to_lane_b', 'drop'] as const;
 export type NextAction = typeof NEXT_ACTIONS[number];
-
-// ============================================================================
-// GATE RESULTS
-// ============================================================================
 
 export const GATE_RESULT = ['pass', 'fail'] as const;
 export type GateResult = typeof GATE_RESULT[number];
 
-// ============================================================================
-// RELIABILITY GRADES
-// ============================================================================
-
 export const RELIABILITY_GRADES = ['A', 'B', 'C'] as const;
 export type ReliabilityGrade = typeof RELIABILITY_GRADES[number];
-
-// ============================================================================
-// SOURCE TYPES
-// ============================================================================
 
 export const SOURCE_TYPES = ['filing', 'transcript', 'investor_deck', 'news', 'dataset'] as const;
 export type SourceType = typeof SOURCE_TYPES[number];
 
-// ============================================================================
-// CLAIM TYPES
-// ============================================================================
-
 export const CLAIM_TYPES = ['numeric', 'qualitative'] as const;
 export type ClaimType = typeof CLAIM_TYPES[number];
 
-// ============================================================================
-// RECOMMENDATION TYPES
-// ============================================================================
-
 export const RECOMMENDATION_TYPES = ['watch', 'deep_dive_more', 'starter_position', 'pass'] as const;
 export type RecommendationType = typeof RECOMMENDATION_TYPES[number];
-
-// ============================================================================
-// PROBABILITY/IMPACT LEVELS
-// ============================================================================
 
 export const PROBABILITY_LEVELS = ['low', 'medium', 'high'] as const;
 export type ProbabilityLevel = typeof PROBABILITY_LEVELS[number];
@@ -468,51 +391,32 @@ export type ProbabilityLevel = typeof PROBABILITY_LEVELS[number];
 export const IMPACT_LEVELS = ['low', 'medium', 'high'] as const;
 export type ImpactLevel = typeof IMPACT_LEVELS[number];
 
-// ============================================================================
-// VALUATION METHODS
-// ============================================================================
-
 export const VALUATION_METHODS = ['dcf', 'comps', 'sopt', 'precedent'] as const;
 export type ValuationMethod = typeof VALUATION_METHODS[number];
-
-// ============================================================================
-// FREQUENCY TYPES
-// ============================================================================
 
 export const FREQUENCY_TYPES = ['monthly', 'quarterly', 'event_driven'] as const;
 export type FrequencyType = typeof FREQUENCY_TYPES[number];
 
-// ============================================================================
-// DIRECTION TYPES
-// ============================================================================
-
 export const DIRECTION_TYPES = ['up', 'down', 'stable'] as const;
 export type DirectionType = typeof DIRECTION_TYPES[number];
 
-// ============================================================================
-// OUTCOME FAILURE MODES
-// ============================================================================
-
-export const FAILURE_MODES = [
-  'thesis_wrong',
-  'timing_wrong',
-  'valuation_wrong',
-  'risk_realized',
-  'management_execution',
-  'macro_regime',
-  'unknown',
-] as const;
+export const FAILURE_MODES = ['thesis_wrong', 'timing_wrong', 'valuation_wrong', 'risk_realized', 'management_execution', 'macro_regime', 'unknown'] as const;
 export type FailureMode = typeof FAILURE_MODES[number];
 
+export const RUN_TYPES = ['daily_discovery', 'daily_lane_b', 'monitoring_trigger', 'weekly_ic_bundle', 'monthly_process_audit'] as const;
+export type RunType = typeof RUN_TYPES[number];
+
 // ============================================================================
-// RUN TYPES
+// UNIVERSE CONFIGURATION
 // ============================================================================
 
-export const RUN_TYPES = [
-  'daily_discovery',
-  'daily_lane_b',
-  'monitoring_trigger',
-  'weekly_ic_bundle',
-  'monthly_process_audit',
-] as const;
-export type RunType = typeof RUN_TYPES[number];
+export const UNIVERSE_CONFIG = {
+  regions: ['US', 'EU', 'UK', 'JP', 'HK', 'AU', 'CA', 'BR', 'IN', 'KR', 'TW', 'SG'] as const,
+  min_market_cap_usd: 500_000_000,
+  max_market_cap_usd: 500_000_000_000,
+  min_avg_volume_usd: 1_000_000,
+  exclude_sectors: ['Financials', 'Utilities'] as const,
+  static_universe_file: 'universe.json',
+} as const;
+
+export type UniverseRegion = typeof UNIVERSE_CONFIG.regions[number];

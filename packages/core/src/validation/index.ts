@@ -15,6 +15,9 @@ import {
 // Re-export research packet completion
 export * from './research-packet-completion.js';
 
+// Re-export evidence traceability
+export * from './evidence-traceability.js';
+
 // ============================================================================
 // TYPES
 // ============================================================================

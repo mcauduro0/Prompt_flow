@@ -1,53 +1,109 @@
 /**
  * ARC Investment Factory - Job Scheduler
- * Cron-based job scheduling for DAG runs
+ * 
+ * Schedules (LOCKED):
+ * - Lane A (daily_discovery_run): 06:00 America/Sao_Paulo, Mon-Fri ONLY
+ * - Lane B (daily_lane_b): 08:00 America/Sao_Paulo, Mon-Fri ONLY
+ * - IC Bundle (weekly_ic_bundle): 08:00 America/Sao_Paulo, Fridays ONLY
+ * 
+ * IMPORTANT: All schedules use America/Sao_Paulo timezone (NOT UTC)
+ * IMPORTANT: All schedules are weekday-only (Mon-Fri)
  */
 
-import { runDailyDiscovery } from '../orchestrator/daily-discovery.js';
-import { runLaneB } from '../orchestrator/lane-b-runner.js';
-import { runICBundle } from '../orchestrator/ic-bundle.js';
+import {
+  SYSTEM_TIMEZONE,
+  SCHEDULES,
+  isWeekday,
+  getCurrentDateInTimezone,
+} from '@arc/shared';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface ScheduledJob {
   name: string;
   cron: string;
+  timezone: string;
+  weekdaysOnly: boolean;
   handler: () => Promise<void>;
   enabled: boolean;
+  lastRun?: Date;
+  lastResult?: 'success' | 'failure' | 'skipped';
+  lastError?: string;
 }
 
-const SCHEDULED_JOBS: ScheduledJob[] = [
-  {
-    name: 'daily_discovery',
-    cron: '0 6 * * *', // 06:00 UTC daily
-    handler: runDailyDiscovery,
-    enabled: true,
-  },
-  {
-    name: 'daily_lane_b',
-    cron: '0 7 * * *', // 07:00 UTC daily (after Lane A)
-    handler: runLaneB,
-    enabled: true,
-  },
-  {
-    name: 'weekly_ic_bundle',
-    cron: '0 8 * * 5', // 08:00 UTC every Friday
-    handler: runICBundle,
-    enabled: true,
-  },
-  {
-    name: 'monthly_process_audit',
-    cron: '0 9 1 * *', // 09:00 UTC first day of month
-    handler: async () => {
-      console.log('[scheduler] monthly_process_audit - placeholder');
-      // TODO: Implement process audit
+// ============================================================================
+// SCHEDULED JOBS (LOCKED PARAMETERS)
+// ============================================================================
+
+/**
+ * Create scheduled jobs with correct timezone and weekday constraints
+ */
+function createScheduledJobs(handlers: {
+  laneA: () => Promise<void>;
+  laneB: () => Promise<void>;
+  icBundle: () => Promise<void>;
+}): ScheduledJob[] {
+  return [
+    {
+      name: 'daily_discovery',
+      cron: SCHEDULES.LANE_A_CRON, // "0 6 * * 1-5" - 06:00 Mon-Fri
+      timezone: SYSTEM_TIMEZONE, // America/Sao_Paulo
+      weekdaysOnly: true,
+      handler: handlers.laneA,
+      enabled: true,
     },
-    enabled: false,
-  },
-];
+    {
+      name: 'daily_lane_b',
+      cron: SCHEDULES.LANE_B_CRON, // "0 8 * * 1-5" - 08:00 Mon-Fri
+      timezone: SYSTEM_TIMEZONE, // America/Sao_Paulo
+      weekdaysOnly: true,
+      handler: handlers.laneB,
+      enabled: true,
+    },
+    {
+      name: 'weekly_ic_bundle',
+      cron: SCHEDULES.IC_BUNDLE_CRON, // "0 8 * * 5" - 08:00 Fridays
+      timezone: SYSTEM_TIMEZONE, // America/Sao_Paulo
+      weekdaysOnly: true,
+      handler: handlers.icBundle,
+      enabled: true,
+    },
+  ];
+}
+
+// ============================================================================
+// TIMEZONE UTILITIES
+// ============================================================================
+
+/**
+ * Get current time in America/Sao_Paulo timezone
+ */
+function getCurrentTimeInSaoPaulo(): Date {
+  const now = new Date();
+  // Create a date string in Sao Paulo timezone
+  const saoPauloTime = now.toLocaleString('en-US', { timeZone: SYSTEM_TIMEZONE });
+  return new Date(saoPauloTime);
+}
+
+/**
+ * Check if current day is a weekday (Mon-Fri)
+ */
+function isWeekdayInSaoPaulo(): boolean {
+  const saoPauloDate = getCurrentTimeInSaoPaulo();
+  const day = saoPauloDate.getDay();
+  return day >= 1 && day <= 5; // Monday = 1, Friday = 5
+}
 
 /**
  * Parse cron expression and check if it matches current time
+ * Uses America/Sao_Paulo timezone
  */
-function matchesCron(cron: string, date: Date): boolean {
+function matchesCronInTimezone(cron: string, timezone: string): boolean {
+  const now = new Date();
+  const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+
   const [minute, hour, dayOfMonth, month, dayOfWeek] = cron.split(' ');
 
   const matches = (field: string, value: number): boolean => {
@@ -67,65 +123,205 @@ function matchesCron(cron: string, date: Date): boolean {
   };
 
   return (
-    matches(minute, date.getUTCMinutes()) &&
-    matches(hour, date.getUTCHours()) &&
-    matches(dayOfMonth, date.getUTCDate()) &&
-    matches(month, date.getUTCMonth() + 1) &&
-    matches(dayOfWeek, date.getUTCDay())
+    matches(minute, tzDate.getMinutes()) &&
+    matches(hour, tzDate.getHours()) &&
+    matches(dayOfMonth, tzDate.getDate()) &&
+    matches(month, tzDate.getMonth() + 1) &&
+    matches(dayOfWeek, tzDate.getDay())
   );
 }
 
-/**
- * Check and run due jobs
- */
-export async function checkAndRunJobs(): Promise<void> {
-  const now = new Date();
-  console.log(`[scheduler] Checking jobs at ${now.toISOString()}`);
+// ============================================================================
+// SCHEDULER CLASS
+// ============================================================================
 
-  for (const job of SCHEDULED_JOBS) {
-    if (!job.enabled) continue;
+export class JobScheduler {
+  private jobs: ScheduledJob[] = [];
+  private intervalId: NodeJS.Timeout | null = null;
+  private running: boolean = false;
 
-    if (matchesCron(job.cron, now)) {
-      console.log(`[scheduler] Running job: ${job.name}`);
-      try {
-        await job.handler();
-        console.log(`[scheduler] Completed job: ${job.name}`);
-      } catch (error) {
-        console.error(`[scheduler] Failed job: ${job.name}`, error);
+  constructor(handlers: {
+    laneA: () => Promise<void>;
+    laneB: () => Promise<void>;
+    icBundle: () => Promise<void>;
+  }) {
+    this.jobs = createScheduledJobs(handlers);
+  }
+
+  /**
+   * Check and run due jobs
+   */
+  async checkAndRunJobs(): Promise<void> {
+    const saoPauloTime = getCurrentTimeInSaoPaulo();
+    console.log(`[Scheduler] Checking jobs at ${saoPauloTime.toISOString()} (${SYSTEM_TIMEZONE})`);
+
+    for (const job of this.jobs) {
+      if (!job.enabled) continue;
+
+      // Check weekday constraint
+      if (job.weekdaysOnly && !isWeekdayInSaoPaulo()) {
+        continue; // Skip on weekends
+      }
+
+      // Check cron match in timezone
+      if (matchesCronInTimezone(job.cron, job.timezone)) {
+        console.log(`[Scheduler] Running job: ${job.name}`);
+        console.log(`[Scheduler] Schedule: ${job.cron} (${job.timezone})`);
+
+        try {
+          await job.handler();
+          job.lastRun = new Date();
+          job.lastResult = 'success';
+          console.log(`[Scheduler] Completed job: ${job.name}`);
+        } catch (error) {
+          job.lastRun = new Date();
+          job.lastResult = 'failure';
+          job.lastError = error instanceof Error ? error.message : String(error);
+          console.error(`[Scheduler] Failed job: ${job.name}`, error);
+        }
       }
     }
   }
-}
 
-/**
- * Start the scheduler (runs every minute)
- */
-export function startScheduler(): NodeJS.Timeout {
-  console.log('[scheduler] Starting scheduler...');
+  /**
+   * Start the scheduler (runs every minute)
+   */
+  start(): void {
+    if (this.running) {
+      console.log('[Scheduler] Already running');
+      return;
+    }
 
-  // Run immediately
-  checkAndRunJobs();
+    console.log(`\n${'='.repeat(60)}`);
+    console.log('[Scheduler] Starting job scheduler');
+    console.log(`[Scheduler] Timezone: ${SYSTEM_TIMEZONE}`);
+    console.log(`[Scheduler] Current time: ${getCurrentTimeInSaoPaulo().toISOString()}`);
+    console.log(`[Scheduler] Is weekday: ${isWeekdayInSaoPaulo()}`);
+    console.log(`${'='.repeat(60)}\n`);
 
-  // Then run every minute
-  return setInterval(checkAndRunJobs, 60 * 1000);
-}
+    // Log registered jobs
+    for (const job of this.jobs) {
+      console.log(`[Scheduler] ${job.name}: ${job.cron} (${job.timezone}) - ${job.enabled ? 'ENABLED' : 'DISABLED'}`);
+    }
 
-/**
- * Run a specific job by name
- */
-export async function runJob(name: string): Promise<void> {
-  const job = SCHEDULED_JOBS.find((j) => j.name === name);
-  if (!job) {
-    throw new Error(`Unknown job: ${name}`);
+    // Run immediately
+    this.checkAndRunJobs();
+
+    // Then run every minute
+    this.intervalId = setInterval(() => this.checkAndRunJobs(), 60 * 1000);
+    this.running = true;
+
+    console.log('\n[Scheduler] Scheduler started. Checking every minute...\n');
   }
 
-  console.log(`[scheduler] Manually running job: ${name}`);
-  await job.handler();
+  /**
+   * Stop the scheduler
+   */
+  stop(): void {
+    if (!this.running || !this.intervalId) {
+      console.log('[Scheduler] Not running');
+      return;
+    }
+
+    clearInterval(this.intervalId);
+    this.intervalId = null;
+    this.running = false;
+    console.log('[Scheduler] Scheduler stopped');
+  }
+
+  /**
+   * Run a specific job by name (manual trigger)
+   */
+  async runJob(name: string): Promise<void> {
+    const job = this.jobs.find((j) => j.name === name);
+    if (!job) {
+      throw new Error(`Unknown job: ${name}`);
+    }
+
+    console.log(`[Scheduler] Manually running job: ${name}`);
+    console.log(`[Scheduler] Bypassing schedule check`);
+
+    try {
+      await job.handler();
+      job.lastRun = new Date();
+      job.lastResult = 'success';
+      console.log(`[Scheduler] Completed job: ${name}`);
+    } catch (error) {
+      job.lastRun = new Date();
+      job.lastResult = 'failure';
+      job.lastError = error instanceof Error ? error.message : String(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get list of scheduled jobs with status
+   */
+  getScheduledJobs(): Array<{
+    name: string;
+    cron: string;
+    timezone: string;
+    enabled: boolean;
+    lastRun?: string;
+    lastResult?: string;
+  }> {
+    return this.jobs.map((job) => ({
+      name: job.name,
+      cron: job.cron,
+      timezone: job.timezone,
+      enabled: job.enabled,
+      lastRun: job.lastRun?.toISOString(),
+      lastResult: job.lastResult,
+    }));
+  }
 }
 
-/**
- * Get list of scheduled jobs
- */
-export function getScheduledJobs(): Array<{ name: string; cron: string; enabled: boolean }> {
-  return SCHEDULED_JOBS.map(({ name, cron, enabled }) => ({ name, cron, enabled }));
+// ============================================================================
+// LEGACY EXPORTS (for backward compatibility)
+// ============================================================================
+
+let defaultScheduler: JobScheduler | null = null;
+
+export function startScheduler(): NodeJS.Timeout {
+  console.log('[Scheduler] Starting scheduler with placeholder handlers...');
+  console.log('[Scheduler] WARNING: Use JobScheduler class for production');
+
+  // Placeholder handlers
+  defaultScheduler = new JobScheduler({
+    laneA: async () => {
+      console.log('[Scheduler] Lane A placeholder - import actual handler');
+    },
+    laneB: async () => {
+      console.log('[Scheduler] Lane B placeholder - import actual handler');
+    },
+    icBundle: async () => {
+      console.log('[Scheduler] IC Bundle placeholder - import actual handler');
+    },
+  });
+
+  defaultScheduler.start();
+
+  // Return interval ID for compatibility
+  return setInterval(() => {}, 60 * 1000);
 }
+
+export async function runJob(name: string): Promise<void> {
+  if (!defaultScheduler) {
+    throw new Error('Scheduler not started. Call startScheduler() first.');
+  }
+  await defaultScheduler.runJob(name);
+}
+
+export function getScheduledJobs(): Array<{ name: string; cron: string; enabled: boolean }> {
+  if (!defaultScheduler) {
+    return [];
+  }
+  return defaultScheduler.getScheduledJobs().map(({ name, cron, enabled }) => ({
+    name,
+    cron,
+    enabled,
+  }));
+}
+
+export { JobScheduler };
+export default JobScheduler;

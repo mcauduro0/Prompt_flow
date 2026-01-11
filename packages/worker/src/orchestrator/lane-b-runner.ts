@@ -1,668 +1,573 @@
 /**
- * ARC Investment Factory - Lane B Runner
- * Deep research workflow for promoted ideas
+ * ARC Investment Factory - Lane B Deep Research Runner
  * 
  * DAG: daily_lane_b
- * Schedule: 07:00 UTC daily (after Lane A)
+ * Schedule: 08:00 America/Sao_Paulo, weekdays only (Mon-Fri)
  * 
- * Nodes:
- * 1. fetch_promoted_ideas → 2. parallel_research → 3. assemble_packets →
- * 4. generate_decision_briefs → 5. persist_packets → 6. notify_user
+ * Limits (LOCKED):
+ * - Daily target: 2-3 promotions
+ * - Daily hard cap: 4 promotions
+ * - Weekly hard cap: 10 deep packets (NOT 15)
+ * - Max concurrency: 3
+ * 
+ * Flow:
+ * 1. check_weekly_quota (MUST check before processing)
+ * 2. fetch_promoted_ideas (from Lane A inbox)
+ * 3. parallel_research (7 agents, max 3 concurrent)
+ * 4. assemble_packets (with completion check)
+ * 5. generate_decision_briefs
+ * 6. persist_packets (immutable versions)
+ * 7. notify_user
  */
 
-import { DAGRunner, createDAGRunner, type DAGContext, type DAGNode } from './dag-runner.js';
-import { createDataAggregator, type DataAggregator, type AggregatedCompanyData } from '@arc/retriever';
-import { createResilientClient, type ResilientLLMClient } from '@arc/llm-client';
+import { v4 as uuidv4 } from 'uuid';
 import {
-  ResearchPacketSchema,
-  DecisionBriefSchema,
-  validateWithRetry,
-  type ResearchPacket,
-  type DecisionBrief,
-} from '@arc/core';
-import {
-  ideasRepository,
-  researchPacketsRepository,
-  evidenceRepository,
-  runsRepository,
-  type Idea,
-  type NewResearchPacket,
-  type NewEvidence,
-} from '@arc/database';
-import {
-  createBusinessModelAgent,
-  createIndustryMoatAgent,
-  createFinancialForensicsAgent,
-  createCapitalAllocationAgent,
-  createManagementQualityAgent,
-  createValuationAgent,
-  createRiskStressAgent,
-  type AgentContext,
-  type AgentResult,
-} from '../agents/index.js';
-import { LANE_B_DAILY_LIMIT, LANE_B_WEEKLY_LIMIT } from '@arc/shared';
+  LANE_B_DAILY_PROMOTIONS_TARGET,
+  LANE_B_DAILY_PROMOTIONS_MAX,
+  LANE_B_WEEKLY_DEEP_PACKETS,
+  LANE_B_MAX_CONCURRENCY,
+  LANE_B_TIME_PER_NAME_MIN,
+  LANE_B_TIME_PER_NAME_MAX,
+  RESEARCH_PACKET_REQUIRED_FIELDS,
+  SCENARIO_REQUIREMENTS,
+  THESIS_VERSIONING,
+  SYSTEM_TIMEZONE,
+  SCHEDULES,
+  type StyleTag,
+} from '@arc/shared';
+import type { ResearchPacket, DecisionBrief } from '@arc/core';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-interface LaneBContext extends DAGContext {
-  data: {
-    promotedIdeas: Idea[];
-    researchResults: Map<string, ResearchModules>;
-    assembledPackets: Map<string, AssembledPacket>;
-    decisionBriefs: Map<string, DecisionBrief>;
-    persistedPackets: ResearchPacket[];
-    asOf: string;
-  };
-}
-
-interface ResearchModules {
-  ideaId: string;
-  ticker: string;
-  business?: any;
-  industry_moat?: any;
-  financial_forensics?: any;
-  capital_allocation?: any;
-  management_quality?: any;
-  valuation?: any;
-  risk_stress?: any;
+export interface LaneBContext {
+  runId: string;
+  asOf: string;
+  startedAt: Date;
+  weeklyUsed: number;
+  weeklyRemaining: number;
+  dailyUsed: number;
+  dailyRemaining: number;
+  promotedIdeas: PromotedIdea[];
+  researchResults: Map<string, AgentResult[]>;
+  assembledPackets: ResearchPacket[];
+  completePackets: ResearchPacket[];
+  incompletePackets: ResearchPacket[];
+  decisionBriefs: DecisionBrief[];
   errors: string[];
-  evidenceIds: string[];
 }
 
-interface AssembledPacket {
+export interface PromotedIdea {
   ideaId: string;
   ticker: string;
-  version: number;
-  modules: ResearchModules;
-  synthesizedView: string;
-  keyRisks: string[];
-  keyOpportunities: string[];
+  companyName: string;
+  styleTag: StyleTag;
+  hypothesis: string;
+  edgeClarity: number;
+  downsideProtection: number;
+  totalScore: number;
+  promotedAt: Date;
+}
+
+export interface AgentResult {
+  agentName: string;
+  module: string;
+  content: Record<string, unknown>;
+  evidenceRefs: EvidenceRef[];
+  completedAt: Date;
+  durationMs: number;
+}
+
+export interface EvidenceRef {
+  sourceType: 'filing' | 'transcript' | 'investor_deck' | 'news' | 'dataset';
+  sourceId: string;
+  sourceLocator: string;
+  snippet: string;
+  claimType: 'numeric' | 'qualitative';
+  isEstimate?: boolean;
+}
+
+export interface WeeklyQuota {
+  weekStart: Date;
+  weekEnd: Date;
+  used: number;
+  remaining: number;
+  completedPacketIds: string[];
 }
 
 // ============================================================================
-// PROMPTS
-// ============================================================================
-
-const SYNTHESIS_SYSTEM_PROMPT = `You are an expert investment analyst synthesizing research modules into a coherent investment view.
-
-Your task is to create a synthesized view that:
-1. Integrates findings from all research modules
-2. Identifies key risks and opportunities
-3. Provides a clear investment recommendation framework
-4. Highlights areas of uncertainty or required further research
-
-Be concise but comprehensive. Focus on actionable insights.`;
-
-const DECISION_BRIEF_SYSTEM_PROMPT = `You are an expert investment analyst creating a decision brief for an investment committee.
-
-Your task is to create a concise, actionable decision brief that:
-1. Summarizes the investment thesis in 2-3 sentences
-2. Provides a clear verdict (strong_buy, buy, hold, sell, strong_sell)
-3. Lists key risks with probability and impact
-4. Identifies specific catalysts and their timing
-5. Provides clear position sizing guidance
-
-The brief should be suitable for presentation to a senior investment committee.
-Output ONLY valid JSON matching the DecisionBrief schema.`;
-
-// ============================================================================
-// DAG NODES
+// WEEKLY QUOTA CHECK (MUST RUN FIRST)
 // ============================================================================
 
 /**
- * Node 1: Fetch Promoted Ideas
- * Get ideas that have been promoted to Lane B
+ * Check weekly quota BEFORE processing any ideas
+ * Weekly hard cap is 10 (NOT 15)
  */
-function createFetchPromotedIdeasNode(): DAGNode {
+export async function checkWeeklyQuota(
+  getWeeklyStats: () => Promise<{ used: number; completedIds: string[] }>
+): Promise<WeeklyQuota> {
+  const now = new Date();
+  
+  // Get start of current week (Monday)
+  const weekStart = new Date(now);
+  const day = weekStart.getDay();
+  const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1);
+  weekStart.setDate(diff);
+  weekStart.setHours(0, 0, 0, 0);
+  
+  // Get end of current week (Friday EOD)
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 4);
+  weekEnd.setHours(23, 59, 59, 999);
+  
+  const stats = await getWeeklyStats();
+  const remaining = LANE_B_WEEKLY_DEEP_PACKETS - stats.used;
+  
+  console.log(`[Quota] Week: ${weekStart.toISOString().split('T')[0]} to ${weekEnd.toISOString().split('T')[0]}`);
+  console.log(`[Quota] Weekly: ${stats.used}/${LANE_B_WEEKLY_DEEP_PACKETS} used, ${remaining} remaining`);
+  
   return {
-    id: 'fetch_promoted_ideas',
-    name: 'Fetch Promoted Ideas',
-    dependencies: [],
-    timeout: 30000,
-    retries: 2,
-    execute: async (context: DAGContext) => {
-      const ctx = context as LaneBContext;
-      console.log('[fetch_promoted_ideas] Fetching promoted ideas...');
-
-      // Check weekly limit
-      const weeklyCount = await researchPacketsRepository.countWeeklyPackets();
-      if (weeklyCount >= LANE_B_WEEKLY_LIMIT) {
-        console.log(`[fetch_promoted_ideas] Weekly limit reached (${weeklyCount}/${LANE_B_WEEKLY_LIMIT})`);
-        ctx.data.promotedIdeas = [];
-        return;
-      }
-
-      const remainingSlots = Math.min(
-        LANE_B_DAILY_LIMIT,
-        LANE_B_WEEKLY_LIMIT - weeklyCount
-      );
-
-      // Get promoted ideas that don't have research packets yet
-      const promotedIdeas = await ideasRepository.getByStatus('promoted', remainingSlots);
-
-      // Filter out ideas that already have packets
-      const ideasNeedingResearch: Idea[] = [];
-      for (const idea of promotedIdeas) {
-        const existingPacket = await researchPacketsRepository.getByIdeaId(idea.ideaId);
-        if (!existingPacket) {
-          ideasNeedingResearch.push(idea);
-        }
-      }
-
-      ctx.data.promotedIdeas = ideasNeedingResearch.slice(0, remainingSlots);
-      ctx.data.asOf = new Date().toISOString().split('T')[0];
-      ctx.data.researchResults = new Map();
-      ctx.data.assembledPackets = new Map();
-      ctx.data.decisionBriefs = new Map();
-
-      console.log(`[fetch_promoted_ideas] Found ${ctx.data.promotedIdeas.length} ideas for research`);
-    },
+    weekStart,
+    weekEnd,
+    used: stats.used,
+    remaining: Math.max(0, remaining),
+    completedPacketIds: stats.completedIds,
   };
 }
 
 /**
- * Node 2: Parallel Research
- * Run all research agents in parallel for each idea
+ * Check daily quota
  */
-function createParallelResearchNode(
-  aggregator: DataAggregator,
-  llmClient: ResilientLLMClient
-): DAGNode {
+export async function checkDailyQuota(
+  getDailyStats: () => Promise<{ used: number }>
+): Promise<{ used: number; remaining: number }> {
+  const stats = await getDailyStats();
+  const remaining = LANE_B_DAILY_PROMOTIONS_MAX - stats.used;
+  
+  console.log(`[Quota] Daily: ${stats.used}/${LANE_B_DAILY_PROMOTIONS_MAX} used, ${remaining} remaining`);
+  
   return {
-    id: 'parallel_research',
-    name: 'Parallel Research',
-    dependencies: ['fetch_promoted_ideas'],
-    timeout: 900000, // 15 minutes
-    retries: 1,
-    execute: async (context: DAGContext) => {
-      const ctx = context as LaneBContext;
-      console.log('[parallel_research] Running research agents...');
-
-      if (ctx.data.promotedIdeas.length === 0) {
-        console.log('[parallel_research] No ideas to research');
-        return;
-      }
-
-      // Create agents
-      const businessAgent = createBusinessModelAgent(llmClient, aggregator);
-      const industryMoatAgent = createIndustryMoatAgent(llmClient, aggregator);
-      const financialForensicsAgent = createFinancialForensicsAgent(llmClient, aggregator);
-      const capitalAllocationAgent = createCapitalAllocationAgent(llmClient, aggregator);
-      const managementQualityAgent = createManagementQualityAgent(llmClient, aggregator);
-      const valuationAgent = createValuationAgent(llmClient, aggregator);
-      const riskStressAgent = createRiskStressAgent(llmClient, aggregator);
-
-      // Process each idea
-      for (const idea of ctx.data.promotedIdeas) {
-        console.log(`[parallel_research] Researching ${idea.ticker}...`);
-
-        try {
-          // Fetch comprehensive company data
-          const companyData = await aggregator.getCompanyData(idea.ticker, {
-            includeFinancials: true,
-            includePriceHistory: true,
-            includeNews: true,
-            includeFilings: true,
-            priceHistoryDays: 365,
-          });
-
-          const agentContext: AgentContext = {
-            ticker: idea.ticker,
-            companyData,
-            evidenceIds: [],
-          };
-
-          // Run all agents in parallel
-          const [
-            businessResult,
-            industryResult,
-            forensicsResult,
-            capitalResult,
-            managementResult,
-            valuationResult,
-            riskResult,
-          ] = await Promise.all([
-            businessAgent.run(agentContext),
-            industryMoatAgent.run(agentContext),
-            financialForensicsAgent.run(agentContext),
-            capitalAllocationAgent.run(agentContext),
-            managementQualityAgent.run(agentContext),
-            valuationAgent.run(agentContext),
-            riskStressAgent.run({
-              ...agentContext,
-              previousModules: {
-                business: businessResult?.data,
-                industry_moat: industryResult?.data,
-                financial_forensics: forensicsResult?.data,
-              },
-            }),
-          ]);
-
-          // Collect all evidence IDs
-          const allEvidenceIds = [
-            ...businessResult.evidenceIds,
-            ...industryResult.evidenceIds,
-            ...forensicsResult.evidenceIds,
-            ...capitalResult.evidenceIds,
-            ...managementResult.evidenceIds,
-            ...valuationResult.evidenceIds,
-            ...riskResult.evidenceIds,
-          ];
-
-          // Collect errors
-          const errors: string[] = [];
-          if (!businessResult.success) errors.push(`Business: ${businessResult.errors?.join(', ')}`);
-          if (!industryResult.success) errors.push(`Industry: ${industryResult.errors?.join(', ')}`);
-          if (!forensicsResult.success) errors.push(`Forensics: ${forensicsResult.errors?.join(', ')}`);
-          if (!capitalResult.success) errors.push(`Capital: ${capitalResult.errors?.join(', ')}`);
-          if (!managementResult.success) errors.push(`Management: ${managementResult.errors?.join(', ')}`);
-          if (!valuationResult.success) errors.push(`Valuation: ${valuationResult.errors?.join(', ')}`);
-          if (!riskResult.success) errors.push(`Risk: ${riskResult.errors?.join(', ')}`);
-
-          ctx.data.researchResults.set(idea.ideaId, {
-            ideaId: idea.ideaId,
-            ticker: idea.ticker,
-            business: businessResult.data,
-            industry_moat: industryResult.data,
-            financial_forensics: forensicsResult.data,
-            capital_allocation: capitalResult.data,
-            management_quality: managementResult.data,
-            valuation: valuationResult.data,
-            risk_stress: riskResult.data,
-            errors,
-            evidenceIds: allEvidenceIds,
-          });
-
-          console.log(`[parallel_research] Completed ${idea.ticker} with ${errors.length} errors`);
-        } catch (error) {
-          console.error(`[parallel_research] Failed ${idea.ticker}:`, error);
-          ctx.data.researchResults.set(idea.ideaId, {
-            ideaId: idea.ideaId,
-            ticker: idea.ticker,
-            errors: [(error as Error).message],
-            evidenceIds: [],
-          });
-        }
-      }
-
-      console.log(`[parallel_research] Completed research for ${ctx.data.researchResults.size} ideas`);
-    },
-  };
-}
-
-/**
- * Node 3: Assemble Packets
- * Synthesize research modules into coherent packets
- */
-function createAssemblePacketsNode(llmClient: ResilientLLMClient): DAGNode {
-  return {
-    id: 'assemble_packets',
-    name: 'Assemble Packets',
-    dependencies: ['parallel_research'],
-    timeout: 300000, // 5 minutes
-    retries: 1,
-    execute: async (context: DAGContext) => {
-      const ctx = context as LaneBContext;
-      console.log('[assemble_packets] Assembling research packets...');
-
-      for (const [ideaId, modules] of ctx.data.researchResults) {
-        // Skip if too many errors
-        if (modules.errors.length > 4) {
-          console.log(`[assemble_packets] Skipping ${modules.ticker} due to too many errors`);
-          continue;
-        }
-
-        try {
-          // Get existing packet version
-          const existingPackets = await researchPacketsRepository.getAllVersionsByIdeaId(ideaId);
-          const version = existingPackets.length + 1;
-
-          // Generate synthesized view
-          const synthesisPrompt = `Synthesize the following research modules for ${modules.ticker}:
-
-BUSINESS MODEL:
-${JSON.stringify(modules.business, null, 2)}
-
-INDUSTRY & MOAT:
-${JSON.stringify(modules.industry_moat, null, 2)}
-
-FINANCIAL FORENSICS:
-${JSON.stringify(modules.financial_forensics, null, 2)}
-
-CAPITAL ALLOCATION:
-${JSON.stringify(modules.capital_allocation, null, 2)}
-
-MANAGEMENT QUALITY:
-${JSON.stringify(modules.management_quality, null, 2)}
-
-VALUATION:
-${JSON.stringify(modules.valuation, null, 2)}
-
-RISK & STRESS:
-${JSON.stringify(modules.risk_stress, null, 2)}
-
-Provide:
-1. A synthesized investment view (2-3 paragraphs)
-2. Top 3 key risks
-3. Top 3 key opportunities
-
-Output as JSON: { "synthesized_view": "...", "key_risks": ["...", "...", "..."], "key_opportunities": ["...", "...", "..."] }`;
-
-          const synthesisResponse = await llmClient.complete({
-            messages: [
-              { role: 'system', content: SYNTHESIS_SYSTEM_PROMPT },
-              { role: 'user', content: synthesisPrompt },
-            ],
-            maxTokens: 2000,
-            temperature: 0.5,
-            jsonMode: true,
-          });
-
-          const synthesis = JSON.parse(synthesisResponse.content);
-
-          ctx.data.assembledPackets.set(ideaId, {
-            ideaId,
-            ticker: modules.ticker,
-            version,
-            modules,
-            synthesizedView: synthesis.synthesized_view,
-            keyRisks: synthesis.key_risks,
-            keyOpportunities: synthesis.key_opportunities,
-          });
-
-          console.log(`[assemble_packets] Assembled packet for ${modules.ticker} v${version}`);
-        } catch (error) {
-          console.error(`[assemble_packets] Failed to assemble ${modules.ticker}:`, error);
-        }
-      }
-
-      console.log(`[assemble_packets] Assembled ${ctx.data.assembledPackets.size} packets`);
-    },
-  };
-}
-
-/**
- * Node 4: Generate Decision Briefs
- * Create IC-ready decision briefs
- */
-function createGenerateDecisionBriefsNode(llmClient: ResilientLLMClient): DAGNode {
-  return {
-    id: 'generate_decision_briefs',
-    name: 'Generate Decision Briefs',
-    dependencies: ['assemble_packets'],
-    timeout: 300000, // 5 minutes
-    retries: 1,
-    execute: async (context: DAGContext) => {
-      const ctx = context as LaneBContext;
-      console.log('[generate_decision_briefs] Generating decision briefs...');
-
-      for (const [ideaId, packet] of ctx.data.assembledPackets) {
-        try {
-          // Get the original idea for context
-          const idea = ctx.data.promotedIdeas.find((i) => i.ideaId === ideaId);
-          if (!idea) continue;
-
-          const briefPrompt = `Generate a decision brief for ${packet.ticker}:
-
-ORIGINAL HYPOTHESIS:
-${idea.oneSentenceHypothesis}
-
-SYNTHESIZED VIEW:
-${packet.synthesizedView}
-
-KEY RISKS:
-${packet.keyRisks.map((r, i) => `${i + 1}. ${r}`).join('\n')}
-
-KEY OPPORTUNITIES:
-${packet.keyOpportunities.map((o, i) => `${i + 1}. ${o}`).join('\n')}
-
-VALUATION:
-${JSON.stringify(packet.modules.valuation, null, 2)}
-
-CATALYSTS (from original idea):
-${JSON.stringify(idea.catalysts, null, 2)}
-
-Generate a DecisionBrief JSON with:
-- idea_id: "${ideaId}"
-- ticker: "${packet.ticker}"
-- as_of: "${ctx.data.asOf}"
-- verdict: one of (strong_buy, buy, hold, sell, strong_sell)
-- thesis_summary: 2-3 sentence summary
-- key_risks: array of { risk, probability, impact, mitigant }
-- catalysts: array of { name, window, probability, expected_impact }
-- position_sizing: { conviction_1_5, max_position_pct, entry_strategy, exit_triggers }
-
-JSON output:`;
-
-          const result = await validateWithRetry({
-            schema: DecisionBriefSchema,
-            schemaName: 'DecisionBrief',
-            initialResponse: await llmClient.complete({
-              messages: [
-                { role: 'system', content: DECISION_BRIEF_SYSTEM_PROMPT },
-                { role: 'user', content: briefPrompt },
-              ],
-              maxTokens: 2000,
-              temperature: 0.5,
-              jsonMode: true,
-            }).then((r) => r.content),
-            retryFn: async (fixPrompt) => {
-              return llmClient.complete({
-                messages: [
-                  { role: 'system', content: DECISION_BRIEF_SYSTEM_PROMPT },
-                  { role: 'user', content: briefPrompt },
-                  { role: 'assistant', content: 'I will fix the JSON output.' },
-                  { role: 'user', content: fixPrompt },
-                ],
-                maxTokens: 2000,
-                temperature: 0.3,
-                jsonMode: true,
-              }).then((r) => r.content);
-            },
-          });
-
-          if (result.success && result.data) {
-            ctx.data.decisionBriefs.set(ideaId, result.data);
-            console.log(`[generate_decision_briefs] Generated brief for ${packet.ticker}`);
-          } else {
-            console.error(`[generate_decision_briefs] Validation failed for ${packet.ticker}`);
-          }
-        } catch (error) {
-          console.error(`[generate_decision_briefs] Failed for ${packet.ticker}:`, error);
-        }
-      }
-
-      console.log(`[generate_decision_briefs] Generated ${ctx.data.decisionBriefs.size} briefs`);
-    },
-  };
-}
-
-/**
- * Node 5: Persist Packets
- * Save research packets and evidence to database
- */
-function createPersistPacketsNode(): DAGNode {
-  return {
-    id: 'persist_packets',
-    name: 'Persist Packets',
-    dependencies: ['generate_decision_briefs'],
-    timeout: 60000,
-    retries: 2,
-    execute: async (context: DAGContext) => {
-      const ctx = context as LaneBContext;
-      console.log('[persist_packets] Persisting research packets...');
-
-      const persistedPackets: ResearchPacket[] = [];
-
-      for (const [ideaId, packet] of ctx.data.assembledPackets) {
-        const brief = ctx.data.decisionBriefs.get(ideaId);
-        if (!brief) {
-          console.log(`[persist_packets] Skipping ${packet.ticker} - no decision brief`);
-          continue;
-        }
-
-        try {
-          // Create research packet
-          const newPacket: NewResearchPacket = {
-            ideaId,
-            ticker: packet.ticker,
-            version: packet.version,
-            asOf: ctx.data.asOf,
-            modules: {
-              business: packet.modules.business,
-              industry_moat: packet.modules.industry_moat,
-              financial_forensics: packet.modules.financial_forensics,
-              capital_allocation: packet.modules.capital_allocation,
-              management_quality: packet.modules.management_quality,
-              valuation: packet.modules.valuation,
-              risk_stress: packet.modules.risk_stress,
-            },
-            synthesizedView: packet.synthesizedView,
-            decisionBrief: brief,
-            status: 'complete',
-          };
-
-          const savedPacket = await researchPacketsRepository.create(newPacket);
-          persistedPackets.push(savedPacket as ResearchPacket);
-
-          // Create evidence records
-          const evidenceRecords: NewEvidence[] = packet.modules.evidenceIds.map((evId, idx) => ({
-            ideaId,
-            ticker: packet.ticker,
-            sourceType: 'api' as const,
-            sourceId: evId,
-            snippet: `Evidence ${idx + 1} for ${packet.ticker}`,
-            retrievedAt: new Date(),
-          }));
-
-          if (evidenceRecords.length > 0) {
-            await evidenceRepository.createMany(evidenceRecords);
-          }
-
-          // Update idea status to 'researched'
-          await ideasRepository.updateStatus(ideaId, 'monitoring');
-
-          console.log(`[persist_packets] Persisted packet for ${packet.ticker}`);
-        } catch (error) {
-          console.error(`[persist_packets] Failed to persist ${packet.ticker}:`, error);
-        }
-      }
-
-      ctx.data.persistedPackets = persistedPackets;
-      console.log(`[persist_packets] Persisted ${persistedPackets.length} packets`);
-    },
-  };
-}
-
-/**
- * Node 6: Notify User
- * Send notification about completed research
- */
-function createNotifyUserNode(): DAGNode {
-  return {
-    id: 'notify_user',
-    name: 'Notify User',
-    dependencies: ['persist_packets'],
-    timeout: 10000,
-    retries: 1,
-    execute: async (context: DAGContext) => {
-      const ctx = context as LaneBContext;
-      console.log('[notify_user] Preparing Lane B notification...');
-
-      const summary = {
-        date: ctx.data.asOf,
-        totalPackets: ctx.data.persistedPackets.length,
-        byVerdict: {
-          strong_buy: 0,
-          buy: 0,
-          hold: 0,
-          sell: 0,
-          strong_sell: 0,
-        },
-        packets: ctx.data.persistedPackets.map((p) => ({
-          ticker: p.ticker,
-          version: p.version,
-          verdict: (p.decisionBrief as any)?.verdict ?? 'unknown',
-          thesis: (p.decisionBrief as any)?.thesis_summary ?? '',
-        })),
-      };
-
-      // Count by verdict
-      for (const packet of ctx.data.persistedPackets) {
-        const verdict = (packet.decisionBrief as any)?.verdict;
-        if (verdict && verdict in summary.byVerdict) {
-          summary.byVerdict[verdict as keyof typeof summary.byVerdict]++;
-        }
-      }
-
-      console.log('[notify_user] Lane B Summary:', JSON.stringify(summary, null, 2));
-
-      // TODO: Implement actual notification (email, Slack, etc.)
-    },
+    used: stats.used,
+    remaining: Math.max(0, remaining),
   };
 }
 
 // ============================================================================
-// MAIN EXPORT
+// RESEARCH PACKET COMPLETION CHECK
 // ============================================================================
 
 /**
- * Create and configure the Lane B DAG
+ * Check if a ResearchPacket is complete
+ * Incomplete packets do NOT count toward weekly limit
  */
-export function createLaneBDAG(): DAGRunner {
-  const aggregator = createDataAggregator();
-  const llmClient = createResilientClient();
-  const dag = createDAGRunner('daily_lane_b');
+export function checkPacketCompletion(packet: Partial<ResearchPacket>): {
+  isComplete: boolean;
+  missingFields: string[];
+  validationErrors: string[];
+} {
+  const missingFields: string[] = [];
+  const validationErrors: string[] = [];
 
-  dag.addNodes([
-    createFetchPromotedIdeasNode(),
-    createParallelResearchNode(aggregator, llmClient),
-    createAssemblePacketsNode(llmClient),
-    createGenerateDecisionBriefsNode(llmClient),
-    createPersistPacketsNode(),
-    createNotifyUserNode(),
-  ]);
-
-  return dag;
-}
-
-/**
- * Run Lane B
- */
-export async function runLaneB(): Promise<void> {
-  // Check idempotency
-  const alreadyRan = await runsRepository.existsForToday('daily_lane_b');
-  if (alreadyRan) {
-    console.log('[lane_b] Already ran today, skipping');
-    return;
+  // Check required fields
+  for (const field of RESEARCH_PACKET_REQUIRED_FIELDS) {
+    if (!packet[field as keyof ResearchPacket]) {
+      missingFields.push(field);
+    }
   }
 
-  // Create run record
-  const run = await runsRepository.create({
-    runType: 'daily_lane_b',
-    status: 'running',
-  });
+  // Validate bull_base_bear scenarios
+  if (packet.bull_base_bear) {
+    const scenarios = packet.bull_base_bear as Record<string, { probability?: number; description?: string }>;
+    
+    // Check all required scenarios exist
+    for (const scenario of SCENARIO_REQUIREMENTS.required_scenarios) {
+      if (!scenarios[scenario]) {
+        validationErrors.push(`Missing ${scenario} scenario`);
+      }
+    }
+    
+    // Check probabilities sum to 1.0
+    const probSum = 
+      (scenarios.bull?.probability || 0) +
+      (scenarios.base?.probability || 0) +
+      (scenarios.bear?.probability || 0);
+    
+    if (Math.abs(probSum - SCENARIO_REQUIREMENTS.probability_sum) > SCENARIO_REQUIREMENTS.probability_tolerance) {
+      validationErrors.push(`Scenario probabilities sum to ${probSum}, expected ${SCENARIO_REQUIREMENTS.probability_sum}`);
+    }
+  }
+
+  // Validate monitoring_plan has KPIs and invalidation triggers
+  const monitoringPlan = packet.monitoring_plan as { kpis?: unknown[]; invalidation_triggers?: unknown[] } | undefined;
+  if (monitoringPlan) {
+    if (!monitoringPlan.kpis || monitoringPlan.kpis.length === 0) {
+      validationErrors.push('Monitoring plan missing KPIs');
+    }
+    if (!monitoringPlan.invalidation_triggers || monitoringPlan.invalidation_triggers.length === 0) {
+      validationErrors.push('Monitoring plan missing invalidation triggers');
+    }
+  }
+
+  const isComplete = missingFields.length === 0 && validationErrors.length === 0;
+
+  return { isComplete, missingFields, validationErrors };
+}
+
+// ============================================================================
+// IMMUTABLE VERSIONING
+// ============================================================================
+
+/**
+ * Create new immutable version of a packet
+ * NEVER overwrite existing versions
+ */
+export function createImmutableVersion(
+  packet: ResearchPacket,
+  previousVersion?: ResearchPacket
+): ResearchPacket & { version: number; previousVersionId?: string } {
+  const prevVer = previousVersion as (ResearchPacket & { version?: number }) | undefined;
+  const version = prevVer?.version ? prevVer.version + 1 : 1;
+  
+  // Generate diff if previous version exists
+  let diff: Record<string, { old: unknown; new: unknown }> | undefined;
+  if (previousVersion && THESIS_VERSIONING.immutable) {
+    diff = {};
+    for (const field of THESIS_VERSIONING.diff_fields) {
+      const oldVal = previousVersion[field as keyof ResearchPacket];
+      const newVal = packet[field as keyof ResearchPacket];
+      if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+        diff[field] = { old: oldVal, new: newVal };
+      }
+    }
+  }
+
+  return {
+    ...packet,
+    packet_id: uuidv4(),
+    version,
+    previousVersionId: previousVersion?.packet_id,
+    version_diff: diff,
+    created_at: new Date().toISOString(),
+  } as ResearchPacket & { version: number; previousVersionId?: string };
+}
+
+// ============================================================================
+// PARALLEL RESEARCH EXECUTION
+// ============================================================================
+
+const RESEARCH_AGENTS = [
+  'business_model',
+  'industry_moat',
+  'financial_forensics',
+  'capital_allocation',
+  'management_quality',
+  'valuation',
+  'risk_stress',
+] as const;
+
+type AgentName = typeof RESEARCH_AGENTS[number];
+
+/**
+ * Run research agents in parallel with concurrency limit
+ */
+export async function runParallelResearch(
+  idea: PromotedIdea,
+  runAgent: (agentName: AgentName, idea: PromotedIdea) => Promise<AgentResult>
+): Promise<AgentResult[]> {
+  const results: AgentResult[] = [];
+  const agentQueue = [...RESEARCH_AGENTS];
+  const inProgress: Promise<void>[] = [];
+
+  console.log(`[Research] Starting parallel research for ${idea.ticker}`);
+  console.log(`[Research] Agents: ${RESEARCH_AGENTS.join(', ')}`);
+  console.log(`[Research] Max concurrency: ${LANE_B_MAX_CONCURRENCY}`);
+
+  const processAgent = async (agentName: AgentName): Promise<void> => {
+    const result = await runAgent(agentName, idea);
+    results.push(result);
+  };
+
+  while (agentQueue.length > 0 || inProgress.length > 0) {
+    // Start new agents up to concurrency limit
+    while (inProgress.length < LANE_B_MAX_CONCURRENCY && agentQueue.length > 0) {
+      const agentName = agentQueue.shift()!;
+      const promise = processAgent(agentName);
+      inProgress.push(promise);
+    }
+
+    // Wait for at least one to complete
+    if (inProgress.length > 0) {
+      await Promise.race(inProgress);
+      // Remove completed promises
+      const stillPending: Promise<void>[] = [];
+      for (const p of inProgress) {
+        const status = await Promise.race([
+          p.then(() => 'done' as const),
+          Promise.resolve('pending' as const),
+        ]);
+        if (status === 'pending') {
+          stillPending.push(p);
+        }
+      }
+      inProgress.length = 0;
+      inProgress.push(...stillPending);
+    }
+  }
+
+  console.log(`[Research] Completed ${results.length}/${RESEARCH_AGENTS.length} agents for ${idea.ticker}`);
+  return results;
+}
+
+// ============================================================================
+// MAIN LANE B RUN
+// ============================================================================
+
+export interface LaneBRunOptions {
+  dryRun?: boolean;
+  forceRun?: boolean;
+}
+
+export interface LaneBDependencies {
+  getWeeklyStats: () => Promise<{ used: number; completedIds: string[] }>;
+  getDailyStats: () => Promise<{ used: number }>;
+  getPromotedIdeas: (limit: number) => Promise<PromotedIdea[]>;
+  runAgent: (agentName: AgentName, idea: PromotedIdea) => Promise<AgentResult>;
+  persistPacket: (packet: ResearchPacket) => Promise<void>;
+  notifyUser: (briefs: DecisionBrief[]) => Promise<void>;
+}
+
+export async function runDailyLaneB(
+  options: LaneBRunOptions = {},
+  deps: LaneBDependencies
+): Promise<LaneBContext> {
+  const runId = uuidv4();
+  const asOf = new Date().toISOString().split('T')[0];
+
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`[Lane B] Run ${runId}`);
+  console.log(`[Lane B] Date: ${asOf}`);
+  console.log(`[Lane B] Timezone: ${SYSTEM_TIMEZONE}`);
+  console.log(`[Lane B] Schedule: ${SCHEDULES.LANE_B_CRON} (weekdays only)`);
+  console.log(`[Lane B] Daily target: ${LANE_B_DAILY_PROMOTIONS_TARGET}, cap: ${LANE_B_DAILY_PROMOTIONS_MAX}`);
+  console.log(`[Lane B] Weekly cap: ${LANE_B_WEEKLY_DEEP_PACKETS}`);
+  console.log(`${'='.repeat(60)}\n`);
+
+  const context: LaneBContext = {
+    runId,
+    asOf,
+    startedAt: new Date(),
+    weeklyUsed: 0,
+    weeklyRemaining: 0,
+    dailyUsed: 0,
+    dailyRemaining: 0,
+    promotedIdeas: [],
+    researchResults: new Map(),
+    assembledPackets: [],
+    completePackets: [],
+    incompletePackets: [],
+    decisionBriefs: [],
+    errors: [],
+  };
 
   try {
-    const dag = createLaneBDAG();
-    const result = await dag.run();
+    // Step 1: Check weekly quota FIRST
+    console.log('[Step 1] Checking weekly quota...');
+    const weeklyQuota = await checkWeeklyQuota(deps.getWeeklyStats);
+    context.weeklyUsed = weeklyQuota.used;
+    context.weeklyRemaining = weeklyQuota.remaining;
 
-    // Update run record
-    await runsRepository.updateStatus(
-      run.runId,
-      result.status === 'completed' ? 'completed' : 'failed',
-      result.errors.length > 0 ? JSON.stringify(result.errors) : undefined
+    if (weeklyQuota.remaining === 0 && !options.forceRun) {
+      console.log(`[Step 1] Weekly quota exhausted (${LANE_B_WEEKLY_DEEP_PACKETS}/${LANE_B_WEEKLY_DEEP_PACKETS}). Skipping.`);
+      return context;
+    }
+    console.log(`[Step 1] Weekly quota OK: ${weeklyQuota.remaining} remaining\n`);
+
+    // Step 2: Check daily quota
+    console.log('[Step 2] Checking daily quota...');
+    const dailyQuota = await checkDailyQuota(deps.getDailyStats);
+    context.dailyUsed = dailyQuota.used;
+    context.dailyRemaining = dailyQuota.remaining;
+
+    if (dailyQuota.remaining === 0 && !options.forceRun) {
+      console.log(`[Step 2] Daily quota exhausted (${LANE_B_DAILY_PROMOTIONS_MAX}/${LANE_B_DAILY_PROMOTIONS_MAX}). Skipping.`);
+      return context;
+    }
+    console.log(`[Step 2] Daily quota OK: ${dailyQuota.remaining} remaining\n`);
+
+    // Calculate how many to process
+    const toProcess = Math.min(
+      dailyQuota.remaining,
+      weeklyQuota.remaining,
+      LANE_B_DAILY_PROMOTIONS_TARGET
     );
+    console.log(`[Lane B] Will process up to ${toProcess} ideas\n`);
 
-    await runsRepository.updatePayload(run.runId, {
-      completedNodes: result.completedNodes,
-      failedNodes: result.failedNodes,
-      durationMs: result.durationMs,
-    });
+    // Step 3: Fetch promoted ideas
+    console.log('[Step 3] Fetching promoted ideas...');
+    context.promotedIdeas = await deps.getPromotedIdeas(toProcess);
+    console.log(`[Step 3] Found ${context.promotedIdeas.length} promoted ideas\n`);
+
+    if (context.promotedIdeas.length === 0) {
+      console.log('[Lane B] No promoted ideas to process. Done.');
+      return context;
+    }
+
+    // Step 4: Run parallel research for each idea
+    console.log('[Step 4] Running parallel research...');
+    for (const idea of context.promotedIdeas) {
+      console.log(`\n[Research] Processing ${idea.ticker}...`);
+      const startTime = Date.now();
+      
+      const results = await runParallelResearch(idea, deps.runAgent);
+      context.researchResults.set(idea.ideaId, results);
+      
+      const duration = (Date.now() - startTime) / 1000 / 60;
+      console.log(`[Research] ${idea.ticker} completed in ${duration.toFixed(1)} minutes`);
+      
+      if (duration < LANE_B_TIME_PER_NAME_MIN) {
+        console.log(`[Research] Warning: ${idea.ticker} completed faster than minimum (${LANE_B_TIME_PER_NAME_MIN}min)`);
+      }
+      if (duration > LANE_B_TIME_PER_NAME_MAX) {
+        console.log(`[Research] Warning: ${idea.ticker} exceeded maximum time (${LANE_B_TIME_PER_NAME_MAX}min)`);
+      }
+    }
+    console.log(`\n[Step 4] Research completed for ${context.promotedIdeas.length} ideas\n`);
+
+    // Step 5: Assemble packets and check completion
+    console.log('[Step 5] Assembling packets and checking completion...');
+    for (const idea of context.promotedIdeas) {
+      const results = context.researchResults.get(idea.ideaId) || [];
+      
+      const packet = assemblePacket(idea, results);
+      context.assembledPackets.push(packet);
+      
+      const { isComplete, missingFields, validationErrors } = checkPacketCompletion(packet);
+      
+      if (isComplete) {
+        context.completePackets.push(packet);
+        console.log(`  [COMPLETE] ${idea.ticker}`);
+      } else {
+        context.incompletePackets.push(packet);
+        console.log(`  [INCOMPLETE] ${idea.ticker}: Missing ${missingFields.join(', ')}`);
+        if (validationErrors.length > 0) {
+          console.log(`    Errors: ${validationErrors.join(', ')}`);
+        }
+      }
+    }
+    console.log(`\n[Step 5] Complete: ${context.completePackets.length}, Incomplete: ${context.incompletePackets.length}\n`);
+
+    // Step 6: Generate decision briefs for complete packets
+    console.log('[Step 6] Generating decision briefs...');
+    for (const packet of context.completePackets) {
+      const brief = generateDecisionBrief(packet);
+      context.decisionBriefs.push(brief);
+    }
+    console.log(`[Step 6] Generated ${context.decisionBriefs.length} decision briefs\n`);
+
+    // Step 7: Persist packets (immutable versions)
+    if (!options.dryRun) {
+      console.log('[Step 7] Persisting packets (immutable)...');
+      for (const packet of context.completePackets) {
+        const versionedPacket = createImmutableVersion(packet);
+        await deps.persistPacket(versionedPacket);
+        console.log(`  [PERSISTED] ${packet.ticker} v${(versionedPacket as any).version}`);
+      }
+      console.log(`[Step 7] Persisted ${context.completePackets.length} packets\n`);
+    }
+
+    // Step 8: Notify user
+    console.log('[Step 8] Sending notification...');
+    if (!options.dryRun && context.decisionBriefs.length > 0) {
+      await deps.notifyUser(context.decisionBriefs);
+    }
+    console.log('[Step 8] Notification sent\n');
+
+    console.log(`${'='.repeat(60)}`);
+    console.log(`[Lane B] Run ${runId} COMPLETED`);
+    console.log(`[Lane B] Complete packets: ${context.completePackets.length}`);
+    console.log(`[Lane B] Incomplete packets: ${context.incompletePackets.length}`);
+    console.log(`${'='.repeat(60)}\n`);
+
   } catch (error) {
-    await runsRepository.updateStatus(run.runId, 'failed', (error as Error).message);
-    throw error;
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    context.errors.push(errorMsg);
+    console.error(`[Lane B] Run ${runId} FAILED: ${errorMsg}`);
   }
+
+  return context;
 }
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+function assemblePacket(idea: PromotedIdea, results: AgentResult[]): ResearchPacket {
+  const packet: Record<string, unknown> = {
+    packet_id: uuidv4(),
+    idea_id: idea.ideaId,
+    ticker: idea.ticker,
+    company_name: idea.companyName,
+    style_tag: idea.styleTag,
+    as_of: new Date().toISOString().split('T')[0],
+    status: 'draft',
+  };
+
+  for (const result of results) {
+    switch (result.agentName) {
+      case 'business_model':
+        packet.business_model = result.content;
+        break;
+      case 'industry_moat':
+        packet.industry_moat = result.content;
+        break;
+      case 'financial_forensics':
+        packet.financial_forensics = result.content;
+        break;
+      case 'capital_allocation':
+        packet.capital_allocation = result.content;
+        break;
+      case 'management_quality':
+        packet.management_quality = result.content;
+        break;
+      case 'valuation':
+        packet.valuation = result.content;
+        break;
+      case 'risk_stress':
+        packet.risk_stress = result.content;
+        break;
+    }
+  }
+
+  packet.evidence_refs = results.flatMap(r => r.evidenceRefs.map(e => ({
+    source_type: e.sourceType,
+    source_id: e.sourceId,
+    source_locator: e.sourceLocator,
+    snippet: e.snippet,
+    claim_type: e.claimType,
+    is_estimate: e.isEstimate,
+  })));
+
+  return packet as unknown as ResearchPacket;
+}
+
+function generateDecisionBrief(packet: ResearchPacket): DecisionBrief {
+  const bullBaseBear = packet.bull_base_bear as Record<string, { description?: string }> | undefined;
+  
+  return {
+    brief_id: uuidv4(),
+    packet_id: packet.packet_id,
+    ticker: packet.ticker,
+    company_name: packet.company_name,
+    style_tag: packet.style_tag,
+    recommendation: 'watch',
+    one_liner: `${packet.ticker} - ${packet.company_name}`,
+    bull_case_summary: bullBaseBear?.bull?.description || '',
+    bear_case_summary: bullBaseBear?.bear?.description || '',
+    key_metrics: [],
+    next_steps: [],
+    generated_at: new Date().toISOString(),
+  } as DecisionBrief;
+}
+
+export default runDailyLaneB;

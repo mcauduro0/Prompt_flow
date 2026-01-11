@@ -2,17 +2,23 @@
   "name": "@arc/worker",
   "version": "1.0.0",
   "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "daily:discovery": "tsx src/jobs/daily-discovery-run.ts",
-    "daily:lane-b": "tsx src/jobs/daily-lane-b-deep-research.ts",
-    "weekly:bundle": "tsx src/jobs/weekly-ic-bundle.ts",
-    "monthly:audit": "tsx src/jobs/monthly-process-audit.ts"
+    "discovery": "tsx src/cli.ts discovery",
+    "lane-b": "tsx src/cli.ts lane-b",
+    "ic-bundle": "tsx src/cli.ts ic-bundle"
   },
   "dependencies": {
     "bullmq": "^5.1.0",

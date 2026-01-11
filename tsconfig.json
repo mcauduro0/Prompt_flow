@@ -13,15 +13,7 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "paths": {
-      "@arc/core": ["./packages/core/src"],
-      "@arc/database": ["./packages/database/src"],
-      "@arc/llm-client": ["./packages/llm-client/src"],
-      "@arc/retriever": ["./packages/retriever/src"],
-      "@arc/worker": ["./packages/worker/src"],
-      "@arc/shared": ["./packages/shared/src"]
-    }
+    "noEmit": true
   },
   "exclude": ["node_modules", "dist", ".next"]
 }
