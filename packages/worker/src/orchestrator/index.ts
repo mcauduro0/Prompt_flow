@@ -5,5 +5,6 @@
 
 export * from './dag-runner.js';
 export * from './daily-discovery.js';
+export * from './daily-discovery-v2.js';
 export * from './lane-b-runner.js';
 export * from './ic-bundle.js';

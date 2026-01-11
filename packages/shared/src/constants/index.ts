@@ -1,7 +1,38 @@
 /**
  * ARC Investment Factory - Operating Parameters
  * These constants are locked as per the Build Pack specification
+ * CORRECTED to match exact Operating Parameters
  */
+
+// ============================================================================
+// TIMEZONE AND SCHEDULE - CORRECTED
+// ============================================================================
+
+/**
+ * System timezone - America/Sao_Paulo
+ */
+export const SYSTEM_TIMEZONE = 'America/Sao_Paulo';
+
+/**
+ * Schedule configuration
+ * All times in America/Sao_Paulo timezone
+ * Weekdays only (Monday-Friday)
+ */
+export const SCHEDULES = {
+  // Lane A: Daily Discovery - 06:00 Sao Paulo, weekdays only
+  LANE_A_CRON: '0 6 * * 1-5', // Mon-Fri at 06:00
+  LANE_A_HOUR: 6,
+  
+  // Lane B: Deep Research - 08:00 Sao Paulo, weekdays only
+  LANE_B_CRON: '0 8 * * 1-5', // Mon-Fri at 08:00
+  LANE_B_HOUR: 8,
+  
+  // IC Bundle: Weekly - 09:00 Sao Paulo, Fridays only
+  IC_BUNDLE_CRON: '0 9 * * 5', // Friday at 09:00
+  
+  // Monthly Process Audit - 10:00 Sao Paulo, first weekday of month
+  MONTHLY_AUDIT_CRON: '0 10 1-7 * 1-5',
+} as const;
 
 // ============================================================================
 // CORE OPERATING PARAMETERS (LOCKED)
@@ -16,11 +47,13 @@ export const OPERATING_PARAMETERS = {
   // Daily Lane A targets
   LANE_A_DAILY_TARGET: 120,
   LANE_A_DAILY_CAP: 200,
+  LANE_A_LLM_ENRICHMENT_CAP: 200, // Max tickers for LLM after novelty shortlist
+  LANE_A_EXPLORATION_RATE: 0.10, // 10% random exploration
 
-  // Lane B targets
-  LANE_B_DAILY_PROMOTIONS_TARGET: 3,
-  LANE_B_DAILY_PROMOTIONS_MAX: 4,
-  LANE_B_WEEKLY_DEEP_PACKETS: 10,
+  // Lane B targets - CORRECTED
+  LANE_B_DAILY_PROMOTIONS_TARGET: 3,  // Target: 2-3
+  LANE_B_DAILY_PROMOTIONS_MAX: 4,     // Hard cap: 4
+  LANE_B_WEEKLY_DEEP_PACKETS: 10,     // Weekly hard cap: 10 (was 15)
   LANE_B_MAX_CONCURRENCY: 3,
 
   // Time budgets (in minutes)
@@ -29,6 +62,11 @@ export const OPERATING_PARAMETERS = {
   LANE_B_TIME_PER_NAME_MIN: 60,
   LANE_B_TIME_PER_NAME_MAX: 120,
 } as const;
+
+// Backward compatibility exports
+export const LANE_A_DAILY_LIMIT = OPERATING_PARAMETERS.LANE_A_DAILY_TARGET;
+export const LANE_B_DAILY_LIMIT = OPERATING_PARAMETERS.LANE_B_DAILY_PROMOTIONS_MAX;
+export const LANE_B_WEEKLY_LIMIT = OPERATING_PARAMETERS.LANE_B_WEEKLY_DEEP_PACKETS;
 
 // ============================================================================
 // STYLE MIX TARGETS (WEEKLY)
@@ -44,34 +82,47 @@ export const STYLE_TAGS = ['quality_compounder', 'garp', 'cigar_butt'] as const;
 export type StyleTag = typeof STYLE_TAGS[number];
 
 // ============================================================================
-// NOVELTY SCORING PARAMETERS
+// NOVELTY SCORING PARAMETERS - CORRECTED
 // ============================================================================
 
 export const NOVELTY_SCORING = {
-  // Positive novelty factors
+  // Ticker is "new" if not seen in 90 days (was 30)
   TICKER_NEW_IF_NOT_SEEN_DAYS: 90,
   TICKER_NEW_BONUS: 30,
+  
+  // Repetition penalty window: 30 days
+  REPETITION_PENALTY_WINDOW_DAYS: 30,
+  
+  // Positive novelty factors
   NEW_EDGE_TYPE_BONUS: 20,
   STYLE_TAG_CHANGED_BONUS: 10,
   NEW_CATALYST_WINDOW_BONUS: 10,
   NEW_THEME_INTERSECTION_BONUS: 10,
   NOVELTY_SCORE_CAP: 60,
 
-  // Repetition penalties
+  // Repetition penalties (applied if seen in last 30 days with NO new edge)
   SEEN_IN_LAST_30_DAYS_NO_NEW_EDGE_PENALTY: -15,
   SEEN_MORE_THAN_3_TIMES_IN_90_DAYS_PENALTY: -10,
+  
+  // Per-appearance penalty
+  REPETITION_PENALTY_PER_APPEARANCE: 0.15,
+  MAX_REPETITION_PENALTY: 0.45,
+  MIN_NOVELTY_SCORE: 0.10,
 
   // Disclosure friction penalties
   MISSING_FILINGS_OR_TRANSCRIPT_PENALTY: -5,
   MISSING_PEER_SET_PENALTY: -3,
 } as const;
 
+// Backward compatibility
+export const NOVELTY_DECAY_DAYS = NOVELTY_SCORING.TICKER_NEW_IF_NOT_SEEN_DAYS;
+
 // ============================================================================
 // IDEA INBOX RANKING WEIGHTS
 // ============================================================================
 
 export const RANKING_WEIGHTS = {
-  NOVELTY_SCORE: 0.45,
+  NOVELTY_SCORE: 0.45,  // For display only
   EDGE_CLARITY: 0.15,
   VALUATION_TENSION: 0.10,
   CATALYST_TIMING: 0.10,
@@ -81,18 +132,64 @@ export const RANKING_WEIGHTS = {
 } as const;
 
 // ============================================================================
-// PROMOTION THRESHOLDS
+// PROMOTION THRESHOLDS - CORRECTED WITH FULL STYLE-SPECIFIC LOGIC
 // ============================================================================
 
 export const PROMOTION_THRESHOLDS = {
+  // Default threshold: 70/100
   DEFAULT_TOTAL_SCORE: 70,
+  
+  // Quality Compounder: can promote at 68 if edge_clarity >= 16/20
   QUALITY_OR_GARP_HIGH_EDGE_SCORE: 68,
   HIGH_EDGE_THRESHOLD: 16, // out of 20
+  
+  // Cigar Butt: requires 72 unless downside_protection >= 13/15
   CIGAR_BUTT_DEFAULT_SCORE: 72,
   CIGAR_BUTT_DOWNSIDE_PROTECTION_OVERRIDE_MIN: 13, // out of 15
+  
+  // Weekly quota adjustment: +3 when style overweight by >10pp
   WEEKLY_QUOTA_OVERWEIGHT_PP_THRESHOLD: 0.10,
   WEEKLY_QUOTA_THRESHOLD_ADD: 3,
 } as const;
+
+/**
+ * Get promotion threshold for a specific idea
+ */
+export function getPromotionThreshold(
+  styleTag: StyleTag,
+  edgeClarity: number,
+  downsideProtection: number,
+  styleOverweightPp: number
+): number {
+  let threshold: number;
+  
+  switch (styleTag) {
+    case 'quality_compounder':
+    case 'garp':
+      // Can promote at 68 if edge_clarity >= 16
+      threshold = edgeClarity >= PROMOTION_THRESHOLDS.HIGH_EDGE_THRESHOLD
+        ? PROMOTION_THRESHOLDS.QUALITY_OR_GARP_HIGH_EDGE_SCORE
+        : PROMOTION_THRESHOLDS.DEFAULT_TOTAL_SCORE;
+      break;
+      
+    case 'cigar_butt':
+      // Requires 72 unless downside_protection >= 13
+      threshold = downsideProtection >= PROMOTION_THRESHOLDS.CIGAR_BUTT_DOWNSIDE_PROTECTION_OVERRIDE_MIN
+        ? PROMOTION_THRESHOLDS.DEFAULT_TOTAL_SCORE
+        : PROMOTION_THRESHOLDS.CIGAR_BUTT_DEFAULT_SCORE;
+      break;
+      
+    default:
+      threshold = PROMOTION_THRESHOLDS.DEFAULT_TOTAL_SCORE;
+  }
+  
+  // Add +3 if style is overweight by >10pp
+  if (styleOverweightPp > PROMOTION_THRESHOLDS.WEEKLY_QUOTA_OVERWEIGHT_PP_THRESHOLD) {
+    threshold += PROMOTION_THRESHOLDS.WEEKLY_QUOTA_THRESHOLD_ADD;
+  }
+  
+  return threshold;
+}
 
 // ============================================================================
 // LANE A SCORE COMPONENTS (0-100 additive)
@@ -109,6 +206,8 @@ export const LANE_A_SCORE_RANGES = {
   DISCLOSURE_FRICTION_PENALTY: { min: 0, max: 5 }, // subtracted
 } as const;
 
+export const SCORING_WEIGHTS = LANE_A_SCORE_RANGES;
+
 // ============================================================================
 // DECAY HALF-LIVES (in days)
 // ============================================================================
@@ -116,6 +215,184 @@ export const LANE_A_SCORE_RANGES = {
 export const DECAY_HALF_LIVES = {
   LANE_A_INTERPRETATION: 45,
   LANE_B_THESIS: 120,
+} as const;
+
+// ============================================================================
+// RESEARCH PACKET COMPLETION CRITERIA - NEW
+// ============================================================================
+
+/**
+ * Required fields for a ResearchPacket to be considered complete
+ * If any are missing, packet is marked incomplete and does not count toward weekly limit
+ */
+export const RESEARCH_PACKET_REQUIRED_FIELDS = [
+  'bull_base_bear',           // Bull/Base/Bear with probabilities and targets
+  'variant_perception',       // Variant perception statement
+  'historical_parallels',     // Historical parallels with base rate implication
+  'pre_mortem',              // Pre-mortem with early warnings
+  'monitoring_plan',         // Monitoring plan with KPIs and invalidation triggers
+] as const;
+
+/**
+ * Bull/Base/Bear scenario requirements
+ */
+export const SCENARIO_REQUIREMENTS = {
+  required_scenarios: ['bull', 'base', 'bear'] as const,
+  probability_sum: 1.0,
+  probability_tolerance: 0.01,
+} as const;
+
+// ============================================================================
+// REJECTION SHADOW - NEW
+// ============================================================================
+
+/**
+ * Rejection shadow configuration
+ * Track why ideas were rejected for future reference
+ */
+export const REJECTION_SHADOW = {
+  retention_days: 365,
+  
+  // Blocking reasons prevent re-promotion
+  blocking_reasons: [
+    'fundamental_flaw',
+    'thesis_invalidated',
+    'permanent_impairment',
+  ] as const,
+  
+  // Soft reasons allow re-promotion with new edge
+  soft_reasons: [
+    'timing',
+    'valuation',
+    'position_sizing',
+    'style_quota',
+  ] as const,
+} as const;
+
+// ============================================================================
+// WHAT IS NEW SINCE LAST TIME - NEW
+// ============================================================================
+
+/**
+ * Configuration for "what is new since last time" tracking
+ */
+export const WHATS_NEW_CONFIG = {
+  tracked_fields: [
+    'edge_type',
+    'catalysts',
+    'signposts',
+    'quick_metrics',
+    'one_sentence_hypothesis',
+  ] as const,
+  
+  numeric_change_threshold: 0.05, // 5%
+  text_change_threshold: 0.20,    // 20% Levenshtein distance
+} as const;
+
+// ============================================================================
+// EVIDENCE AND TRACEABILITY - NEW
+// ============================================================================
+
+/**
+ * Evidence requirements for numeric claims
+ */
+export const EVIDENCE_REQUIREMENTS = {
+  require_source_locator: true,
+  source_locator_pattern: /^[a-zA-Z0-9_-]+:(page|table):\d+$/,
+  max_snippet_length: 500,
+  min_evidence_per_module: 3,
+} as const;
+
+// ============================================================================
+// THESIS VERSION IMMUTABILITY - NEW
+// ============================================================================
+
+/**
+ * Thesis versioning configuration
+ * Versions are immutable - never overwrite, always create new version
+ */
+export const THESIS_VERSIONING = {
+  immutable: true,
+  max_versions_per_ticker: 50,
+  diff_fields: [
+    'one_sentence_hypothesis',
+    'mechanism',
+    'edge_type',
+    'catalysts',
+    'signposts',
+    'quick_metrics',
+    'score',
+  ] as const,
+} as const;
+
+// ============================================================================
+// GATES CONFIGURATION - ENHANCED
+// ============================================================================
+
+export const GATES = {
+  gate_0_data_sufficiency: {
+    min_hypothesis_length: 50,
+    min_mechanism_length: 100,
+    min_signposts: 2,
+    min_catalysts: 1,
+    required_metrics: ['market_cap_usd', 'ev_to_ebitda'],
+  },
+  
+  gate_1_coherence: {
+    mechanism_hypothesis_ratio: 2.0,
+  },
+  
+  gate_2_edge_claim: {
+    valid_edge_types: [
+      'variant_perception',
+      'unit_economics_inflection',
+      'mispriced_risk',
+      'reinvestment_runway',
+      'rerating_catalyst',
+      'underfollowed',
+    ] as const,
+    min_edge_types: 1,
+  },
+  
+  // Gate 3: Downside Shape (Sanity) - ENFORCED
+  gate_3_downside_shape: {
+    max_net_debt_to_ebitda: 5.0,
+    cigar_butt_max_net_debt_to_ebitda: 7.0,
+    min_current_ratio: 0.8,
+    require_positive_fcf_or_explanation: true,
+  },
+  
+  // Gate 4: Style Fit - ENFORCED
+  gate_4_style_fit: {
+    quality_compounder: {
+      min_ebit_margin: 0.10,
+      min_roic: 0.12,
+    },
+    garp: {
+      max_pe: 50,
+      max_ev_to_ebitda: 25,
+    },
+    cigar_butt: {
+      max_ev_to_ebitda: 15,
+      max_price_to_book: 2.0,
+    },
+  },
+} as const;
+
+// ============================================================================
+// NOTIFICATION CONFIGURATION - NEW
+// ============================================================================
+
+export const NOTIFICATIONS = {
+  email: {
+    enabled: true,
+    daily_inbox_subject: 'ARC Daily Inbox - {{date}}',
+    weekly_bundle_subject: 'ARC Weekly IC Bundle - Week {{week}}',
+  },
+  whatsapp: {
+    enabled: false,
+    webhook_url: process.env.WHATSAPP_WEBHOOK_URL,
+  },
 } as const;
 
 // ============================================================================

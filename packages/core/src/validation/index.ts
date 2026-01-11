@@ -12,6 +12,9 @@ import {
   DecisionBriefSchema,
 } from '../schemas/index.js';
 
+// Re-export research packet completion
+export * from './research-packet-completion.js';
+
 // ============================================================================
 // TYPES
 // ============================================================================

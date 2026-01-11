@@ -117,6 +117,30 @@ export const ideas = pgTable('ideas', {
   status: ideaStatusEnum('status').default('new').notNull(),
   rejectionReason: text('rejection_reason'),
   nextAction: text('next_action'),
+  // NEW: Immutable versioning
+  version: integer('version').default(1).notNull(),
+  // NEW: Company name
+  companyName: text('company_name'),
+  // NEW: Rejection shadow tracking
+  rejectionShadow: jsonb('rejection_shadow').$type<{
+    rejected_at: string;
+    reason: string;
+    is_blocking: boolean;
+    prior_idea_id?: string;
+    notes?: string;
+  } | null>(),
+  // NEW: What's new since last time
+  whatsNewSinceLastTime: jsonb('whats_new_since_last_time').$type<Array<{
+    category: string;
+    description: string;
+    evidence?: string;
+    detected_at?: string;
+  }>>(),
+  // NEW: Novelty flags
+  isNewTicker: boolean('is_new_ticker').default(false),
+  isExploration: boolean('is_exploration').default(false),
+  // NEW: Promotion timestamp
+  promotedAt: timestamp('promoted_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
