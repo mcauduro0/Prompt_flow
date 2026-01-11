@@ -4,8 +4,8 @@
  * Schedules (LOCKED - America/Sao_Paulo timezone):
  * - Lane A (daily_discovery_run): 06:00 Mon-Fri
  * - Lane B (daily_lane_b): 08:00 Mon-Fri
- * - Weekly QA Report: 17:00 Fridays
- * - IC Bundle (weekly_ic_bundle): 18:00 Fridays (after QA Report)
+ * - Weekly QA Report: 18:00 Fridays (per governance spec)
+ * - IC Bundle (weekly_ic_bundle): 19:00 Fridays (after QA Report)
  * 
  * IMPORTANT: All schedules use America/Sao_Paulo timezone (NOT UTC)
  * IMPORTANT: All schedules are weekday-only (Mon-Fri)
@@ -51,11 +51,11 @@ const CRON_EXPRESSIONS = {
   // Lane B: 08:00 Mon-Fri
   LANE_B: '0 8 * * 1-5',
   
-  // Weekly QA Report: 17:00 Fridays (before IC Bundle)
-  QA_REPORT: '0 17 * * 5',
+  // Weekly QA Report: 18:00 Fridays (per governance spec)
+  QA_REPORT: '0 18 * * 5',
   
-  // IC Bundle: 18:00 Fridays (after QA Report)
-  IC_BUNDLE: '0 18 * * 5',
+  // IC Bundle: 19:00 Fridays (after QA Report at 18:00)
+  IC_BUNDLE: '0 19 * * 5',
 } as const;
 
 // ============================================================================

@@ -8,3 +8,4 @@ export * from './research-packet.schema.js';
 export * from './evidence.schema.js';
 export * from './decision-brief.schema.js';
 export * from './research-modules.schema.js';
+export * from './qa-report.schema.js';

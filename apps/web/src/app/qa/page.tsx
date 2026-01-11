@@ -3,158 +3,235 @@
 import { useState, useEffect } from 'react';
 
 /**
- * QA Report Page
+ * QA Report Page - Governance Contract UI
  * 
- * Displays weekly QA reports with all metrics:
- * - Gate pass/fail distribution
- * - Novelty distribution
- * - Style mix vs target
- * - Evidence coverage
- * - Compliance checks
- * - Alerts and recommendations
+ * Displays weekly QA reports per governance spec:
+ * - 7 sections (A-G) with pass/warn/fail status
+ * - 5 drift alarms
+ * - Overall score 0-100
+ * - Week-over-week diff view
+ * - Last 8 reports
+ * - JSON download
  */
+
+// ============================================================================
+// TYPES (matching governance schema)
+// ============================================================================
+
+type QAStatus = 'pass' | 'warn' | 'fail';
+
+interface QACheck {
+  id: string;
+  description: string;
+  status: QAStatus;
+  value: number | string | Record<string, unknown>;
+  expected: string;
+  evidence?: {
+    query_ids?: string[];
+    counts?: Record<string, number>;
+    sample_ids?: string[];
+  };
+}
+
+interface QASection {
+  name: string;
+  status: QAStatus;
+  score_0_100: number;
+  checks: QACheck[];
+}
+
+interface DriftAlarm {
+  id: string;
+  severity: 'warn' | 'fail';
+  triggered: boolean;
+  message: string;
+  remediation: string;
+  related_check_ids: string[];
+}
+
+interface KeyMetrics {
+  discovery_runs: number;
+  lane_b_runs: number;
+  weekend_runs: number;
+  ideas_generated: number;
+  ideas_promoted: number;
+  packets_completed: number;
+  novelty_rate_top30: number;
+  gate_pass_rate: number;
+  evidence_grounding_rate: number;
+  universe_coverage_rate: number;
+  non_us_share: number;
+  error_rate: number;
+}
 
 interface QAReport {
   report_id: string;
-  generated_at: string;
-  period_start: string;
-  period_end: string;
+  as_of: string;
+  window_start: string;
+  window_end: string;
   timezone: string;
-  summary: {
-    overall_health: 'healthy' | 'warning' | 'critical';
-    total_ideas_generated: number;
-    total_ideas_promoted: number;
-    total_packets_completed: number;
-    alerts: string[];
+  overall_status: QAStatus;
+  overall_score_0_100: number;
+  sections: QASection[];
+  drift_alarms: DriftAlarm[];
+  key_metrics: KeyMetrics;
+  links: {
+    json_artifact?: string;
+    ui_page?: string;
+    previous_report?: string;
   };
-  gate_analysis: {
-    total_evaluated: number;
-    pass_rate: number;
-    by_gate: Record<string, { evaluated: number; passed: number; failed: number; pass_rate: number }>;
-    binary_override_count: number;
-    binary_override_breakdown: {
-      leverage_risk: number;
-      liquidity_risk: number;
-      regulatory_cliff: number;
-    };
-  };
-  novelty_analysis: {
-    total_shortlisted: number;
-    new_count: number;
-    new_pct: number;
-    reappearance_count: number;
-    reappearance_pct: number;
-    repeat_count: number;
-    repeat_pct: number;
-    exploration_count: number;
-    exploration_pct: number;
-  };
-  style_mix_analysis: {
-    actual: Record<string, number>;
-    target: Record<string, number>;
-    deviation: Record<string, number>;
-    max_deviation: number;
-    style_mix_healthy: boolean;
-  };
-  evidence_analysis: {
-    total_evidence_refs: number;
-    with_doc_id: number;
-    with_chunk_id: number;
-    coverage_pct: number;
-    avg_evidence_per_idea: number;
-  };
-  compliance_checks: {
-    novelty_first_enforced: boolean;
-    gates_enforced: boolean;
-    binary_overrides_active: boolean;
-    weekly_cap_respected: boolean;
-    timezone_correct: boolean;
-    all_passed: boolean;
-    failures: string[];
-  };
-  recommendations: string[];
 }
 
-// Mock data for demonstration
+// ============================================================================
+// MOCK DATA (for demonstration)
+// ============================================================================
+
 const mockReport: QAReport = {
   report_id: 'qa-2026-01-10',
-  generated_at: '2026-01-10T17:00:00-03:00',
-  period_start: '2026-01-03T00:00:00-03:00',
-  period_end: '2026-01-10T00:00:00-03:00',
+  as_of: '2026-01-10T18:00:00-03:00',
+  window_start: '2026-01-03',
+  window_end: '2026-01-10',
   timezone: 'America/Sao_Paulo',
-  summary: {
-    overall_health: 'healthy',
-    total_ideas_generated: 600,
-    total_ideas_promoted: 15,
-    total_packets_completed: 10,
-    alerts: [],
-  },
-  gate_analysis: {
-    total_evaluated: 600,
-    pass_rate: 0.75,
-    by_gate: {
-      gate_0_data_sufficiency: { evaluated: 600, passed: 570, failed: 30, pass_rate: 0.95 },
-      gate_1_coherence: { evaluated: 570, passed: 540, failed: 30, pass_rate: 0.95 },
-      gate_2_edge_claim: { evaluated: 540, passed: 500, failed: 40, pass_rate: 0.93 },
-      gate_3_downside_sanity: { evaluated: 500, passed: 460, failed: 40, pass_rate: 0.92 },
-      gate_4_style_fit: { evaluated: 460, passed: 450, failed: 10, pass_rate: 0.98 },
+  overall_status: 'pass',
+  overall_score_0_100: 92,
+  sections: [
+    {
+      name: 'A: System Health and Cadence',
+      status: 'pass',
+      score_0_100: 100,
+      checks: [
+        { id: 'A1', description: 'Scheduler cadence', status: 'pass', value: { discovery: 5, lane_b: 5 }, expected: 'discovery=5, lane_b=5' },
+        { id: 'A2', description: 'Weekend suppression', status: 'pass', value: 0, expected: '0' },
+        { id: 'A3', description: 'Caps and concurrency', status: 'pass', value: { low_days: 0, packets_this_week: 8 }, expected: 'lane_a: 100-200/day, lane_b: ≤10/week' },
+        { id: 'A4', description: 'Error rate', status: 'pass', value: '2.1%', expected: '<5%' },
+      ],
     },
-    binary_override_count: 8,
-    binary_override_breakdown: {
-      leverage_risk: 4,
-      liquidity_risk: 3,
-      regulatory_cliff: 1,
+    {
+      name: 'B: Novelty-First Behavior',
+      status: 'pass',
+      score_0_100: 100,
+      checks: [
+        { id: 'B1', description: 'Top 30 novelty rate', status: 'pass', value: '14.2', expected: '≥12/30' },
+        { id: 'B2', description: 'Repetition violations', status: 'pass', value: 0, expected: '0' },
+        { id: 'B3', description: 'Reappearance delta quality', status: 'pass', value: '85.0%', expected: '≥80%' },
+      ],
     },
-  },
-  novelty_analysis: {
-    total_shortlisted: 1000,
-    new_count: 400,
-    new_pct: 40,
-    reappearance_count: 300,
-    reappearance_pct: 30,
-    repeat_count: 200,
-    repeat_pct: 20,
-    exploration_count: 100,
-    exploration_pct: 10,
-  },
-  style_mix_analysis: {
-    actual: { quality: 0.28, value: 0.22, growth: 0.25, special_situations: 0.15, turnaround: 0.10 },
-    target: { quality: 0.30, value: 0.25, growth: 0.20, special_situations: 0.15, turnaround: 0.10 },
-    deviation: { quality: 0.02, value: 0.03, growth: 0.05, special_situations: 0.00, turnaround: 0.00 },
-    max_deviation: 0.05,
-    style_mix_healthy: true,
-  },
-  evidence_analysis: {
-    total_evidence_refs: 3000,
-    with_doc_id: 2850,
-    with_chunk_id: 2700,
-    coverage_pct: 90,
-    avg_evidence_per_idea: 5,
-  },
-  compliance_checks: {
-    novelty_first_enforced: true,
-    gates_enforced: true,
-    binary_overrides_active: true,
-    weekly_cap_respected: true,
-    timezone_correct: true,
-    all_passed: true,
-    failures: [],
-  },
-  recommendations: [
-    'Consider expanding universe coverage in LatAm region',
-    'Monitor Gate 3 pass rate - slightly below target',
+    {
+      name: 'C: Gates and Promotion Discipline',
+      status: 'pass',
+      score_0_100: 100,
+      checks: [
+        { id: 'C1', description: 'Gate completeness', status: 'pass', value: '100.0%', expected: '100%' },
+        { id: 'C2', description: 'Promotion gate integrity', status: 'pass', value: '100.0%', expected: '100%' },
+        { id: 'C3', description: 'Downside gate integrity', status: 'pass', value: '100.0%', expected: '100%' },
+        { id: 'C4', description: 'Style fit integrity', status: 'pass', value: '100.0%', expected: '100%' },
+      ],
+    },
+    {
+      name: 'D: Deep Packet Completeness',
+      status: 'warn',
+      score_0_100: 70,
+      checks: [
+        { id: 'D1', description: 'Completed packets count', status: 'pass', value: 8, expected: '≤10' },
+        { id: 'D2', description: 'Mandatory fields present', status: 'pass', value: '100.0%', expected: '100%' },
+        { id: 'D3', description: 'Evidence grounding rate', status: 'warn', value: '87.5%', expected: '≥90%' },
+        { id: 'D4', description: 'Open questions quality', status: 'pass', value: '92.0%', expected: '≥80%' },
+      ],
+    },
+    {
+      name: 'E: Memory and Versioning',
+      status: 'pass',
+      score_0_100: 100,
+      checks: [
+        { id: 'E1', description: 'Immutable thesis versioning', status: 'pass', value: '100.0%', expected: '100%' },
+        { id: 'E2', description: 'Rejection shadow enforcement', status: 'pass', value: '88.0%', expected: '≥80%' },
+      ],
+    },
+    {
+      name: 'F: Global Universe Coverage',
+      status: 'pass',
+      score_0_100: 100,
+      checks: [
+        { id: 'F1', description: 'Universe coverage rate', status: 'pass', value: '92.0%', expected: '≥90%' },
+        { id: 'F2', description: 'Non-US share in inbox', status: 'pass', value: '35.0%', expected: '≥30%' },
+        { id: 'F3', description: 'Non-US retrieval success', status: 'pass', value: '85.0%', expected: '≥80%' },
+      ],
+    },
+    {
+      name: 'G: Operator Usability',
+      status: 'pass',
+      score_0_100: 100,
+      checks: [
+        { id: 'G1', description: 'UI workflow integrity', status: 'pass', value: { can_promote: true, has_packets: true }, expected: 'all true' },
+      ],
+    },
   ],
+  drift_alarms: [
+    { id: 'novelty_collapse', severity: 'fail', triggered: false, message: 'Novelty collapse not triggered', remediation: 'Review novelty-first shortlist logic', related_check_ids: ['B1'] },
+    { id: 'promotion_gate_breach', severity: 'fail', triggered: false, message: 'No promotion gate breaches', remediation: 'Review gate enforcement', related_check_ids: ['C2'] },
+    { id: 'weekly_packet_cap_breach', severity: 'fail', triggered: false, message: 'Weekly cap respected', remediation: 'Review Lane B cap enforcement', related_check_ids: ['D1'] },
+    { id: 'evidence_grounding_collapse', severity: 'fail', triggered: false, message: 'Evidence grounding above threshold', remediation: 'Review evidence locator validation', related_check_ids: ['D3'] },
+    { id: 'global_coverage_collapse', severity: 'warn', triggered: false, message: 'Global coverage above threshold', remediation: 'Review security master', related_check_ids: ['F1'] },
+  ],
+  key_metrics: {
+    discovery_runs: 5,
+    lane_b_runs: 5,
+    weekend_runs: 0,
+    ideas_generated: 600,
+    ideas_promoted: 15,
+    packets_completed: 8,
+    novelty_rate_top30: 0.47,
+    gate_pass_rate: 0.75,
+    evidence_grounding_rate: 0.875,
+    universe_coverage_rate: 0.92,
+    non_us_share: 0.35,
+    error_rate: 0.021,
+  },
+  links: {
+    json_artifact: 'qa_reports/2026-01-10.json',
+    ui_page: '/qa',
+  },
 };
 
-export default function QAReportPage() {
-  const [reports, setReports] = useState<QAReport[]>([mockReport]);
-  const [selectedReport, setSelectedReport] = useState<QAReport>(mockReport);
-  const [loading, setLoading] = useState(false);
+// Previous week mock for diff view
+const mockPreviousReport: QAReport = {
+  ...mockReport,
+  report_id: 'qa-2026-01-03',
+  as_of: '2026-01-03T18:00:00-03:00',
+  window_start: '2025-12-27',
+  window_end: '2026-01-03',
+  overall_score_0_100: 88,
+  key_metrics: {
+    ...mockReport.key_metrics,
+    ideas_generated: 550,
+    ideas_promoted: 12,
+    packets_completed: 7,
+    novelty_rate_top30: 0.42,
+    evidence_grounding_rate: 0.82,
+  },
+};
 
-  const healthColors = {
-    healthy: 'bg-green-100 text-green-800 border-green-200',
-    warning: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    critical: 'bg-red-100 text-red-800 border-red-200',
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
+export default function QAReportPage() {
+  const [reports, setReports] = useState<QAReport[]>([mockReport, mockPreviousReport]);
+  const [selectedReport, setSelectedReport] = useState<QAReport>(mockReport);
+  const [showDiff, setShowDiff] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+
+  // Status colors
+  const statusColors = {
+    pass: 'bg-green-100 text-green-800 border-green-200',
+    warn: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    fail: 'bg-red-100 text-red-800 border-red-200',
+  };
+
+  const statusBadgeColors = {
+    pass: 'bg-green-500',
+    warn: 'bg-yellow-500',
+    fail: 'bg-red-500',
   };
 
   const formatDate = (dateStr: string) => {
@@ -167,15 +244,42 @@ export default function QAReportPage() {
 
   const formatPercent = (value: number) => `${(value * 100).toFixed(1)}%`;
 
+  const toggleSection = (name: string) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(name)) {
+      newExpanded.delete(name);
+    } else {
+      newExpanded.add(name);
+    }
+    setExpandedSections(newExpanded);
+  };
+
   const downloadJSON = () => {
     const blob = new Blob([JSON.stringify(selectedReport, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `qa_report_${selectedReport.period_end.split('T')[0]}.json`;
+    a.download = `qa_report_${selectedReport.window_end}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const getPreviousReport = (): QAReport | undefined => {
+    const currentIndex = reports.findIndex(r => r.report_id === selectedReport.report_id);
+    return currentIndex < reports.length - 1 ? reports[currentIndex + 1] : undefined;
+  };
+
+  const renderDiff = (current: number, previous: number | undefined, format: 'number' | 'percent' = 'number') => {
+    if (previous === undefined) return null;
+    const diff = current - previous;
+    const color = diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : 'text-gray-500';
+    const sign = diff > 0 ? '+' : '';
+    const value = format === 'percent' ? `${sign}${(diff * 100).toFixed(1)}%` : `${sign}${diff}`;
+    return <span className={`text-xs ml-1 ${color}`}>({value})</span>;
+  };
+
+  // Limit to last 8 reports
+  const displayReports = reports.slice(0, 8);
 
   return (
     <div className="space-y-6">
@@ -184,7 +288,7 @@ export default function QAReportPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Weekly QA Report</h1>
           <p className="text-gray-600">
-            System health and compliance monitoring
+            Governance Contract - System health and compliance monitoring
           </p>
         </div>
         <div className="flex gap-2">
@@ -196,12 +300,18 @@ export default function QAReportPage() {
               if (report) setSelectedReport(report);
             }}
           >
-            {reports.map(report => (
+            {displayReports.map(report => (
               <option key={report.report_id} value={report.report_id}>
-                Week of {formatDate(report.period_end)}
+                Week of {formatDate(report.window_end)}
               </option>
             ))}
           </select>
+          <button
+            onClick={() => setShowDiff(!showDiff)}
+            className={`px-4 py-2 rounded-lg border ${showDiff ? 'bg-blue-50 border-blue-300' : 'bg-white'}`}
+          >
+            {showDiff ? 'Hide Diff' : 'Show Diff'}
+          </button>
           <button
             onClick={downloadJSON}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -211,243 +321,253 @@ export default function QAReportPage() {
         </div>
       </div>
 
-      {/* Summary Card */}
-      <div className={`border rounded-lg p-6 ${healthColors[selectedReport.summary.overall_health]}`}>
+      {/* Overall Status Card */}
+      <div className={`border rounded-lg p-6 ${statusColors[selectedReport.overall_status]}`}>
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-semibold">
-              Overall Health: {selectedReport.summary.overall_health.toUpperCase()}
+              Overall Status: {selectedReport.overall_status.toUpperCase()}
             </h2>
             <p className="text-sm mt-1">
-              Period: {formatDate(selectedReport.period_start)} - {formatDate(selectedReport.period_end)}
+              Period: {formatDate(selectedReport.window_start)} - {formatDate(selectedReport.window_end)}
+            </p>
+            <p className="text-sm">
+              Generated: {new Date(selectedReport.as_of).toLocaleString('pt-BR')} ({selectedReport.timezone})
             </p>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold">{selectedReport.summary.total_ideas_generated}</div>
-            <div className="text-sm">Ideas Generated</div>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          <div className="bg-white/50 rounded-lg p-3">
-            <div className="text-xl font-bold">{selectedReport.summary.total_ideas_promoted}</div>
-            <div className="text-sm">Promoted</div>
-          </div>
-          <div className="bg-white/50 rounded-lg p-3">
-            <div className="text-xl font-bold">{selectedReport.summary.total_packets_completed}</div>
-            <div className="text-sm">Packets</div>
-          </div>
-          <div className="bg-white/50 rounded-lg p-3">
-            <div className="text-xl font-bold">{selectedReport.summary.alerts.length}</div>
-            <div className="text-sm">Alerts</div>
+            <div className="text-4xl font-bold">{selectedReport.overall_score_0_100}</div>
+            <div className="text-sm">Score / 100</div>
+            {showDiff && getPreviousReport() && renderDiff(
+              selectedReport.overall_score_0_100,
+              getPreviousReport()?.overall_score_0_100
+            )}
           </div>
         </div>
       </div>
 
-      {/* Compliance Checks */}
+      {/* Key Metrics Grid */}
       <div className="bg-white border rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">Compliance Checks</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <h2 className="text-lg font-semibold mb-4">Key Metrics</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {[
-            { label: 'Novelty-First', value: selectedReport.compliance_checks.novelty_first_enforced },
-            { label: 'Gates Enforced', value: selectedReport.compliance_checks.gates_enforced },
-            { label: 'Binary Overrides', value: selectedReport.compliance_checks.binary_overrides_active },
-            { label: 'Weekly Cap', value: selectedReport.compliance_checks.weekly_cap_respected },
-            { label: 'Timezone', value: selectedReport.compliance_checks.timezone_correct },
-          ].map(check => (
-            <div
-              key={check.label}
-              className={`p-3 rounded-lg text-center ${
-                check.value ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
-              }`}
-            >
-              <div className={`text-lg ${check.value ? 'text-green-600' : 'text-red-600'}`}>
-                {check.value ? '✓' : '✗'}
+            { label: 'Discovery Runs', value: selectedReport.key_metrics.discovery_runs, prev: getPreviousReport()?.key_metrics.discovery_runs },
+            { label: 'Lane B Runs', value: selectedReport.key_metrics.lane_b_runs, prev: getPreviousReport()?.key_metrics.lane_b_runs },
+            { label: 'Ideas Generated', value: selectedReport.key_metrics.ideas_generated, prev: getPreviousReport()?.key_metrics.ideas_generated },
+            { label: 'Ideas Promoted', value: selectedReport.key_metrics.ideas_promoted, prev: getPreviousReport()?.key_metrics.ideas_promoted },
+            { label: 'Packets Completed', value: selectedReport.key_metrics.packets_completed, prev: getPreviousReport()?.key_metrics.packets_completed },
+            { label: 'Novelty Rate (Top 30)', value: formatPercent(selectedReport.key_metrics.novelty_rate_top30), prev: getPreviousReport()?.key_metrics.novelty_rate_top30, format: 'percent' as const },
+            { label: 'Gate Pass Rate', value: formatPercent(selectedReport.key_metrics.gate_pass_rate), prev: getPreviousReport()?.key_metrics.gate_pass_rate, format: 'percent' as const },
+            { label: 'Evidence Grounding', value: formatPercent(selectedReport.key_metrics.evidence_grounding_rate), prev: getPreviousReport()?.key_metrics.evidence_grounding_rate, format: 'percent' as const },
+            { label: 'Universe Coverage', value: formatPercent(selectedReport.key_metrics.universe_coverage_rate), prev: getPreviousReport()?.key_metrics.universe_coverage_rate, format: 'percent' as const },
+            { label: 'Non-US Share', value: formatPercent(selectedReport.key_metrics.non_us_share), prev: getPreviousReport()?.key_metrics.non_us_share, format: 'percent' as const },
+            { label: 'Error Rate', value: formatPercent(selectedReport.key_metrics.error_rate), prev: getPreviousReport()?.key_metrics.error_rate, format: 'percent' as const },
+            { label: 'Weekend Runs', value: selectedReport.key_metrics.weekend_runs, prev: getPreviousReport()?.key_metrics.weekend_runs },
+          ].map(metric => (
+            <div key={metric.label} className="bg-gray-50 rounded-lg p-3">
+              <div className="text-xl font-bold">
+                {typeof metric.value === 'string' ? metric.value : metric.value}
+                {showDiff && metric.prev !== undefined && (
+                  metric.format === 'percent' 
+                    ? renderDiff(parseFloat(String(metric.value).replace('%', '')) / 100, metric.prev as number, 'percent')
+                    : renderDiff(metric.value as number, metric.prev as number)
+                )}
               </div>
-              <div className="text-sm font-medium">{check.label}</div>
+              <div className="text-xs text-gray-600">{metric.label}</div>
             </div>
           ))}
         </div>
-        {selectedReport.compliance_checks.failures.length > 0 && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <h3 className="font-medium text-red-800 mb-2">Failures:</h3>
-            <ul className="list-disc list-inside text-sm text-red-700">
-              {selectedReport.compliance_checks.failures.map((failure, i) => (
-                <li key={i}>{failure}</li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
 
-      {/* Gate Analysis */}
+      {/* Drift Alarms */}
       <div className="bg-white border rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">Gate Analysis</h2>
+        <h2 className="text-lg font-semibold mb-4">Drift Alarms</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+          {selectedReport.drift_alarms.map(alarm => (
+            <div
+              key={alarm.id}
+              className={`p-3 rounded-lg border ${
+                alarm.triggered
+                  ? alarm.severity === 'fail'
+                    ? 'bg-red-50 border-red-300'
+                    : 'bg-yellow-50 border-yellow-300'
+                  : 'bg-green-50 border-green-200'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${
+                  alarm.triggered
+                    ? alarm.severity === 'fail' ? 'bg-red-500' : 'bg-yellow-500'
+                    : 'bg-green-500'
+                }`} />
+                <span className="font-medium text-sm">{alarm.id.replace(/_/g, ' ')}</span>
+              </div>
+              <div className="text-xs mt-1 text-gray-600">
+                {alarm.triggered ? alarm.message : 'Not triggered'}
+              </div>
+              {alarm.triggered && (
+                <div className="text-xs mt-1 text-gray-500">
+                  Fix: {alarm.remediation}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sections (A-G) */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Sections</h2>
+        {selectedReport.sections.map(section => (
+          <div key={section.name} className="bg-white border rounded-lg overflow-hidden">
+            {/* Section Header */}
+            <button
+              onClick={() => toggleSection(section.name)}
+              className={`w-full p-4 flex justify-between items-center ${statusColors[section.status]} hover:opacity-90`}
+            >
+              <div className="flex items-center gap-3">
+                <span className={`w-3 h-3 rounded-full ${statusBadgeColors[section.status]}`} />
+                <span className="font-semibold">{section.name}</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-sm">Score: {section.score_0_100}/100</span>
+                <span className="text-sm font-medium">{section.status.toUpperCase()}</span>
+                <span>{expandedSections.has(section.name) ? '▼' : '▶'}</span>
+              </div>
+            </button>
+
+            {/* Section Checks */}
+            {expandedSections.has(section.name) && (
+              <div className="p-4 border-t">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-sm text-gray-600">
+                      <th className="pb-2">Check</th>
+                      <th className="pb-2">Description</th>
+                      <th className="pb-2">Value</th>
+                      <th className="pb-2">Expected</th>
+                      <th className="pb-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {section.checks.map(check => (
+                      <tr key={check.id} className="border-t">
+                        <td className="py-2 font-mono text-sm">{check.id}</td>
+                        <td className="py-2 text-sm">{check.description}</td>
+                        <td className="py-2 text-sm font-medium">
+                          {typeof check.value === 'object' 
+                            ? JSON.stringify(check.value) 
+                            : String(check.value)}
+                        </td>
+                        <td className="py-2 text-sm text-gray-600">{check.expected}</td>
+                        <td className="py-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            check.status === 'pass' ? 'bg-green-100 text-green-800' :
+                            check.status === 'warn' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {check.status.toUpperCase()}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Section Weights Reference */}
+      <div className="bg-gray-50 border rounded-lg p-4">
+        <h3 className="font-semibold mb-2">Section Weights (for Overall Score)</h3>
+        <div className="grid grid-cols-7 gap-2 text-sm">
+          <div className="text-center">
+            <div className="font-bold">A</div>
+            <div className="text-gray-600">15%</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold">B</div>
+            <div className="text-gray-600">20%</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold">C</div>
+            <div className="text-gray-600">15%</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold">D</div>
+            <div className="text-gray-600">25%</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold">E</div>
+            <div className="text-gray-600">10%</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold">F</div>
+            <div className="text-gray-600">10%</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold">G</div>
+            <div className="text-gray-600">5%</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Report History */}
+      <div className="bg-white border rounded-lg p-6">
+        <h2 className="text-lg font-semibold mb-4">Report History (Last 8)</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">Gate</th>
-                <th className="text-right py-2">Evaluated</th>
-                <th className="text-right py-2">Passed</th>
-                <th className="text-right py-2">Failed</th>
-                <th className="text-right py-2">Pass Rate</th>
+              <tr className="text-left text-sm text-gray-600 border-b">
+                <th className="pb-2">Week Ending</th>
+                <th className="pb-2">Status</th>
+                <th className="pb-2">Score</th>
+                <th className="pb-2">Ideas</th>
+                <th className="pb-2">Promoted</th>
+                <th className="pb-2">Packets</th>
+                <th className="pb-2">Alarms</th>
               </tr>
             </thead>
             <tbody>
-              {Object.entries(selectedReport.gate_analysis.by_gate).map(([gate, stats]) => (
-                <tr key={gate} className="border-b">
-                  <td className="py-2 font-medium">
-                    {gate.replace('gate_', 'Gate ').replace(/_/g, ' ')}
-                  </td>
-                  <td className="text-right">{stats.evaluated}</td>
-                  <td className="text-right text-green-600">{stats.passed}</td>
-                  <td className="text-right text-red-600">{stats.failed}</td>
-                  <td className="text-right">
-                    <span className={stats.pass_rate >= 0.9 ? 'text-green-600' : 'text-yellow-600'}>
-                      {formatPercent(stats.pass_rate)}
+              {displayReports.map(report => (
+                <tr 
+                  key={report.report_id} 
+                  className={`border-b cursor-pointer hover:bg-gray-50 ${
+                    report.report_id === selectedReport.report_id ? 'bg-blue-50' : ''
+                  }`}
+                  onClick={() => setSelectedReport(report)}
+                >
+                  <td className="py-2">{formatDate(report.window_end)}</td>
+                  <td className="py-2">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      report.overall_status === 'pass' ? 'bg-green-100 text-green-800' :
+                      report.overall_status === 'warn' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {report.overall_status.toUpperCase()}
                     </span>
+                  </td>
+                  <td className="py-2 font-medium">{report.overall_score_0_100}</td>
+                  <td className="py-2">{report.key_metrics.ideas_generated}</td>
+                  <td className="py-2">{report.key_metrics.ideas_promoted}</td>
+                  <td className="py-2">{report.key_metrics.packets_completed}</td>
+                  <td className="py-2">
+                    {report.drift_alarms.filter(a => a.triggered).length > 0 ? (
+                      <span className="text-red-600 font-medium">
+                        {report.drift_alarms.filter(a => a.triggered).length}
+                      </span>
+                    ) : (
+                      <span className="text-green-600">0</span>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        
-        {/* Binary Overrides */}
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-medium mb-2">Gate 3 Binary Overrides: {selectedReport.gate_analysis.binary_override_count}</h3>
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className="text-gray-600">Leverage Risk:</span>{' '}
-              <span className="font-medium">{selectedReport.gate_analysis.binary_override_breakdown.leverage_risk}</span>
-            </div>
-            <div>
-              <span className="text-gray-600">Liquidity Risk:</span>{' '}
-              <span className="font-medium">{selectedReport.gate_analysis.binary_override_breakdown.liquidity_risk}</span>
-            </div>
-            <div>
-              <span className="text-gray-600">Regulatory Cliff:</span>{' '}
-              <span className="font-medium">{selectedReport.gate_analysis.binary_override_breakdown.regulatory_cliff}</span>
-            </div>
-          </div>
-        </div>
       </div>
-
-      {/* Novelty Analysis */}
-      <div className="bg-white border rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">Novelty Distribution</h2>
-        <div className="grid grid-cols-4 gap-4">
-          <div className="p-4 bg-green-50 rounded-lg text-center">
-            <div className="text-2xl font-bold text-green-700">{selectedReport.novelty_analysis.new_pct}%</div>
-            <div className="text-sm text-green-600">New (90+ days)</div>
-            <div className="text-xs text-gray-500">{selectedReport.novelty_analysis.new_count} tickers</div>
-          </div>
-          <div className="p-4 bg-blue-50 rounded-lg text-center">
-            <div className="text-2xl font-bold text-blue-700">{selectedReport.novelty_analysis.reappearance_pct}%</div>
-            <div className="text-sm text-blue-600">Reappearance (30-90d)</div>
-            <div className="text-xs text-gray-500">{selectedReport.novelty_analysis.reappearance_count} tickers</div>
-          </div>
-          <div className="p-4 bg-yellow-50 rounded-lg text-center">
-            <div className="text-2xl font-bold text-yellow-700">{selectedReport.novelty_analysis.repeat_pct}%</div>
-            <div className="text-sm text-yellow-600">Repeat (&lt;30 days)</div>
-            <div className="text-xs text-gray-500">{selectedReport.novelty_analysis.repeat_count} tickers</div>
-          </div>
-          <div className="p-4 bg-purple-50 rounded-lg text-center">
-            <div className="text-2xl font-bold text-purple-700">{selectedReport.novelty_analysis.exploration_pct}%</div>
-            <div className="text-sm text-purple-600">Exploration</div>
-            <div className="text-xs text-gray-500">{selectedReport.novelty_analysis.exploration_count} tickers</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Style Mix Analysis */}
-      <div className="bg-white border rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">Style Mix vs Target</h2>
-        <div className="space-y-4">
-          {Object.entries(selectedReport.style_mix_analysis.actual).map(([style, actual]) => {
-            const target = selectedReport.style_mix_analysis.target[style] || 0;
-            const deviation = selectedReport.style_mix_analysis.deviation[style] || 0;
-            return (
-              <div key={style}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium capitalize">{style.replace(/_/g, ' ')}</span>
-                  <span>
-                    {formatPercent(actual)} / {formatPercent(target)} target
-                    {deviation > 0.05 && (
-                      <span className="text-yellow-600 ml-2">({formatPercent(deviation)} deviation)</span>
-                    )}
-                  </span>
-                </div>
-                <div className="h-4 bg-gray-100 rounded-full overflow-hidden relative">
-                  <div
-                    className="h-full bg-blue-500 rounded-full"
-                    style={{ width: `${actual * 100}%` }}
-                  />
-                  <div
-                    className="absolute top-0 h-full w-0.5 bg-gray-800"
-                    style={{ left: `${target * 100}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Evidence Analysis */}
-      <div className="bg-white border rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">Evidence Coverage</h2>
-        <div className="grid grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold">{selectedReport.evidence_analysis.total_evidence_refs}</div>
-            <div className="text-sm text-gray-600">Total References</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">
-              {selectedReport.evidence_analysis.coverage_pct}%
-            </div>
-            <div className="text-sm text-gray-600">With doc_id + chunk_id</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold">{selectedReport.evidence_analysis.avg_evidence_per_idea}</div>
-            <div className="text-sm text-gray-600">Avg per Idea</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold">{selectedReport.evidence_analysis.with_chunk_id}</div>
-            <div className="text-sm text-gray-600">With Chunk ID</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recommendations */}
-      {selectedReport.recommendations.length > 0 && (
-        <div className="bg-white border rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Recommendations</h2>
-          <ul className="space-y-2">
-            {selectedReport.recommendations.map((rec, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="text-blue-500 mt-1">→</span>
-                <span>{rec}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Alerts */}
-      {selectedReport.summary.alerts.length > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-yellow-800 mb-4">Alerts</h2>
-          <ul className="space-y-2">
-            {selectedReport.summary.alerts.map((alert, i) => (
-              <li key={i} className="flex items-start gap-2 text-yellow-700">
-                <span className="mt-1">⚠</span>
-                <span>{alert}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }
