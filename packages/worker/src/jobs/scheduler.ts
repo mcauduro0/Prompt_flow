@@ -8,6 +8,7 @@ import {
   SYSTEM_TIMEZONE,
   SCHEDULES,
 } from '@arc/shared';
+import { runsRepository } from '@arc/database';
 import { runDailyDiscovery } from '../orchestrator/daily-discovery.js';
 import { runLaneB } from '../orchestrator/lane-b-runner.js';
 import { generateICBundle } from '../orchestrator/ic-bundle.js';
@@ -22,11 +23,15 @@ function isWeekday(): boolean {
 export class JobScheduler {
   private jobs: CronJob[] = [];
   private isRunning = false;
+  private triggerCheckInterval: NodeJS.Timeout | null = null;
 
-  start(): void {
+  async start(): Promise<void> {
     if (this.isRunning) return;
     
     console.log(`[Scheduler] Starting with timezone: ${SYSTEM_TIMEZONE}`);
+
+    // Check for manual triggers on startup
+    await this.checkManualTriggers();
 
     // Lane A: Daily Discovery - 06:00 weekdays
     this.jobs.push(new CronJob(
@@ -78,13 +83,59 @@ export class JobScheduler {
       SYSTEM_TIMEZONE
     ));
 
+    // Check for manual triggers every 30 seconds
+    this.triggerCheckInterval = setInterval(async () => {
+      await this.checkManualTriggers();
+    }, 30000);
+
     this.isRunning = true;
     console.log('[Scheduler] All jobs scheduled');
+  }
+
+  async checkManualTriggers(): Promise<void> {
+    try {
+      // Check for pending manual Lane A triggers
+      const runs = await runsRepository.getByType('manual_lane_a_trigger', 10);
+      const pendingRuns = runs.filter(r => r.status === 'running');
+
+      for (const run of pendingRuns) {
+        console.log(`[Scheduler] Found manual Lane A trigger: ${run.runId}`);
+        
+        // Update status to processing
+        await runsRepository.updateStatus(run.runId, 'running');
+        
+        try {
+          const payload = run.payload as { dryRun?: boolean; maxIdeas?: number } | null;
+          const result = await runDailyDiscovery({
+            dryRun: payload?.dryRun ?? false,
+            maxIdeas: payload?.maxIdeas ?? 10,
+          });
+          
+          await runsRepository.updateStatus(run.runId, 'completed');
+          await runsRepository.updatePayload(run.runId, {
+            ...payload,
+            result,
+            completedAt: new Date().toISOString(),
+          });
+          
+          console.log(`[Scheduler] Manual Lane A completed: ${run.runId}`, result);
+        } catch (error) {
+          await runsRepository.updateStatus(run.runId, 'failed', (error as Error).message);
+          console.error(`[Scheduler] Manual Lane A failed: ${run.runId}`, error);
+        }
+      }
+    } catch (error) {
+      console.error('[Scheduler] Error checking manual triggers:', error);
+    }
   }
 
   stop(): void {
     this.jobs.forEach(job => job.stop());
     this.jobs = [];
+    if (this.triggerCheckInterval) {
+      clearInterval(this.triggerCheckInterval);
+      this.triggerCheckInterval = null;
+    }
     this.isRunning = false;
     console.log('[Scheduler] Stopped');
   }
