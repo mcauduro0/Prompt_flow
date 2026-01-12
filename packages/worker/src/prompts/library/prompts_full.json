@@ -2544,8 +2544,8 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "perplexity",
-        "model": "sonar-pro",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
         "temperature": 0.4,
         "max_tokens": 3000
       },
@@ -3539,8 +3539,8 @@
         "temperature": 0.2,
         "max_tokens": 4000
       },
-      "system_prompt": "You are a portfolio manager constructing an investment portfolio.",
-      "user_prompt_template": "Investment Objectives:\n- Risk tolerance: {{risk_tolerance}}\n- Return target: {{return_target}}\n- Time horizon: {{time_horizon}}\n- Constraints: {{constraints}}\n\nAvailable positions: {{positions}}\n\nPORTFOLIO CONSTRUCTION:\n\n1. ASSET ALLOCATION\n   - Strategic allocation by asset class\n   - Sector allocation\n   - Geographic allocation\n   - Factor exposures\n\n2. POSITION SIZING\n   - Individual position weights\n   - Concentration limits\n   - Liquidity considerations\n   - Correlation analysis\n\n3. RISK BUDGETING\n   - Risk contribution by position\n   - Diversification benefit\n   - Tail risk assessment\n   - Drawdown expectations\n\n4. OPTIMIZATION\n   - Mean-variance optimization\n   - Risk parity considerations\n   - Constraints application\n   - Rebalancing triggers\n\nProvide specific position weights and rationale.",
+      "system_prompt": "You are an experienced portfolio manager specializing in equity portfolio construction. \nYou follow modern portfolio theory principles while incorporating practical considerations like liquidity, transaction costs, and risk management.\nAlways provide specific percentage allocations and clear rationale for your recommendations.\nIf insufficient information is provided, make reasonable assumptions and state them clearly.",
+      "user_prompt_template": "You are a portfolio construction specialist.\n\nGiven the following investment ideas and constraints, construct an optimal portfolio allocation.\n\nINVESTMENT IDEAS:\n{{ideas}}\n\nCONSTRAINTS:\n{{constraints}}\n\nPlease provide:\n\n1. PORTFOLIO ALLOCATION\n   - For each idea, recommend a weight (% of portfolio)\n   - Ensure weights sum to 100% or less (cash can be held)\n   - Consider diversification across sectors\n\n2. RATIONALE\n   - Explain the allocation logic\n   - Discuss risk/return tradeoffs\n   - Note any concentration concerns\n\n3. RISK METRICS (estimated)\n   - Expected portfolio beta\n   - Sector concentration\n   - Top position size\n\n4. REBALANCING TRIGGERS\n   - When to rebalance\n   - Position size limits\n\nFormat your response as a structured analysis with clear sections.",
       "required_data_sources": [
         "fmp"
       ],
@@ -4129,8 +4129,8 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "perplexity",
-        "model": "sonar-pro",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -4263,8 +4263,8 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "perplexity",
-        "model": "sonar-pro",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -5519,8 +5519,8 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "perplexity",
-        "model": "sonar-pro",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -6380,8 +6380,8 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "perplexity",
-        "model": "sonar-pro",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -6447,8 +6447,8 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "perplexity",
-        "model": "sonar-pro",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -6514,8 +6514,8 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "perplexity",
-        "model": "sonar-pro",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -6986,8 +6986,8 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "perplexity",
-        "model": "sonar-pro",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
         "temperature": 0.3,
         "max_tokens": 3000
       },

@@ -1,0 +1,100 @@
+{
+  "timestamp": "2026-01-12T23:37:33.759Z",
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "pass_rate": 100
+  },
+  "metrics": {
+    "total_tokens": 4820,
+    "total_cost_usd": 0.0024132
+  },
+  "results": [
+    {
+      "prompt_id": "macro_environment_analysis",
+      "lane": "lane_a",
+      "status": "pass",
+      "execution_time_ms": 16850,
+      "tokens_used": 953,
+      "cost_usd": 0.00053805,
+      "llm_called": true,
+      "llm_provider": "openai",
+      "output_length": 4623,
+      "output_preview": "To provide a comprehensive analysis of the current macroeconomic environment, we will examine key indicators such as GDP growth, inflation, employment, monetary policy, fiscal policy, and global trade..."
+    },
+    {
+      "prompt_id": "thematic_idea_generator",
+      "lane": "lane_a",
+      "status": "pass",
+      "execution_time_ms": 23896,
+      "tokens_used": 805,
+      "cost_usd": 0.0004146,
+      "llm_called": true,
+      "llm_provider": "openai",
+      "output_length": 3100,
+      "output_preview": "THEME ANALYSIS:\n\n1. Define the theme and its investment relevance: AI Infrastructure refers to the hardware, software, and services that support the development and deployment of artificial intelligen..."
+    },
+    {
+      "prompt_id": "business_overview_report",
+      "lane": "lane_b",
+      "status": "pass",
+      "execution_time_ms": 29515,
+      "tokens_used": 735,
+      "cost_usd": 0.00035324999999999994,
+      "llm_called": true,
+      "llm_provider": "openai",
+      "output_length": 2972,
+      "output_preview": "1. BUSINESS DESCRIPTION\n   - Fastenal Company (FAST) is a leading industrial supply company that provides a range of products and services to businesses across various sectors. \n   - The company's cor..."
+    },
+    {
+      "prompt_id": "valuation_analysis",
+      "lane": "lane_b",
+      "status": "pass",
+      "execution_time_ms": 9695,
+      "tokens_used": 277,
+      "cost_usd": 0.00006135,
+      "llm_called": true,
+      "llm_provider": "openai",
+      "output_length": 219,
+      "output_preview": "I'm sorry, but I can't provide the analysis you're asking for because you didn't provide any specific financial data for the company FAST. Please provide the necessary data so I can help you with the ..."
+    },
+    {
+      "prompt_id": "portfolio_construction",
+      "lane": "portfolio",
+      "status": "pass",
+      "execution_time_ms": 29258,
+      "tokens_used": 790,
+      "cost_usd": 0.0003579,
+      "llm_called": true,
+      "llm_provider": "openai",
+      "output_length": 2507,
+      "output_preview": "1. PORTFOLIO ALLOCATION\n\nGiven the constraint of a maximum position size of 10%, we will allocate the portfolio as follows:\n\n- Apple Inc. (AAPL): 30%\n- Microsoft Corp. (MSFT): 30%\n- Fastenal Co. (FAST..."
+    },
+    {
+      "prompt_id": "news_sentiment_monitor",
+      "lane": "monitoring",
+      "status": "pass",
+      "execution_time_ms": 13884,
+      "tokens_used": 418,
+      "cost_usd": 0.0002139,
+      "llm_called": true,
+      "llm_provider": "openai",
+      "output_length": 1766,
+      "output_preview": "Company: Apple Inc. (AAPL)\nNews Feed: Apple Inc. has announced a new iPhone model, the iPhone 13, with advanced features. The company also reported a 20% increase in its quarterly profits. However, th..."
+    },
+    {
+      "prompt_id": "daily_market_briefing",
+      "lane": "utility",
+      "status": "pass",
+      "execution_time_ms": 15204,
+      "tokens_used": 842,
+      "cost_usd": 0.00047415,
+      "llm_called": true,
+      "llm_provider": "openai",
+      "output_length": 3679,
+      "output_preview": "**Daily Market Briefing - [Insert Date]**\n\n---\n\n### Market Summary\nAs of the close on [Insert Date], the major U.S. indices showed mixed performance amid ongoing economic concerns and corporate earnin..."
+    }
+  ]
+}
