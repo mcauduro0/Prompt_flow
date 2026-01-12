@@ -343,79 +343,72 @@ export default function TelemetryPage() {
     }
   }
 
-  // Mock data for initial display
-  const mockStats: TelemetryStats = stats || {
-    total_executions: 156,
-    success_rate: 94.2,
-    total_tokens: 245000,
-    total_cost_usd: 12.45,
-    avg_latency_ms: 2340,
-    by_provider: {
-      openai: { count: 120, tokens: 180000, cost: 9.50, avg_latency: 2100 },
-      anthropic: { count: 36, tokens: 65000, cost: 2.95, avg_latency: 3200 },
-    },
-    by_prompt: {
-      lane_a_idea_generation: { count: 45, success_rate: 96, avg_latency: 1800 },
-      business_model_analysis: { count: 32, success_rate: 94, avg_latency: 2500 },
-      valuation_analysis: { count: 28, success_rate: 92, avg_latency: 2800 },
-    },
+  // Real data with empty state defaults (NO MOCK DATA)
+  const realStats: TelemetryStats = stats || {
+    total_executions: 0,
+    success_rate: 0,
+    total_tokens: 0,
+    total_cost_usd: 0,
+    avg_latency_ms: 0,
+    by_provider: {},
+    by_prompt: {},
     recent_errors: [],
     qualityMetrics: {
-      overall_quality_score: 78,
-      gate_pass_rate: 0.85,
-      validation_pass_rate: 0.92,
-      data_sufficiency_rate: 0.95,
-      coherence_rate: 0.88,
-      edge_claim_rate: 0.72,
-      style_fit_rate: 0.80,
+      overall_quality_score: 0,
+      gate_pass_rate: 0,
+      validation_pass_rate: 0,
+      data_sufficiency_rate: 0,
+      coherence_rate: 0,
+      edge_claim_rate: 0,
+      style_fit_rate: 0,
     },
     laneOutcomeStats: {
-      total: 45,
-      byLane: { lane_a: 30, lane_b: 15 },
-      byOutcome: { idea_generated: 25, research_complete: 12, idea_rejected: 5, research_partial: 3 },
-      avgQualityScore: 76,
-      avgCostPerOutcome: 0.28,
-      ideasGenerated: 25,
-      researchCompleted: 12,
+      total: 0,
+      byLane: { lane_a: 0, lane_b: 0 },
+      byOutcome: {},
+      avgQualityScore: 0,
+      avgCostPerOutcome: 0,
+      ideasGenerated: 0,
+      researchCompleted: 0,
     },
   };
 
-  const mockBudget: BudgetStatus = budget || {
-    daily_limit_usd: 50,
-    daily_spent_usd: 12.45,
-    daily_remaining_usd: 37.55,
-    monthly_limit_usd: 500,
-    monthly_spent_usd: 156.78,
-    monthly_remaining_usd: 343.22,
+  const realBudget: BudgetStatus = budget || {
+    daily_limit_usd: Number(process.env.NEXT_PUBLIC_DAILY_BUDGET_USD) || 50,
+    daily_spent_usd: 0,
+    daily_remaining_usd: Number(process.env.NEXT_PUBLIC_DAILY_BUDGET_USD) || 50,
+    monthly_limit_usd: Number(process.env.NEXT_PUBLIC_MONTHLY_BUDGET_USD) || 500,
+    monthly_spent_usd: 0,
+    monthly_remaining_usd: Number(process.env.NEXT_PUBLIC_MONTHLY_BUDGET_USD) || 500,
     token_limit_per_run: 100000,
     llm_calls_allowed: true,
-    estimated_calls_remaining: 150,
+    estimated_calls_remaining: 1000,
     alerts: [],
   };
 
-  const mockQuarantine: QuarantineStats = quarantine || {
-    total: 12,
-    pending: 5,
-    escalated: 2,
-    resolved: 5,
-    byPriority: { critical: 1, high: 3, medium: 5, low: 3 },
-    pendingRetries: 3,
+  const realQuarantine: QuarantineStats = quarantine || {
+    total: 0,
+    pending: 0,
+    escalated: 0,
+    resolved: 0,
+    byPriority: { critical: 0, high: 0, medium: 0, low: 0 },
+    pendingRetries: 0,
   };
 
-  const dailyBudgetStatus = mockBudget.daily_spent_usd / mockBudget.daily_limit_usd > 0.9 
+  const dailyBudgetStatus = realBudget.daily_spent_usd / realBudget.daily_limit_usd > 0.9 
     ? 'critical' 
-    : mockBudget.daily_spent_usd / mockBudget.daily_limit_usd > 0.7 
+    : realBudget.daily_spent_usd / realBudget.daily_limit_usd > 0.7 
       ? 'warning' 
       : 'good';
 
-  const monthlyBudgetStatus = mockBudget.monthly_spent_usd / mockBudget.monthly_limit_usd > 0.9 
+  const monthlyBudgetStatus = realBudget.monthly_spent_usd / realBudget.monthly_limit_usd > 0.9 
     ? 'critical' 
-    : mockBudget.monthly_spent_usd / mockBudget.monthly_limit_usd > 0.7 
+    : realBudget.monthly_spent_usd / realBudget.monthly_limit_usd > 0.7 
       ? 'warning' 
       : 'good';
 
-  const qualityMetrics = mockStats.qualityMetrics!;
-  const laneOutcomes = mockStats.laneOutcomeStats!;
+  const qualityMetrics = realStats.qualityMetrics!;
+  const laneOutcomes = realStats.laneOutcomeStats!;
 
   return (
     <AppLayout>
@@ -448,10 +441,10 @@ export default function TelemetryPage() {
         </div>
 
         {/* Budget Alerts */}
-        <AlertBanner alerts={mockBudget.alerts} />
+        <AlertBanner alerts={realBudget.alerts} />
 
         {/* LLM Status Banner */}
-        {!mockBudget.llm_calls_allowed && (
+        {!realBudget.llm_calls_allowed && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
             <div className="flex items-center gap-3">
               <span className="text-red-400 text-lg">⛔</span>
@@ -527,39 +520,39 @@ export default function TelemetryPage() {
             <div className="bg-card border border-border rounded-lg p-4">
               <h3 className="text-sm font-medium text-foreground mb-3">Daily Budget</h3>
               <ProgressBar 
-                value={mockBudget.daily_spent_usd} 
-                max={mockBudget.daily_limit_usd}
-                label={`$${mockBudget.daily_spent_usd.toFixed(2)} / $${mockBudget.daily_limit_usd.toFixed(2)}`}
+                value={realBudget.daily_spent_usd} 
+                max={realBudget.daily_limit_usd}
+                label={`$${realBudget.daily_spent_usd.toFixed(2)} / $${realBudget.daily_limit_usd.toFixed(2)}`}
                 status={dailyBudgetStatus}
               />
               <p className="text-xs text-muted-foreground mt-2">
-                ${mockBudget.daily_remaining_usd.toFixed(2)} remaining today
+                ${realBudget.daily_remaining_usd.toFixed(2)} remaining today
               </p>
             </div>
             
             <div className="bg-card border border-border rounded-lg p-4">
               <h3 className="text-sm font-medium text-foreground mb-3">Monthly Budget</h3>
               <ProgressBar 
-                value={mockBudget.monthly_spent_usd} 
-                max={mockBudget.monthly_limit_usd}
-                label={`$${mockBudget.monthly_spent_usd.toFixed(2)} / $${mockBudget.monthly_limit_usd.toFixed(2)}`}
+                value={realBudget.monthly_spent_usd} 
+                max={realBudget.monthly_limit_usd}
+                label={`$${realBudget.monthly_spent_usd.toFixed(2)} / $${realBudget.monthly_limit_usd.toFixed(2)}`}
                 status={monthlyBudgetStatus}
               />
               <p className="text-xs text-muted-foreground mt-2">
-                ${mockBudget.monthly_remaining_usd.toFixed(2)} remaining this month
+                ${realBudget.monthly_remaining_usd.toFixed(2)} remaining this month
               </p>
             </div>
 
             <div className="bg-card border border-border rounded-lg p-4">
               <h3 className="text-sm font-medium text-foreground mb-3">Estimated Capacity</h3>
               <div className="flex items-baseline gap-2">
-                <span className={`text-3xl font-semibold ${mockBudget.llm_calls_allowed ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {mockBudget.estimated_calls_remaining}
+                <span className={`text-3xl font-semibold ${realBudget.llm_calls_allowed ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {realBudget.estimated_calls_remaining}
                 </span>
                 <span className="text-sm text-muted-foreground">calls remaining</span>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                {mockBudget.llm_calls_allowed ? 'LLM calls enabled' : 'LLM calls disabled'}
+                {realBudget.llm_calls_allowed ? 'LLM calls enabled' : 'LLM calls disabled'}
               </p>
             </div>
           </div>
@@ -571,25 +564,25 @@ export default function TelemetryPage() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <StatCard 
               title="Total Quarantined" 
-              value={mockQuarantine.total}
+              value={realQuarantine.total}
             />
             <StatCard 
               title="Pending Review" 
-              value={mockQuarantine.pending}
-              status={mockQuarantine.pending > 10 ? 'warning' : 'neutral'}
+              value={realQuarantine.pending}
+              status={realQuarantine.pending > 10 ? 'warning' : 'neutral'}
             />
             <StatCard 
               title="Escalated" 
-              value={mockQuarantine.escalated}
-              status={mockQuarantine.escalated > 0 ? 'critical' : 'good'}
+              value={realQuarantine.escalated}
+              status={realQuarantine.escalated > 0 ? 'critical' : 'good'}
             />
             <StatCard 
               title="Pending Retries" 
-              value={mockQuarantine.pendingRetries}
+              value={realQuarantine.pendingRetries}
             />
             <StatCard 
               title="Resolved" 
-              value={mockQuarantine.resolved}
+              value={realQuarantine.resolved}
               status="good"
             />
           </div>
@@ -601,23 +594,23 @@ export default function TelemetryPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard 
               title="Total Executions" 
-              value={mockStats.total_executions.toLocaleString()}
+              value={realStats.total_executions.toLocaleString()}
               subtitle={`in last ${timeRange}`}
             />
             <StatCard 
               title="Success Rate" 
-              value={`${mockStats.success_rate.toFixed(1)}%`}
-              status={mockStats.success_rate >= 95 ? 'good' : mockStats.success_rate >= 90 ? 'warning' : 'critical'}
+              value={`${realStats.success_rate.toFixed(1)}%`}
+              status={realStats.success_rate >= 95 ? 'good' : realStats.success_rate >= 90 ? 'warning' : 'critical'}
             />
             <StatCard 
               title="Total Tokens" 
-              value={`${(mockStats.total_tokens / 1000).toFixed(0)}K`}
+              value={`${(realStats.total_tokens / 1000).toFixed(0)}K`}
               subtitle="input + output"
             />
             <StatCard 
               title="Avg Latency" 
-              value={`${(mockStats.avg_latency_ms / 1000).toFixed(1)}s`}
-              status={mockStats.avg_latency_ms < 3000 ? 'good' : mockStats.avg_latency_ms < 5000 ? 'warning' : 'critical'}
+              value={`${(realStats.avg_latency_ms / 1000).toFixed(1)}s`}
+              status={realStats.avg_latency_ms < 3000 ? 'good' : realStats.avg_latency_ms < 5000 ? 'warning' : 'critical'}
             />
           </div>
         </section>
@@ -637,7 +630,7 @@ export default function TelemetryPage() {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(mockStats.by_provider).map(([provider, data]) => (
+                {Object.entries(realStats.by_provider).map(([provider, data]) => (
                   <tr key={provider} className="border-b border-border last:border-0">
                     <td className="p-3 text-sm text-foreground capitalize">{provider}</td>
                     <td className="p-3 text-sm text-foreground text-right">{data.count}</td>
@@ -665,7 +658,7 @@ export default function TelemetryPage() {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(mockStats.by_prompt).map(([prompt, data]) => (
+                {Object.entries(realStats.by_prompt).map(([prompt, data]) => (
                   <tr key={prompt} className="border-b border-border last:border-0">
                     <td className="p-3 text-sm text-foreground">
                       <code className="text-xs bg-muted px-1 py-0.5 rounded">
@@ -690,11 +683,11 @@ export default function TelemetryPage() {
         </section>
 
         {/* Recent Errors */}
-        {mockStats.recent_errors.length > 0 && (
+        {realStats.recent_errors.length > 0 && (
           <section className="mb-8">
             <h2 className="text-lg font-medium text-foreground mb-4">Recent Errors</h2>
             <div className="bg-card border border-border rounded-lg p-4 space-y-3">
-              {mockStats.recent_errors.map((error, i) => (
+              {realStats.recent_errors.map((error, i) => (
                 <div key={i} className="flex items-start gap-3 text-sm">
                   <span className="text-red-400">✕</span>
                   <div>
