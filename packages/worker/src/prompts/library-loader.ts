@@ -51,7 +51,10 @@ export class PromptLibraryLoader {
     } else {
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = dirname(__filename);
-      this.libraryPath = join(__dirname, 'library', 'prompts.json');
+      // Try full library first, fall back to basic
+      const fullPath = join(__dirname, 'library', 'prompts_full.json');
+      const basicPath = join(__dirname, 'library', 'prompts.json');
+      this.libraryPath = existsSync(fullPath) ? fullPath : basicPath;
     }
   }
 

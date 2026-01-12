@@ -9,3 +9,6 @@ export * from './sources/sec-edgar.js';
 export * from './aggregator.js';
 export * from './types.js';
 export * from './hub.js';
+export * from './sources/fred.js';
+export * from './sources/reddit.js';
+export * from './sources/twitter.js';

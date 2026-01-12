@@ -1,556 +1,561 @@
 /**
  * ARC Investment Factory - Data Retriever Hub
  * 
- * Centralized interface for fetching data from multiple sources.
- * Implements caching, fallback, timeout, and status tracking per source.
+ * Centralized data access layer with caching, fallback, and unified interface
+ * for all data sources: FMP, Polygon, SEC EDGAR, FRED, Reddit, Twitter.
  */
 
-import { createHash } from 'crypto';
-import { createFMPClient, type FMPClient } from './sources/fmp.js';
-import { createPolygonClient, type PolygonClient } from './sources/polygon.js';
-import { createSECEdgarClient, type SECEdgarClient } from './sources/sec-edgar.js';
+import { FMPClient } from './sources/fmp.js';
+import { PolygonClient } from './sources/polygon.js';
+import { SECEdgarClient } from './sources/sec-edgar.js';
+import { FREDClient } from './sources/fred.js';
+import { RedditClient } from './sources/reddit.js';
+import { TwitterClient } from './sources/twitter.js';
+import type { RetrieverResult, CompanyProfile, FinancialMetrics, StockPrice, SECFiling } from './types.js';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export interface SourceStatus {
-  source: string;
-  available: boolean;
-  last_success?: Date;
-  last_failure?: Date;
-  failure_count: number;
-  avg_latency_ms: number;
-}
-
-export interface FetchResult<T = unknown> {
-  source: string;
-  success: boolean;
-  data?: T;
-  error?: string;
-  latency_ms: number;
-  cached: boolean;
-  cache_key?: string;
-}
-
-export interface CacheEntry {
-  key: string;
-  data: unknown;
-  created_at: Date;
-  expires_at: Date;
-  source: string;
+export interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  ttl: number;
 }
 
 export interface HubConfig {
-  cache_enabled: boolean;
-  default_ttl_seconds: number;
-  timeout_ms: number;
-  max_retries: number;
-  retry_delay_ms: number;
-  circuit_breaker_threshold: number;
+  cacheTTL?: {
+    profile?: number;
+    financials?: number;
+    prices?: number;
+    news?: number;
+    filings?: number;
+    macro?: number;
+    social?: number;
+  };
+  enableCache?: boolean;
 }
+
+export interface DataSourceStatus {
+  name: string;
+  configured: boolean;
+  lastSuccess?: Date;
+  lastError?: string;
+  avgLatencyMs?: number;
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+function makeResult<T>(success: boolean, source: string, data?: T, error?: string): RetrieverResult<T> {
+  return {
+    success,
+    data,
+    error,
+    source,
+    retrievedAt: new Date().toISOString(),
+  };
+}
+
+// ============================================================================
+// DEFAULT CONFIGURATION
+// ============================================================================
+
+const DEFAULT_TTL = {
+  profile: 24 * 60 * 60 * 1000,      // 24 hours
+  financials: 6 * 60 * 60 * 1000,    // 6 hours
+  prices: 5 * 60 * 1000,             // 5 minutes
+  news: 15 * 60 * 1000,              // 15 minutes
+  filings: 60 * 60 * 1000,           // 1 hour
+  macro: 60 * 60 * 1000,             // 1 hour
+  social: 10 * 60 * 1000,            // 10 minutes
+};
 
 // ============================================================================
 // DATA RETRIEVER HUB
 // ============================================================================
 
 export class DataRetrieverHub {
-  private cache: Map<string, CacheEntry> = new Map();
-  private sourceStatus: Map<string, SourceStatus> = new Map();
-  private config: HubConfig;
+  private fmp: FMPClient;
+  private polygon: PolygonClient;
+  private sec: SECEdgarClient;
+  private fred: FREDClient;
+  private reddit: RedditClient;
+  private twitter: TwitterClient;
+  
+  private cache: Map<string, CacheEntry<unknown>> = new Map();
+  private config: Required<HubConfig>;
+  private sourceStatus: Map<string, DataSourceStatus> = new Map();
 
-  // Source clients
-  private fmpClient: ReturnType<typeof createFMPClient>;
-  private polygonClient: ReturnType<typeof createPolygonClient>;
-  private secEdgarClient: ReturnType<typeof createSECEdgarClient>;
+  constructor(config: HubConfig = {}) {
+    this.fmp = new FMPClient();
+    this.polygon = new PolygonClient();
+    this.sec = new SECEdgarClient();
+    this.fred = new FREDClient();
+    this.reddit = new RedditClient();
+    this.twitter = new TwitterClient();
 
-  constructor(config?: Partial<HubConfig>) {
     this.config = {
-      cache_enabled: true,
-      default_ttl_seconds: 3600, // 1 hour
-      timeout_ms: 30000, // 30 seconds
-      max_retries: 2,
-      retry_delay_ms: 1000,
-      circuit_breaker_threshold: 5,
-      ...config,
+      cacheTTL: { ...DEFAULT_TTL, ...config.cacheTTL },
+      enableCache: config.enableCache ?? true,
     };
 
-    // Initialize source clients
-    this.fmpClient = createFMPClient();
-    this.polygonClient = createPolygonClient();
-    this.secEdgarClient = createSECEdgarClient();
-
-    // Initialize source status
     this.initializeSourceStatus();
   }
 
   private initializeSourceStatus(): void {
-    const sources = ['fmp', 'polygon', 'sec_edgar', 'perplexity', 'news'];
+    const sources = [
+      { name: 'FMP', key: 'FMP_API_KEY' },
+      { name: 'Polygon', key: 'POLYGON_API_KEY' },
+      { name: 'SEC EDGAR', key: null },
+      { name: 'FRED', key: 'FRED_API_KEY' },
+      { name: 'Reddit', key: 'REDDIT_CLIENT_ID' },
+      { name: 'Twitter', key: 'TWITTER_BEARER_TOKEN' },
+    ];
+
     for (const source of sources) {
-      this.sourceStatus.set(source, {
-        source,
-        available: true,
-        failure_count: 0,
-        avg_latency_ms: 0,
+      this.sourceStatus.set(source.name, {
+        name: source.name,
+        configured: source.key === null || !!process.env[source.key],
       });
     }
   }
 
-  // ============================================================================
-  // CACHE METHODS
-  // ============================================================================
+  // --------------------------------------------------------------------------
+  // CACHE MANAGEMENT
+  // --------------------------------------------------------------------------
 
-  private generateCacheKey(source: string, method: string, params: Record<string, unknown>): string {
-    const paramsStr = JSON.stringify(params, Object.keys(params).sort());
-    const hash = createHash('sha256')
-      .update(`${source}:${method}:${paramsStr}`)
-      .digest('hex')
-      .substring(0, 16);
-    return `${source}:${method}:${hash}`;
+  private getCacheKey(source: string, method: string, params: Record<string, unknown>): string {
+    return `${source}:${method}:${JSON.stringify(params)}`;
   }
 
-  private getFromCache(key: string): CacheEntry | null {
-    if (!this.config.cache_enabled) return null;
+  private getFromCache<T>(key: string): T | null {
+    if (!this.config.enableCache) return null;
 
-    const entry = this.cache.get(key);
+    const entry = this.cache.get(key) as CacheEntry<T> | undefined;
     if (!entry) return null;
 
-    if (new Date() > entry.expires_at) {
+    const now = Date.now();
+    if (now - entry.timestamp > entry.ttl) {
       this.cache.delete(key);
       return null;
     }
 
-    return entry;
+    return entry.data;
   }
 
-  private setCache(key: string, data: unknown, source: string, ttl_seconds?: number): void {
-    if (!this.config.cache_enabled) return;
-
-    const ttl = ttl_seconds || this.config.default_ttl_seconds;
-    const now = new Date();
-    const expires_at = new Date(now.getTime() + ttl * 1000);
+  private setCache<T>(key: string, data: T, ttl: number): void {
+    if (!this.config.enableCache) return;
 
     this.cache.set(key, {
-      key,
       data,
-      created_at: now,
-      expires_at,
-      source,
+      timestamp: Date.now(),
+      ttl,
     });
   }
 
-  clearCache(): void {
+  public clearCache(): void {
     this.cache.clear();
   }
 
-  getCacheStats(): { size: number; sources: Record<string, number> } {
-    const sources: Record<string, number> = {};
-    for (const entry of this.cache.values()) {
-      sources[entry.source] = (sources[entry.source] || 0) + 1;
-    }
-    return { size: this.cache.size, sources };
-  }
-
-  // ============================================================================
-  // SOURCE STATUS METHODS
-  // ============================================================================
-
-  private updateSourceStatus(source: string, success: boolean, latency_ms: number): void {
-    const status = this.sourceStatus.get(source);
-    if (!status) return;
-
-    if (success) {
-      status.last_success = new Date();
-      status.failure_count = 0;
-      status.available = true;
-    } else {
-      status.last_failure = new Date();
-      status.failure_count++;
-      if (status.failure_count >= this.config.circuit_breaker_threshold) {
-        status.available = false;
-        console.warn(`[DataRetrieverHub] Circuit breaker opened for source: ${source}`);
-      }
-    }
-
-    // Update average latency (exponential moving average)
-    status.avg_latency_ms = status.avg_latency_ms * 0.8 + latency_ms * 0.2;
-    this.sourceStatus.set(source, status);
-  }
-
-  getSourceStatus(source: string): SourceStatus | undefined {
-    return this.sourceStatus.get(source);
-  }
-
-  getAllSourceStatus(): SourceStatus[] {
-    return Array.from(this.sourceStatus.values());
-  }
-
-  resetSourceStatus(source: string): void {
-    const status = this.sourceStatus.get(source);
-    if (status) {
-      status.available = true;
-      status.failure_count = 0;
-      this.sourceStatus.set(source, status);
-    }
-  }
-
-  // ============================================================================
-  // GENERIC FETCH WITH RETRY AND TIMEOUT
-  // ============================================================================
-
-  private async fetchWithRetry<T>(
-    source: string,
-    method: string,
-    fetchFn: () => Promise<{ success: boolean; data?: T; error?: string }>,
-    params: Record<string, unknown>,
-    ttl_seconds?: number
-  ): Promise<FetchResult<T>> {
-    const cacheKey = this.generateCacheKey(source, method, params);
-    const startTime = Date.now();
-
-    // Check cache first
-    const cached = this.getFromCache(cacheKey);
-    if (cached) {
-      return {
-        source,
-        success: true,
-        data: cached.data as T,
-        latency_ms: Date.now() - startTime,
-        cached: true,
-        cache_key: cacheKey,
-      };
-    }
-
-    // Check circuit breaker
-    const status = this.sourceStatus.get(source);
-    if (status && !status.available) {
-      return {
-        source,
-        success: false,
-        error: `Source ${source} is unavailable (circuit breaker open)`,
-        latency_ms: Date.now() - startTime,
-        cached: false,
-      };
-    }
-
-    // Fetch with retry
-    let lastError: Error | null = null;
-    for (let attempt = 0; attempt <= this.config.max_retries; attempt++) {
-      try {
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout')), this.config.timeout_ms)
-        );
-
-        const result = await Promise.race([fetchFn(), timeoutPromise]);
-        const latency_ms = Date.now() - startTime;
-
-        if (result.success && result.data !== undefined) {
-          // Update status and cache
-          this.updateSourceStatus(source, true, latency_ms);
-          this.setCache(cacheKey, result.data, source, ttl_seconds);
-
-          return {
-            source,
-            success: true,
-            data: result.data,
-            latency_ms,
-            cached: false,
-            cache_key: cacheKey,
-          };
-        } else {
-          throw new Error(result.error || 'Unknown error');
-        }
-      } catch (error) {
-        lastError = error as Error;
-        if (attempt < this.config.max_retries) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, this.config.retry_delay_ms * (attempt + 1))
-          );
-        }
-      }
-    }
-
-    const latency_ms = Date.now() - startTime;
-    this.updateSourceStatus(source, false, latency_ms);
-
+  public getCacheStats(): { size: number; keys: string[] } {
     return {
-      source,
-      success: false,
-      error: lastError?.message || 'Unknown error',
-      latency_ms,
-      cached: false,
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys()),
     };
   }
 
-  // ============================================================================
-  // FMP DATA METHODS
-  // ============================================================================
+  // --------------------------------------------------------------------------
+  // SOURCE STATUS
+  // --------------------------------------------------------------------------
 
-  async getCompanyProfile(ticker: string): Promise<FetchResult> {
-    return this.fetchWithRetry(
-      'fmp',
-      'getProfile',
-      () => this.fmpClient.getProfile(ticker),
-      { ticker },
-      86400 // 24 hours
-    );
+  private updateSourceStatus(name: string, success: boolean, error?: string, latencyMs?: number): void {
+    const status = this.sourceStatus.get(name);
+    if (status) {
+      if (success) {
+        status.lastSuccess = new Date();
+        if (latencyMs) {
+          status.avgLatencyMs = status.avgLatencyMs 
+            ? (status.avgLatencyMs + latencyMs) / 2 
+            : latencyMs;
+        }
+      } else {
+        status.lastError = error;
+      }
+      this.sourceStatus.set(name, status);
+    }
   }
 
-  async getFinancialMetrics(ticker: string): Promise<FetchResult> {
-    return this.fetchWithRetry(
-      'fmp',
-      'getKeyMetrics',
-      () => this.fmpClient.getKeyMetrics(ticker),
-      { ticker },
-      3600 // 1 hour
-    );
+  public getSourceStatus(): DataSourceStatus[] {
+    return Array.from(this.sourceStatus.values());
   }
 
-  async getIncomeStatement(ticker: string, period: 'annual' | 'quarter' = 'annual'): Promise<FetchResult> {
-    return this.fetchWithRetry(
-      'fmp',
-      'getIncomeStatements',
-      () => this.fmpClient.getIncomeStatements(ticker, period),
-      { ticker, period },
-      86400
-    );
+  // --------------------------------------------------------------------------
+  // COMPANY DATA (FMP + Polygon)
+  // --------------------------------------------------------------------------
+
+  async getCompanyProfile(ticker: string): Promise<RetrieverResult<CompanyProfile>> {
+    const cacheKey = this.getCacheKey('fmp', 'profile', { ticker });
+    const cached = this.getFromCache<CompanyProfile>(cacheKey);
+    if (cached) return makeResult(true, 'FMP (cached)', cached);
+
+    const startTime = Date.now();
+    const result = await this.fmp.getProfile(ticker);
+    const latency = Date.now() - startTime;
+
+    this.updateSourceStatus('FMP', result.success, result.error, latency);
+
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.profile!);
+    }
+
+    return result;
   }
 
-  async getBalanceSheet(ticker: string, period: 'annual' | 'quarter' = 'annual'): Promise<FetchResult> {
-    return this.fetchWithRetry(
-      'fmp',
-      'getBalanceSheets',
-      () => this.fmpClient.getBalanceSheets(ticker, period),
-      { ticker, period },
-      86400
-    );
+  async getFinancialMetrics(ticker: string): Promise<RetrieverResult<FinancialMetrics>> {
+    const cacheKey = this.getCacheKey('fmp', 'metrics', { ticker });
+    const cached = this.getFromCache<FinancialMetrics>(cacheKey);
+    if (cached) return makeResult(true, 'FMP (cached)', cached);
+
+    const startTime = Date.now();
+    const result = await this.fmp.getKeyMetrics(ticker);
+    const latency = Date.now() - startTime;
+
+    this.updateSourceStatus('FMP', result.success, result.error, latency);
+
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.financials!);
+    }
+
+    return result;
   }
 
-  async getCashFlowStatement(ticker: string, period: 'annual' | 'quarter' = 'annual'): Promise<FetchResult> {
-    return this.fetchWithRetry(
-      'fmp',
-      'getCashFlowStatements',
-      () => this.fmpClient.getCashFlowStatements(ticker, period),
-      { ticker, period },
-      86400
-    );
+  async getIncomeStatements(ticker: string, period: 'annual' | 'quarter' = 'annual', limit = 5): Promise<RetrieverResult<unknown[]>> {
+    const cacheKey = this.getCacheKey('fmp', 'income', { ticker, period, limit });
+    const cached = this.getFromCache<unknown[]>(cacheKey);
+    if (cached) return makeResult(true, 'FMP (cached)', cached);
+
+    const result = await this.fmp.getIncomeStatements(ticker, period, limit);
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.financials!);
+    }
+    return result;
   }
 
-  async getStockScreener(params: {
+  async getBalanceSheets(ticker: string, period: 'annual' | 'quarter' = 'annual', limit = 5): Promise<RetrieverResult<unknown[]>> {
+    const cacheKey = this.getCacheKey('fmp', 'balance', { ticker, period, limit });
+    const cached = this.getFromCache<unknown[]>(cacheKey);
+    if (cached) return makeResult(true, 'FMP (cached)', cached);
+
+    const result = await this.fmp.getBalanceSheets(ticker, period, limit);
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.financials!);
+    }
+    return result;
+  }
+
+  async getCashFlowStatements(ticker: string, period: 'annual' | 'quarter' = 'annual', limit = 5): Promise<RetrieverResult<unknown[]>> {
+    const cacheKey = this.getCacheKey('fmp', 'cashflow', { ticker, period, limit });
+    const cached = this.getFromCache<unknown[]>(cacheKey);
+    if (cached) return makeResult(true, 'FMP (cached)', cached);
+
+    const result = await this.fmp.getCashFlowStatements(ticker, period, limit);
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.financials!);
+    }
+    return result;
+  }
+
+  async screenStocks(params: {
     marketCapMoreThan?: number;
     marketCapLowerThan?: number;
     sector?: string;
+    industry?: string;
     limit?: number;
-  }): Promise<FetchResult> {
-    return this.fetchWithRetry(
-      'fmp',
-      'screenStocks',
-      () => this.fmpClient.screenStocks(params),
-      params,
-      3600
-    );
+  }): Promise<RetrieverResult<unknown[]>> {
+    const cacheKey = this.getCacheKey('fmp', 'screen', params);
+    const cached = this.getFromCache<unknown[]>(cacheKey);
+    if (cached) return makeResult(true, 'FMP (cached)', cached);
+
+    const result = await this.fmp.screenStocks(params);
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.profile!);
+    }
+    return result;
   }
 
-  // ============================================================================
-  // POLYGON DATA METHODS
-  // ============================================================================
+  // --------------------------------------------------------------------------
+  // PRICE DATA (Polygon primary, FMP fallback)
+  // --------------------------------------------------------------------------
 
-  async getStockPrice(ticker: string): Promise<FetchResult> {
-    return this.fetchWithRetry(
-      'polygon',
-      'getLatestPrice',
-      () => this.polygonClient.getLatestPrice(ticker),
-      { ticker },
-      60 // 1 minute
+  async getPriceHistory(ticker: string, days = 365): Promise<RetrieverResult<StockPrice[]>> {
+    const cacheKey = this.getCacheKey('polygon', 'prices', { ticker, days });
+    const cached = this.getFromCache<StockPrice[]>(cacheKey);
+    if (cached) return makeResult(true, 'Polygon (cached)', cached);
+
+    const endDate = new Date();
+    const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+
+    const startTime = Date.now();
+    const result = await this.polygon.getDailyPrices(
+      ticker,
+      startDate.toISOString().split('T')[0],
+      endDate.toISOString().split('T')[0]
     );
-  }
+    const latency = Date.now() - startTime;
 
-  async getPriceHistory(
-    ticker: string,
-    days: number = 365
-  ): Promise<FetchResult> {
-    const today = new Date();
-    const from = new Date(today);
-    from.setDate(from.getDate() - days);
-    const fromStr = from.toISOString().split('T')[0];
-    const toStr = today.toISOString().split('T')[0];
-    
-    return this.fetchWithRetry(
-      'polygon',
-      'getDailyPrices',
-      () => this.polygonClient.getDailyPrices(ticker, fromStr, toStr),
-      { ticker, days },
-      3600
-    );
-  }
+    this.updateSourceStatus('Polygon', result.success, result.error, latency);
 
-  async getTickerNews(ticker: string, limit: number = 10): Promise<FetchResult> {
-    return this.fetchWithRetry(
-      'polygon',
-      'getNews',
-      () => this.polygonClient.getNews(ticker, limit),
-      { ticker, limit },
-      1800 // 30 minutes
-    );
-  }
-
-  // ============================================================================
-  // SEC EDGAR DATA METHODS
-  // ============================================================================
-
-  async getSecFilings(ticker: string, formTypes?: string[]): Promise<FetchResult> {
-    return this.fetchWithRetry(
-      'sec_edgar',
-      'getFilings',
-      () => this.secEdgarClient.getFilings(ticker, formTypes),
-      { ticker, formTypes },
-      86400
-    );
-  }
-
-  async get10KFiling(ticker: string): Promise<FetchResult> {
-    return this.fetchWithRetry(
-      'sec_edgar',
-      'get10KFiling',
-      () => this.secEdgarClient.getFilings(ticker, ['10-K']),
-      { ticker, formType: '10-K' },
-      86400
-    );
-  }
-
-  async get10QFiling(ticker: string): Promise<FetchResult> {
-    return this.fetchWithRetry(
-      'sec_edgar',
-      'get10QFiling',
-      () => this.secEdgarClient.getFilings(ticker, ['10-Q']),
-      { ticker, formType: '10-Q' },
-      86400
-    );
-  }
-
-  // ============================================================================
-  // AGGREGATED DATA METHODS
-  // ============================================================================
-
-  /**
-   * Fetch all data needed for Lane A discovery
-   */
-  async fetchLaneAData(ticker: string): Promise<{
-    results: Record<string, FetchResult>;
-    sources_succeeded: string[];
-    sources_failed: Array<{ source: string; reason: string }>;
-  }> {
-    const results: Record<string, FetchResult> = {};
-    const sources_succeeded: string[] = [];
-    const sources_failed: Array<{ source: string; reason: string }> = [];
-
-    // Fetch in parallel
-    const [profile, metrics, price, news] = await Promise.all([
-      this.getCompanyProfile(ticker),
-      this.getFinancialMetrics(ticker),
-      this.getStockPrice(ticker),
-      this.getTickerNews(ticker, 5),
-    ]);
-
-    results.profile = profile;
-    results.metrics = metrics;
-    results.price = price;
-    results.news = news;
-
-    // Track successes and failures
-    for (const [key, result] of Object.entries(results)) {
-      if (result.success) {
-        if (!sources_succeeded.includes(result.source)) {
-          sources_succeeded.push(result.source);
-        }
-      } else {
-        sources_failed.push({ source: result.source, reason: result.error || 'Unknown error' });
-      }
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.prices!);
     }
 
-    return { results, sources_succeeded, sources_failed };
+    return result;
   }
 
-  /**
-   * Fetch all data needed for Lane B deep research
-   */
-  async fetchLaneBData(ticker: string): Promise<{
-    results: Record<string, FetchResult>;
-    sources_succeeded: string[];
-    sources_failed: Array<{ source: string; reason: string }>;
-  }> {
-    const results: Record<string, FetchResult> = {};
-    const sources_succeeded: string[] = [];
-    const sources_failed: Array<{ source: string; reason: string }> = [];
+  async getLatestPrice(ticker: string): Promise<RetrieverResult<StockPrice>> {
+    const cacheKey = this.getCacheKey('polygon', 'latest', { ticker });
+    const cached = this.getFromCache<StockPrice>(cacheKey);
+    if (cached) return makeResult(true, 'Polygon (cached)', cached);
 
-    // Fetch in parallel
-    const [
-      profile,
-      metrics,
-      incomeAnnual,
-      incomeQuarter,
-      balanceAnnual,
-      cashFlowAnnual,
-      priceHistory,
-      news,
-      filings10K,
-      filings10Q,
-    ] = await Promise.all([
+    const startTime = Date.now();
+    const result = await this.polygon.getLatestPrice(ticker);
+    const latency = Date.now() - startTime;
+
+    this.updateSourceStatus('Polygon', result.success, result.error, latency);
+
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.prices!);
+    }
+
+    return result;
+  }
+
+  // --------------------------------------------------------------------------
+  // NEWS (Polygon)
+  // --------------------------------------------------------------------------
+
+  async getNews(ticker?: string, limit = 10): Promise<RetrieverResult<unknown[]>> {
+    const cacheKey = this.getCacheKey('polygon', 'news', { ticker, limit });
+    const cached = this.getFromCache<unknown[]>(cacheKey);
+    if (cached) return makeResult(true, 'Polygon (cached)', cached);
+
+    const startTime = Date.now();
+    const result = await this.polygon.getNews(ticker, limit);
+    const latency = Date.now() - startTime;
+
+    this.updateSourceStatus('Polygon', result.success, result.error, latency);
+
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.news!);
+    }
+
+    return result;
+  }
+
+  // --------------------------------------------------------------------------
+  // SEC FILINGS
+  // --------------------------------------------------------------------------
+
+  async getSECFilings(ticker: string, formType?: string, limit = 10): Promise<RetrieverResult<SECFiling[]>> {
+    const cacheKey = this.getCacheKey('sec', 'filings', { ticker, formType, limit });
+    const cached = this.getFromCache<SECFiling[]>(cacheKey);
+    if (cached) return makeResult(true, 'SEC EDGAR (cached)', cached);
+
+    const startTime = Date.now();
+    const formTypes = formType ? [formType] : undefined;
+    const result = await this.sec.getFilings(ticker, formTypes, limit);
+    const latency = Date.now() - startTime;
+
+    this.updateSourceStatus('SEC EDGAR', result.success, result.error, latency);
+
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.filings!);
+    }
+
+    return result;
+  }
+
+  async get10K(ticker: string, limit = 5): Promise<RetrieverResult<SECFiling[]>> {
+    return this.sec.get10K(ticker, limit);
+  }
+
+  async get10Q(ticker: string, limit = 8): Promise<RetrieverResult<SECFiling[]>> {
+    return this.sec.get10Q(ticker, limit);
+  }
+
+  async get8K(ticker: string, limit = 10): Promise<RetrieverResult<SECFiling[]>> {
+    return this.sec.get8K(ticker, limit);
+  }
+
+  async getInsiderTransactions(ticker: string, limit = 20): Promise<RetrieverResult<SECFiling[]>> {
+    return this.sec.getInsiderTransactions(ticker, limit);
+  }
+
+  // --------------------------------------------------------------------------
+  // MACRO DATA (FRED)
+  // --------------------------------------------------------------------------
+
+  async getMacroSeries(seriesId: string): Promise<RetrieverResult<unknown>> {
+    const cacheKey = this.getCacheKey('fred', 'series', { seriesId });
+    const cached = this.getFromCache<unknown>(cacheKey);
+    if (cached) return makeResult(true, 'FRED (cached)', cached);
+
+    const startTime = Date.now();
+    const result = await this.fred.getSeries(seriesId);
+    const latency = Date.now() - startTime;
+
+    this.updateSourceStatus('FRED', result.success, result.error, latency);
+
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.macro!);
+      return makeResult(true, 'FRED', result.data);
+    }
+
+    return makeResult(false, 'FRED', undefined, result.error);
+  }
+
+  async getGDP(): Promise<RetrieverResult<unknown>> {
+    return this.getMacroSeries('GDP');
+  }
+
+  async getInflation(): Promise<RetrieverResult<unknown>> {
+    return this.getMacroSeries('CPIAUCSL');
+  }
+
+  async getUnemployment(): Promise<RetrieverResult<unknown>> {
+    return this.getMacroSeries('UNRATE');
+  }
+
+  async getFedFundsRate(): Promise<RetrieverResult<unknown>> {
+    return this.getMacroSeries('FEDFUNDS');
+  }
+
+  async getTreasuryYields(): Promise<RetrieverResult<unknown>> {
+    return this.getMacroSeries('DGS10');
+  }
+
+  async getMacroSnapshot(): Promise<RetrieverResult<{
+    gdp: unknown;
+    inflation: unknown;
+    unemployment: unknown;
+    fedFunds: unknown;
+    treasury10y: unknown;
+  }>> {
+    const [gdp, inflation, unemployment, fedFunds, treasury10y] = await Promise.all([
+      this.getGDP(),
+      this.getInflation(),
+      this.getUnemployment(),
+      this.getFedFundsRate(),
+      this.getTreasuryYields(),
+    ]);
+
+    return makeResult(true, 'FRED', {
+      gdp: gdp.data,
+      inflation: inflation.data,
+      unemployment: unemployment.data,
+      fedFunds: fedFunds.data,
+      treasury10y: treasury10y.data,
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // SOCIAL SENTIMENT (Reddit, Twitter)
+  // --------------------------------------------------------------------------
+
+  async getRedditSentiment(ticker: string): Promise<RetrieverResult<unknown>> {
+    const cacheKey = this.getCacheKey('reddit', 'sentiment', { ticker });
+    const cached = this.getFromCache<unknown>(cacheKey);
+    if (cached) return makeResult(true, 'Reddit (cached)', cached);
+
+    const startTime = Date.now();
+    const result = await this.reddit.getTickerMentions(ticker);
+    const latency = Date.now() - startTime;
+
+    this.updateSourceStatus('Reddit', result.success, result.error, latency);
+
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.social!);
+      return makeResult(true, 'Reddit', result.data);
+    }
+
+    return makeResult(false, 'Reddit', undefined, result.error);
+  }
+
+  async getWSBTrending(): Promise<RetrieverResult<unknown>> {
+    const cacheKey = this.getCacheKey('reddit', 'wsb', {});
+    const cached = this.getFromCache<unknown>(cacheKey);
+    if (cached) return makeResult(true, 'Reddit (cached)', cached);
+
+    const result = await this.reddit.getSubredditPosts('wallstreetbets', 'hot', 25);
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.social!);
+      return makeResult(true, 'Reddit', result.data);
+    }
+    return makeResult(false, 'Reddit', undefined, result.error);
+  }
+
+  async getTwitterSentiment(ticker: string): Promise<RetrieverResult<unknown>> {
+    const cacheKey = this.getCacheKey('twitter', 'sentiment', { ticker });
+    const cached = this.getFromCache<unknown>(cacheKey);
+    if (cached) return makeResult(true, 'Twitter (cached)', cached);
+
+    const startTime = Date.now();
+    const result = await this.twitter.searchTweets(`$${ticker}`, 100);
+    const latency = Date.now() - startTime;
+
+    this.updateSourceStatus('Twitter', result.success, result.error, latency);
+
+    if (result.success && result.data) {
+      this.setCache(cacheKey, result.data, this.config.cacheTTL.social!);
+      return makeResult(true, 'Twitter', result.data);
+    }
+
+    return makeResult(false, 'Twitter', undefined, result.error);
+  }
+
+  // --------------------------------------------------------------------------
+  // AGGREGATED DATA
+  // --------------------------------------------------------------------------
+
+  async getFullCompanyData(ticker: string): Promise<RetrieverResult<{
+    profile: CompanyProfile | null;
+    metrics: FinancialMetrics | null;
+    prices: StockPrice[] | null;
+    filings: SECFiling[] | null;
+    news: unknown[] | null;
+    socialSentiment: unknown | null;
+  }>> {
+    const [profile, metrics, prices, filings, news, reddit] = await Promise.all([
       this.getCompanyProfile(ticker),
       this.getFinancialMetrics(ticker),
-      this.getIncomeStatement(ticker, 'annual'),
-      this.getIncomeStatement(ticker, 'quarter'),
-      this.getBalanceSheet(ticker, 'annual'),
-      this.getCashFlowStatement(ticker, 'annual'),
       this.getPriceHistory(ticker, 365),
-      this.getTickerNews(ticker, 20),
-      this.get10KFiling(ticker),
-      this.get10QFiling(ticker),
+      this.getSECFilings(ticker, undefined, 10),
+      this.getNews(ticker, 10),
+      this.getRedditSentiment(ticker),
     ]);
 
-    results.profile = profile;
-    results.metrics = metrics;
-    results.incomeAnnual = incomeAnnual;
-    results.incomeQuarter = incomeQuarter;
-    results.balanceAnnual = balanceAnnual;
-    results.cashFlowAnnual = cashFlowAnnual;
-    results.priceHistory = priceHistory;
-    results.news = news;
-    results.filings10K = filings10K;
-    results.filings10Q = filings10Q;
-
-    // Track successes and failures
-    for (const [key, result] of Object.entries(results)) {
-      if (result.success) {
-        if (!sources_succeeded.includes(result.source)) {
-          sources_succeeded.push(result.source);
-        }
-      } else {
-        sources_failed.push({ source: result.source, reason: result.error || 'Unknown error' });
-      }
-    }
-
-    return { results, sources_succeeded, sources_failed };
+    return makeResult(true, 'Multiple', {
+      profile: profile.data || null,
+      metrics: metrics.data || null,
+      prices: prices.data || null,
+      filings: filings.data || null,
+      news: news.data || null,
+      socialSentiment: reddit.data || null,
+    });
   }
 }
 
 // ============================================================================
-// FACTORY FUNCTION
+// SINGLETON INSTANCE
 // ============================================================================
 
 let hubInstance: DataRetrieverHub | null = null;
 
-export function getDataRetrieverHub(config?: Partial<HubConfig>): DataRetrieverHub {
+export function getDataRetrieverHub(): DataRetrieverHub {
   if (!hubInstance) {
-    hubInstance = new DataRetrieverHub(config);
+    hubInstance = new DataRetrieverHub();
   }
   return hubInstance;
-}
-
-export function resetDataRetrieverHub(): void {
-  hubInstance = null;
-}
-
-export function createDataRetrieverHub(config?: Partial<HubConfig>): DataRetrieverHub {
-  return new DataRetrieverHub(config);
 }

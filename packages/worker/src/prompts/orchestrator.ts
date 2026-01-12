@@ -362,38 +362,21 @@ export class PromptOrchestrator {
     }
 
     // Determine which data to fetch based on lane
-    if (context.lane === 'lane_a' || context.lane === 'A') {
-      const result = await this.dataHub.fetchLaneAData(context.ticker);
-      
-      for (const [key, fetchResult] of Object.entries(result.results)) {
-        const fr = fetchResult as { success: boolean; data?: unknown };
-        if (fr.success) {
-          data[key] = fr.data;
+    // Fetch data based on lane requirements
+    if (context.lane === 'lane_a' || context.lane === 'A' || context.lane === 'lane_b' || context.lane === 'B') {
+      try {
+        const fullData = await this.dataHub.getFullCompanyData(context.ticker);
+        if (fullData.success && fullData.data) {
+          data['profile'] = fullData.data.profile;
+          data['metrics'] = fullData.data.metrics;
+          data['prices'] = fullData.data.prices;
+          data['news'] = fullData.data.news;
+          succeeded.push('FMP', 'Polygon');
         }
+      } catch (error) {
+        failed.push({ source: 'FMP', reason: 'Failed to fetch company data' });
+        console.error('[Orchestrator] Failed to fetch company data:', error);
       }
-      
-      return {
-        data,
-        succeeded: result.sources_succeeded,
-        failed: result.sources_failed,
-      };
-    }
-
-    if (context.lane === 'lane_b' || context.lane === 'B') {
-      const result = await this.dataHub.fetchLaneBData(context.ticker);
-      
-      for (const [key, fetchResult] of Object.entries(result.results)) {
-        const fr = fetchResult as { success: boolean; data?: unknown };
-        if (fr.success) {
-          data[key] = fr.data;
-        }
-      }
-      
-      return {
-        data,
-        succeeded: result.sources_succeeded,
-        failed: result.sources_failed,
-      };
     }
 
     return { data, succeeded, failed };
@@ -465,7 +448,7 @@ export class PromptOrchestrator {
       quarantine: await this.quarantine.getStats(),
       activeBudgets: this.budget.getActiveBudgets().length,
       libraryPrompts: this.library.getStats().total,
-      dataSourceStatus: this.dataHub.getAllSourceStatus(),
+      dataSourceStatus: this.dataHub.getSourceStatus(),
     };
   }
 

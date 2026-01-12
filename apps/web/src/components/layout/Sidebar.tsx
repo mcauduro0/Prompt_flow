@@ -12,7 +12,8 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Settings
+  Settings,
+  Activity
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ const navItems = [
   { path: "/research", label: "Research", icon: FileText },
   { path: "/qa", label: "QA", icon: Shield },
   { path: "/memory", label: "Memory", icon: Search },
+  { path: "/telemetry", label: "Telemetry", icon: Activity },
   { path: "/settings", label: "Settings", icon: Settings },
 ];
 

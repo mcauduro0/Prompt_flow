@@ -1,0 +1,7123 @@
+{
+  "prompts": [
+    {
+      "prompt_id": "bull_bear_analysis",
+      "version": "1.0.0",
+      "name": "Bull Bear Analysis",
+      "description": "thesis",
+      "lane": "lane_b",
+      "stage": "synthesis",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in thesis.",
+      "user_prompt_template": "Analyze {{ticker}} for bull bear analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "business_economics",
+      "version": "1.0.0",
+      "name": "Business Economics",
+      "description": "business_model",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in business_model.",
+      "user_prompt_template": "Analyze {{ticker}} for business economics.",
+      "required_data_sources": [
+        "fmp",
+        "fred"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "business_overview_report",
+      "version": "1.0.0",
+      "name": "Business Overview Report",
+      "description": "business_model",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in business_model.",
+      "user_prompt_template": "Analyze {{ticker}} for business overview report.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "capital_allocation_analysis",
+      "version": "1.0.0",
+      "name": "Capital Allocation Analysis",
+      "description": "financial",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in financial.",
+      "user_prompt_template": "Analyze {{ticker}} for capital allocation analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "capital_structure_optimizer",
+      "version": "1.0.0",
+      "name": "Capital Structure Optimizer",
+      "description": "financial_analysis",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in financial_analysis.",
+      "user_prompt_template": "Analyze {{ticker}} for capital structure optimizer.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "catalyst_identification",
+      "version": "1.0.0",
+      "name": "Catalyst Identification",
+      "description": "catalysts",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in catalysts.",
+      "user_prompt_template": "Analyze {{ticker}} for catalyst identification.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "ceo_track_record",
+      "version": "1.0.0",
+      "name": "Ceo Track Record",
+      "description": "management",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in management.",
+      "user_prompt_template": "Analyze {{ticker}} for ceo track record.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "competitive_analysis",
+      "version": "1.0.0",
+      "name": "Competitive Analysis",
+      "description": "industry",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in industry.",
+      "user_prompt_template": "Analyze {{ticker}} for competitive analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "customer_analysis",
+      "version": "1.0.0",
+      "name": "Customer Analysis",
+      "description": "business_model",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in business_model.",
+      "user_prompt_template": "Analyze {{ticker}} for customer analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "debt_structure_analysis",
+      "version": "1.0.0",
+      "name": "Debt Structure Analysis",
+      "description": "financial",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in financial.",
+      "user_prompt_template": "Analyze {{ticker}} for debt structure analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "earnings_quality_analysis",
+      "version": "1.0.0",
+      "name": "Earnings Quality Analysis",
+      "description": "financial",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in financial.",
+      "user_prompt_template": "Analyze {{ticker}} for earnings quality analysis.",
+      "required_data_sources": [
+        "fmp",
+        "perplexity",
+        "polygon"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "esg_analysis",
+      "version": "1.0.0",
+      "name": "Esg Analysis",
+      "description": "esg",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in esg.",
+      "user_prompt_template": "Analyze {{ticker}} for esg analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "financial_statement_analysis",
+      "version": "1.0.0",
+      "name": "Financial Statement Analysis",
+      "description": "financial",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in financial.",
+      "user_prompt_template": "Analyze {{ticker}} for financial statement analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "geographic_analysis",
+      "version": "1.0.0",
+      "name": "Geographic Analysis",
+      "description": "operations",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in operations.",
+      "user_prompt_template": "Analyze {{ticker}} for geographic analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "growth_margin_drivers",
+      "version": "1.0.0",
+      "name": "Growth Margin Drivers",
+      "description": "financial",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in financial.",
+      "user_prompt_template": "Analyze {{ticker}} for growth margin drivers.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "industry_overview",
+      "version": "1.0.0",
+      "name": "Industry Overview",
+      "description": "industry",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in industry.",
+      "user_prompt_template": "Analyze {{ticker}} for industry overview.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "insider_activity_analysis",
+      "version": "1.0.0",
+      "name": "Insider Activity Analysis",
+      "description": "technical",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in technical.",
+      "user_prompt_template": "Analyze {{ticker}} for insider activity analysis.",
+      "required_data_sources": [
+        "fmp",
+        "sec_edgar"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "ma_history_analysis",
+      "version": "1.0.0",
+      "name": "Ma History Analysis",
+      "description": "financial",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in financial.",
+      "user_prompt_template": "Analyze {{ticker}} for ma history analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "management_quality_assessment",
+      "version": "1.0.0",
+      "name": "Management Quality Assessment",
+      "description": "management",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in management.",
+      "user_prompt_template": "Analyze {{ticker}} for management quality assessment.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "regulatory_risk_analysis",
+      "version": "1.0.0",
+      "name": "Regulatory Risk Analysis",
+      "description": "risk",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in risk.",
+      "user_prompt_template": "Analyze {{ticker}} for regulatory risk analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "risk_assessment",
+      "version": "1.0.0",
+      "name": "Risk Assessment",
+      "description": "risk",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in risk.",
+      "user_prompt_template": "Analyze {{ticker}} for risk assessment.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "risk_factor_identifier",
+      "version": "1.0.0",
+      "name": "Risk Factor Identifier",
+      "description": "risk_analysis",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in risk_analysis.",
+      "user_prompt_template": "Analyze {{ticker}} for risk factor identifier.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "segment_analysis",
+      "version": "1.0.0",
+      "name": "Segment Analysis",
+      "description": "financial",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in financial.",
+      "user_prompt_template": "Analyze {{ticker}} for segment analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "short_interest_analysis",
+      "version": "1.0.0",
+      "name": "Short Interest Analysis",
+      "description": "technical",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in technical.",
+      "user_prompt_template": "Analyze {{ticker}} for short interest analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "supply_chain_analysis",
+      "version": "1.0.0",
+      "name": "Supply Chain Analysis",
+      "description": "operations",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in operations.",
+      "user_prompt_template": "Analyze {{ticker}} for supply chain analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "tam_sam_som_analyzer",
+      "version": "1.0.0",
+      "name": "Tam Sam Som Analyzer",
+      "description": "market_analysis",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in market_analysis.",
+      "user_prompt_template": "Analyze {{ticker}} for tam sam som analyzer.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "technology_ip_analysis",
+      "version": "1.0.0",
+      "name": "Technology Ip Analysis",
+      "description": "operations",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in operations.",
+      "user_prompt_template": "Analyze {{ticker}} for technology ip analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "valuation_analysis",
+      "version": "1.0.0",
+      "name": "Valuation Analysis",
+      "description": "valuation",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in valuation.",
+      "user_prompt_template": "Analyze {{ticker}} for valuation analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "working_capital_analysis",
+      "version": "1.0.0",
+      "name": "Working Capital Analysis",
+      "description": "financial",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in financial.",
+      "user_prompt_template": "Analyze {{ticker}} for working capital analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "competitive_landscape_mapping",
+      "version": "1.0.0",
+      "name": "Competitive Landscape Mapping",
+      "description": "industry",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in industry.",
+      "user_prompt_template": "Analyze {{ticker}} for competitive landscape mapping.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "connecting_disparate_trends",
+      "version": "1.0.0",
+      "name": "Connecting Disparate Trends",
+      "description": "thematic",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in thematic.",
+      "user_prompt_template": "Analyze {{ticker}} for connecting disparate trends.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "deep_web_trend_scanner",
+      "version": "1.0.0",
+      "name": "Deep Web Trend Scanner",
+      "description": "alternative_sources",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in alternative_sources.",
+      "user_prompt_template": "Analyze {{ticker}} for deep web trend scanner.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "historical_parallel_finder",
+      "version": "1.0.0",
+      "name": "Historical Parallel Finder",
+      "description": "pattern_recognition",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in pattern_recognition.",
+      "user_prompt_template": "Analyze {{ticker}} for historical parallel finder.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "historical_parallel_stress_test",
+      "version": "1.0.0",
+      "name": "Historical Parallel Stress Test",
+      "description": "risk",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in risk.",
+      "user_prompt_template": "Analyze {{ticker}} for historical parallel stress test.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "identify_pure_plays",
+      "version": "1.0.0",
+      "name": "Identify Pure Plays",
+      "description": "screening",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in screening.",
+      "user_prompt_template": "Analyze {{ticker}} for identify pure plays.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "insider_trading_analysis",
+      "version": "1.0.0",
+      "name": "Insider Trading Analysis",
+      "description": "sec_filings",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in sec_filings.",
+      "user_prompt_template": "Analyze {{ticker}} for insider trading analysis.",
+      "required_data_sources": [
+        "fmp",
+        "sec_edgar"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "institutional_clustering_13f",
+      "version": "1.0.0",
+      "name": "Institutional Clustering 13F",
+      "description": "sec_filings",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in sec_filings.",
+      "user_prompt_template": "Analyze {{ticker}} for institutional clustering 13f.",
+      "required_data_sources": [
+        "fmp",
+        "sec_edgar"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "investment_presentation_creator",
+      "version": "1.0.0",
+      "name": "Investment Presentation Creator",
+      "description": "output",
+      "lane": "lane_b",
+      "stage": "synthesis",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in output.",
+      "user_prompt_template": "Analyze {{ticker}} for investment presentation creator.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "newsletter_idea_scraping",
+      "version": "1.0.0",
+      "name": "Newsletter Idea Scraping",
+      "description": "alternative_sources",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in alternative_sources.",
+      "user_prompt_template": "Analyze {{ticker}} for newsletter idea scraping.",
+      "required_data_sources": [
+        "fmp",
+        "perplexity",
+        "polygon"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "niche_publication_scanner",
+      "version": "1.0.0",
+      "name": "Niche Publication Scanner",
+      "description": "alternative_sources",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in alternative_sources.",
+      "user_prompt_template": "Analyze {{ticker}} for niche publication scanner.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "pure_play_filter",
+      "version": "1.0.0",
+      "name": "Pure Play Filter",
+      "description": "screening",
+      "lane": "lane_a",
+      "stage": "gate",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in screening.",
+      "user_prompt_template": "Analyze {{ticker}} for pure play filter.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "reddit_memestock_scraper",
+      "version": "1.0.0",
+      "name": "Reddit Memestock Scraper",
+      "description": "social_sentiment",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in social_sentiment.",
+      "user_prompt_template": "Analyze {{ticker}} for reddit memestock scraper.",
+      "required_data_sources": [
+        "fmp",
+        "reddit"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "sector_thesis_stress_test",
+      "version": "1.0.0",
+      "name": "Sector Thesis Stress Test",
+      "description": "risk",
+      "lane": "lane_b",
+      "stage": "synthesis",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in risk.",
+      "user_prompt_template": "Analyze {{ticker}} for sector thesis stress test.",
+      "required_data_sources": [
+        "fmp",
+        "sec_edgar"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "social_sentiment_scanner",
+      "version": "1.0.0",
+      "name": "Social Sentiment Scanner",
+      "description": "alternative_data",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in alternative_data.",
+      "user_prompt_template": "Analyze {{ticker}} for social sentiment scanner.",
+      "required_data_sources": [
+        "fmp",
+        "twitter",
+        "reddit"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "substack_idea_scraping",
+      "version": "1.0.0",
+      "name": "Substack Idea Scraping",
+      "description": "alternative_sources",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in alternative_sources.",
+      "user_prompt_template": "Analyze {{ticker}} for substack idea scraping.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "thematic_candidate_screen",
+      "version": "1.0.0",
+      "name": "Thematic Candidate Screen",
+      "description": "thematic",
+      "lane": "lane_a",
+      "stage": "gate",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in thematic.",
+      "user_prompt_template": "Analyze {{ticker}} for thematic candidate screen.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "thematic_idea_generator",
+      "version": "1.0.0",
+      "name": "Thematic Idea Generator",
+      "description": "thematic",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in thematic.",
+      "user_prompt_template": "Analyze {{ticker}} for thematic idea generator.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "theme_order_effects",
+      "version": "1.0.0",
+      "name": "Theme Order Effects",
+      "description": "thematic",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in thematic.",
+      "user_prompt_template": "Analyze {{ticker}} for theme order effects.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "theme_subsector_expansion",
+      "version": "1.0.0",
+      "name": "Theme Subsector Expansion",
+      "description": "thematic",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in thematic.",
+      "user_prompt_template": "Analyze {{ticker}} for theme subsector expansion.",
+      "required_data_sources": [
+        "fmp",
+        "sec_edgar"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "trend_to_equity_mapper",
+      "version": "1.0.0",
+      "name": "Trend To Equity Mapper",
+      "description": "trend_analysis",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in trend_analysis.",
+      "user_prompt_template": "Analyze {{ticker}} for trend to equity mapper.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "twitter_copytrading_scraper",
+      "version": "1.0.0",
+      "name": "Twitter Copytrading Scraper",
+      "description": "social_sentiment",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in social_sentiment.",
+      "user_prompt_template": "Analyze {{ticker}} for twitter copytrading scraper.",
+      "required_data_sources": [
+        "fmp",
+        "twitter"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "under_radar_discovery",
+      "version": "1.0.0",
+      "name": "Under Radar Discovery",
+      "description": "screening",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in screening.",
+      "user_prompt_template": "Analyze {{ticker}} for under radar discovery.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "value_chain_mapper",
+      "version": "1.0.0",
+      "name": "Value Chain Mapper",
+      "description": "industry_analysis",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in industry_analysis.",
+      "user_prompt_template": "Analyze {{ticker}} for value chain mapper.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "china_macro_analysis",
+      "version": "1.0.0",
+      "name": "China Macro Analysis",
+      "description": "china",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in china.",
+      "user_prompt_template": "Analyze {{ticker}} for china macro analysis.",
+      "required_data_sources": [
+        "fmp",
+        "fred"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "commodity_analysis",
+      "version": "1.0.0",
+      "name": "Commodity Analysis",
+      "description": "commodities",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in commodities.",
+      "user_prompt_template": "Analyze {{ticker}} for commodity analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "credit_cycle_analysis",
+      "version": "1.0.0",
+      "name": "Credit Cycle Analysis",
+      "description": "credit",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in credit.",
+      "user_prompt_template": "Analyze {{ticker}} for credit cycle analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "currency_analysis",
+      "version": "1.0.0",
+      "name": "Currency Analysis",
+      "description": "fx",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in fx.",
+      "user_prompt_template": "Analyze {{ticker}} for currency analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "earnings_season_preview",
+      "version": "1.0.0",
+      "name": "Earnings Season Preview",
+      "description": "earnings",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in earnings.",
+      "user_prompt_template": "Analyze {{ticker}} for earnings season preview.",
+      "required_data_sources": [
+        "fmp",
+        "perplexity",
+        "polygon"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "economic_indicator_analysis",
+      "version": "1.0.0",
+      "name": "Economic Indicator Analysis",
+      "description": "economic",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in economic.",
+      "user_prompt_template": "Analyze {{ticker}} for economic indicator analysis.",
+      "required_data_sources": [
+        "fmp",
+        "fred"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "election_impact_analysis",
+      "version": "1.0.0",
+      "name": "Election Impact Analysis",
+      "description": "political",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in political.",
+      "user_prompt_template": "Analyze {{ticker}} for election impact analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "fed_policy_analysis",
+      "version": "1.0.0",
+      "name": "Fed Policy Analysis",
+      "description": "monetary",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in monetary.",
+      "user_prompt_template": "Analyze {{ticker}} for fed policy analysis.",
+      "required_data_sources": [
+        "fmp",
+        "fred"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "geopolitical_risk_analysis",
+      "version": "1.0.0",
+      "name": "Geopolitical Risk Analysis",
+      "description": "geopolitical",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in geopolitical.",
+      "user_prompt_template": "Analyze {{ticker}} for geopolitical risk analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "global_macro_scan",
+      "version": "1.0.0",
+      "name": "Global Macro Scan",
+      "description": "global",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in global.",
+      "user_prompt_template": "Analyze {{ticker}} for global macro scan.",
+      "required_data_sources": [
+        "fmp",
+        "fred"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "inflation_analysis",
+      "version": "1.0.0",
+      "name": "Inflation Analysis",
+      "description": "economic",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in economic.",
+      "user_prompt_template": "Analyze {{ticker}} for inflation analysis.",
+      "required_data_sources": [
+        "fmp",
+        "fred"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "liquidity_conditions_analysis",
+      "version": "1.0.0",
+      "name": "Liquidity Conditions Analysis",
+      "description": "liquidity",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in liquidity.",
+      "user_prompt_template": "Analyze {{ticker}} for liquidity conditions analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "macro_environment_analysis",
+      "version": "1.0.0",
+      "name": "Macro Environment Analysis",
+      "description": "economic",
+      "lane": "monitoring",
+      "stage": "monitoring",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in economic.",
+      "user_prompt_template": "Analyze {{ticker}} for macro environment analysis.",
+      "required_data_sources": [
+        "fmp",
+        "fred"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "market_regime_analysis",
+      "version": "1.0.0",
+      "name": "Market Regime Analysis",
+      "description": "regime",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in regime.",
+      "user_prompt_template": "Analyze {{ticker}} for market regime analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "sector_sensitivity_analysis",
+      "version": "1.0.0",
+      "name": "Sector Sensitivity Analysis",
+      "description": "sector",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in sector.",
+      "user_prompt_template": "Analyze {{ticker}} for sector sensitivity analysis.",
+      "required_data_sources": [
+        "fmp",
+        "sec_edgar"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "yield_curve_analysis",
+      "version": "1.0.0",
+      "name": "Yield Curve Analysis",
+      "description": "rates",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in rates.",
+      "user_prompt_template": "Analyze {{ticker}} for yield curve analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "earnings_season_analyzer",
+      "version": "1.0.0",
+      "name": "Earnings Season Analyzer",
+      "description": "earnings",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in earnings.",
+      "user_prompt_template": "Analyze {{ticker}} for earnings season analyzer.",
+      "required_data_sources": [
+        "fmp",
+        "perplexity",
+        "polygon"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "sector_momentum_ranker",
+      "version": "1.0.0",
+      "name": "Sector Momentum Ranker",
+      "description": "technical",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in technical.",
+      "user_prompt_template": "Analyze {{ticker}} for sector momentum ranker.",
+      "required_data_sources": [
+        "fmp",
+        "polygon",
+        "sec_edgar"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "news_sentiment_monitor",
+      "version": "1.0.0",
+      "name": "News Sentiment Monitor",
+      "description": "news",
+      "lane": "monitoring",
+      "stage": "monitoring",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in news.",
+      "user_prompt_template": "Analyze {{ticker}} for news sentiment monitor.",
+      "required_data_sources": [
+        "fmp",
+        "perplexity",
+        "polygon",
+        "reddit"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "portfolio_performance_reporter",
+      "version": "1.0.0",
+      "name": "Portfolio Performance Reporter",
+      "description": "performance",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in performance.",
+      "user_prompt_template": "Analyze {{ticker}} for portfolio performance reporter.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "competitor_earnings_comparison",
+      "version": "1.0.0",
+      "name": "Competitor Earnings Comparison",
+      "description": "earnings",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in earnings.",
+      "user_prompt_template": "Analyze {{ticker}} for competitor earnings comparison.",
+      "required_data_sources": [
+        "fmp",
+        "perplexity",
+        "polygon"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "daily_market_briefing",
+      "version": "1.0.0",
+      "name": "Daily Market Briefing",
+      "description": "market",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in market.",
+      "user_prompt_template": "Analyze {{ticker}} for daily market briefing.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "earnings_call_analysis",
+      "version": "1.0.0",
+      "name": "Earnings Call Analysis",
+      "description": "earnings",
+      "lane": "monitoring",
+      "stage": "monitoring",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in earnings.",
+      "user_prompt_template": "Analyze {{ticker}} for earnings call analysis.",
+      "required_data_sources": [
+        "fmp",
+        "perplexity",
+        "polygon"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "news_sentiment_analysis",
+      "version": "1.0.0",
+      "name": "News Sentiment Analysis",
+      "description": "sentiment",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in sentiment.",
+      "user_prompt_template": "Analyze {{ticker}} for news sentiment analysis.",
+      "required_data_sources": [
+        "fmp",
+        "perplexity",
+        "polygon",
+        "reddit"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "research_report_summary",
+      "version": "1.0.0",
+      "name": "Research Report Summary",
+      "description": "research",
+      "lane": "lane_b",
+      "stage": "synthesis",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in research.",
+      "user_prompt_template": "Analyze {{ticker}} for research report summary.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "sec_filing_analysis",
+      "version": "1.0.0",
+      "name": "Sec Filing Analysis",
+      "description": "filings",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in filings.",
+      "user_prompt_template": "Analyze {{ticker}} for sec filing analysis.",
+      "required_data_sources": [
+        "fmp",
+        "sec_edgar"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "watchlist_screening",
+      "version": "1.0.0",
+      "name": "Watchlist Screening",
+      "description": "screening",
+      "lane": "lane_a",
+      "stage": "gate",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in screening.",
+      "user_prompt_template": "Analyze {{ticker}} for watchlist screening.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "benchmark_comparison",
+      "version": "1.0.0",
+      "name": "Benchmark Comparison",
+      "description": "analytics",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in analytics.",
+      "user_prompt_template": "Analyze {{ticker}} for benchmark comparison.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "correlation_analysis",
+      "version": "1.0.0",
+      "name": "Correlation Analysis",
+      "description": "analytics",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in analytics.",
+      "user_prompt_template": "Analyze {{ticker}} for correlation analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "currency_hedging_analysis",
+      "version": "1.0.0",
+      "name": "Currency Hedging Analysis",
+      "description": "hedging",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in hedging.",
+      "user_prompt_template": "Analyze {{ticker}} for currency hedging analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "drawdown_analysis",
+      "version": "1.0.0",
+      "name": "Drawdown Analysis",
+      "description": "risk",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in risk.",
+      "user_prompt_template": "Analyze {{ticker}} for drawdown analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "esg_portfolio_analysis",
+      "version": "1.0.0",
+      "name": "Esg Portfolio Analysis",
+      "description": "esg",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in esg.",
+      "user_prompt_template": "Analyze {{ticker}} for esg portfolio analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "factor_exposure_analysis",
+      "version": "1.0.0",
+      "name": "Factor Exposure Analysis",
+      "description": "analytics",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in analytics.",
+      "user_prompt_template": "Analyze {{ticker}} for factor exposure analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "factor_exposure_analyzer",
+      "version": "1.0.0",
+      "name": "Factor Exposure Analyzer",
+      "description": "factor_analysis",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in factor_analysis.",
+      "user_prompt_template": "Analyze {{ticker}} for factor exposure analyzer.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "income_analysis",
+      "version": "1.0.0",
+      "name": "Income Analysis",
+      "description": "analytics",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in analytics.",
+      "user_prompt_template": "Analyze {{ticker}} for income analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "investment_policy_compliance",
+      "version": "1.0.0",
+      "name": "Investment Policy Compliance",
+      "description": "compliance",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in compliance.",
+      "user_prompt_template": "Analyze {{ticker}} for investment policy compliance.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "liquidity_analysis",
+      "version": "1.0.0",
+      "name": "Liquidity Analysis",
+      "description": "risk",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in risk.",
+      "user_prompt_template": "Analyze {{ticker}} for liquidity analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "options_overlay_strategy",
+      "version": "1.0.0",
+      "name": "Options Overlay Strategy",
+      "description": "hedging",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in hedging.",
+      "user_prompt_template": "Analyze {{ticker}} for options overlay strategy.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "performance_attribution",
+      "version": "1.0.0",
+      "name": "Performance Attribution",
+      "description": "analytics",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in analytics.",
+      "user_prompt_template": "Analyze {{ticker}} for performance attribution.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "portfolio_construction",
+      "version": "1.0.0",
+      "name": "Portfolio Construction",
+      "description": "construction",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in construction.",
+      "user_prompt_template": "Analyze {{ticker}} for portfolio construction.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "position_sizer",
+      "version": "1.0.0",
+      "name": "Position Sizer",
+      "description": "sizing",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in sizing.",
+      "user_prompt_template": "Analyze {{ticker}} for position sizer.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "position_sizing",
+      "version": "1.0.0",
+      "name": "Position Sizing",
+      "description": "risk",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in risk.",
+      "user_prompt_template": "Analyze {{ticker}} for position sizing.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "rebalancing_analysis",
+      "version": "1.0.0",
+      "name": "Rebalancing Analysis",
+      "description": "execution",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in execution.",
+      "user_prompt_template": "Analyze {{ticker}} for rebalancing analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "risk_monitoring",
+      "version": "1.0.0",
+      "name": "Risk Monitoring",
+      "description": "risk",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in risk.",
+      "user_prompt_template": "Analyze {{ticker}} for risk monitoring.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "scenario_analysis",
+      "version": "1.0.0",
+      "name": "Scenario Analysis",
+      "description": "risk",
+      "lane": "portfolio",
+      "stage": "portfolio",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in risk.",
+      "user_prompt_template": "Analyze {{ticker}} for scenario analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "sector_rotation_analysis",
+      "version": "1.0.0",
+      "name": "Sector Rotation Analysis",
+      "description": "strategy",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in strategy.",
+      "user_prompt_template": "Analyze {{ticker}} for sector rotation analysis.",
+      "required_data_sources": [
+        "fmp",
+        "sec_edgar"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "tax_loss_harvesting",
+      "version": "1.0.0",
+      "name": "Tax Loss Harvesting",
+      "description": "tax",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in tax.",
+      "user_prompt_template": "Analyze {{ticker}} for tax loss harvesting.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "transition_management",
+      "version": "1.0.0",
+      "name": "Transition Management",
+      "description": "execution",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in execution.",
+      "user_prompt_template": "Analyze {{ticker}} for transition management.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "bull_bear_case_generator",
+      "version": "1.0.0",
+      "name": "Bull Bear Case Generator",
+      "description": "scenario",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in scenario.",
+      "user_prompt_template": "Analyze {{ticker}} for bull bear case generator.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "earnings_preview_generator",
+      "version": "1.0.0",
+      "name": "Earnings Preview Generator",
+      "description": "earnings",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in earnings.",
+      "user_prompt_template": "Analyze {{ticker}} for earnings preview generator.",
+      "required_data_sources": [
+        "fmp",
+        "perplexity",
+        "polygon"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "activist_situation_analyzer",
+      "version": "1.0.0",
+      "name": "Activist Situation Analyzer",
+      "description": "activism",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in activism.",
+      "user_prompt_template": "Analyze {{ticker}} for activist situation analyzer.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "ipo_analysis",
+      "version": "1.0.0",
+      "name": "Ipo Analysis",
+      "description": "ipo",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in ipo.",
+      "user_prompt_template": "Analyze {{ticker}} for ipo analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "spinoff_opportunity_analyzer",
+      "version": "1.0.0",
+      "name": "Spinoff Opportunity Analyzer",
+      "description": "corporate_actions",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in corporate_actions.",
+      "user_prompt_template": "Analyze {{ticker}} for spinoff opportunity analyzer.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "contrarian_thesis_development",
+      "version": "1.0.0",
+      "name": "Contrarian Thesis Development",
+      "description": "strategy",
+      "lane": "lane_b",
+      "stage": "synthesis",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in strategy.",
+      "user_prompt_template": "Analyze {{ticker}} for contrarian thesis development.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "exit_strategy",
+      "version": "1.0.0",
+      "name": "Exit Strategy",
+      "description": "execution",
+      "lane": "lane_a",
+      "stage": "discovery",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in execution.",
+      "user_prompt_template": "Analyze {{ticker}} for exit strategy.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "investment_memo",
+      "version": "1.0.0",
+      "name": "Investment Memo",
+      "description": "output",
+      "lane": "lane_b",
+      "stage": "synthesis",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in output.",
+      "user_prompt_template": "Analyze {{ticker}} for investment memo.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "investment_thesis_synthesis",
+      "version": "1.0.0",
+      "name": "Investment Thesis Synthesis",
+      "description": "synthesis",
+      "lane": "lane_b",
+      "stage": "synthesis",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in synthesis.",
+      "user_prompt_template": "Analyze {{ticker}} for investment thesis synthesis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "peer_thesis_comparison",
+      "version": "1.0.0",
+      "name": "Peer Thesis Comparison",
+      "description": "analysis",
+      "lane": "lane_b",
+      "stage": "synthesis",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in analysis.",
+      "user_prompt_template": "Analyze {{ticker}} for peer thesis comparison.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "pre_mortem_analysis",
+      "version": "1.0.0",
+      "name": "Pre Mortem Analysis",
+      "description": "risk",
+      "lane": "lane_b",
+      "stage": "research",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in risk.",
+      "user_prompt_template": "Analyze {{ticker}} for pre mortem analysis.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "thesis_monitoring_framework",
+      "version": "1.0.0",
+      "name": "Thesis Monitoring Framework",
+      "description": "monitoring",
+      "lane": "lane_b",
+      "stage": "synthesis",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in monitoring.",
+      "user_prompt_template": "Analyze {{ticker}} for thesis monitoring framework.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "thesis_presentation",
+      "version": "1.0.0",
+      "name": "Thesis Presentation",
+      "description": "output",
+      "lane": "lane_b",
+      "stage": "synthesis",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in output.",
+      "user_prompt_template": "Analyze {{ticker}} for thesis presentation.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "thesis_update",
+      "version": "1.0.0",
+      "name": "Thesis Update",
+      "description": "monitoring",
+      "lane": "monitoring",
+      "stage": "monitoring",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in monitoring.",
+      "user_prompt_template": "Analyze {{ticker}} for thesis update.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "prompt_id": "variant_perception",
+      "version": "1.0.0",
+      "name": "Variant Perception",
+      "description": "edge",
+      "lane": "lane_b",
+      "stage": "synthesis",
+      "execution_type": "llm",
+      "criticality": "required",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.5,
+        "max_tokens": 4000
+      },
+      "system_prompt": "You are a financial analyst specializing in edge.",
+      "user_prompt_template": "Analyze {{ticker}} for variant perception.",
+      "required_data_sources": [
+        "fmp"
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "analysis",
+          "confidence"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "Detailed analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "strong_buy",
+              "buy",
+              "hold",
+              "sell",
+              "strong_sell"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "version": "2.0.0",
+  "total": 116
+}
