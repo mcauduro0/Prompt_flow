@@ -8,3 +8,4 @@ export * from './sources/polygon.js';
 export * from './sources/sec-edgar.js';
 export * from './aggregator.js';
 export * from './types.js';
+export * from './hub.js';

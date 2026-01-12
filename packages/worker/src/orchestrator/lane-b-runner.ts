@@ -10,6 +10,11 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import {
+  isPromptLibraryEnabled,
+  executeLaneBWithLibrary,
+  initializePromptSystem,
+} from '../prompts/index.js';
+import {
   LANE_B_DAILY_LIMIT,
   LANE_B_WEEKLY_LIMIT,
   LANE_B_MAX_CONCURRENCY,
@@ -346,11 +351,14 @@ export async function runLaneB(config: LaneBConfig = {}): Promise<LaneBResult> {
   const errors: string[] = [];
   const packets: LaneBResult['packets'] = [];
 
+  const usePromptLibrary = isPromptLibraryEnabled();
+
   console.log(`[Lane B] Starting deep research run at ${new Date().toISOString()}`);
   console.log(`[Lane B] Run ID: ${runId}`);
   console.log(`[Lane B] Timezone: ${SYSTEM_TIMEZONE}`);
   console.log(`[Lane B] Daily limit: ${LANE_B_DAILY_LIMIT}, Weekly: ${LANE_B_WEEKLY_LIMIT}`);
   console.log(`[Lane B] Max concurrency: ${LANE_B_MAX_CONCURRENCY}`);
+  console.log(`[Lane B] Using Prompt Library: ${usePromptLibrary ? 'YES' : 'NO (legacy)'}`);
 
   // Create run record
   await runsRepository.create({

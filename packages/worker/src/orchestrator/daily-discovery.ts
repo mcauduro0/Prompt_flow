@@ -7,6 +7,12 @@
  * Data Sources:
  * - FMP: Company fundamentals, financial metrics, screening
  * - Polygon: Real-time prices, market data, news sentiment
+ * 
+ * NEW: When USE_PROMPT_LIBRARY=true, uses the Prompt Library system with:
+ * - Structured prompts from prompts.json
+ * - Schema validation on outputs
+ * - Telemetry and budget tracking
+ * - Quarantine for invalid outputs
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -20,6 +26,12 @@ import {
 import { createFMPClient, createPolygonClient } from '@arc/retriever';
 import { createResilientClient, type LLMClient } from '@arc/llm-client';
 import { ideasRepository, runsRepository, memoryRepository } from '@arc/database';
+import {
+  isPromptLibraryEnabled,
+  executeLaneAWithLibrary,
+  initializePromptSystem,
+  type LaneAResult,
+} from '../prompts/index.js';
 
 export interface DiscoveryConfig {
   dryRun?: boolean;
@@ -33,6 +45,11 @@ export interface DiscoveryResult {
   ideasInbox: number;
   errors: string[];
   duration_ms: number;
+  telemetry?: {
+    total_cost: number;
+    total_latency_ms: number;
+    prompts_executed: number;
+  };
 }
 
 interface RawIdea {
@@ -47,6 +64,10 @@ interface RawIdea {
   currentPrice: number | null;
   priceChange1D: number | null;
   volume: number | null;
+  catalysts?: Array<{ name: string; window: string; probability?: string }>;
+  keyRisks?: string[];
+  timeHorizon?: string;
+  conviction?: number;
 }
 
 interface EnrichedStock {
@@ -56,6 +77,10 @@ interface EnrichedStock {
   price: any;
   news: any[];
 }
+
+// ============================================================================
+// DATA FETCHING (Shared between old and new pipeline)
+// ============================================================================
 
 /**
  * Fetch universe of stocks to analyze using FMP screener
@@ -123,10 +148,85 @@ async function enrichStockData(tickers: string[]): Promise<EnrichedStock[]> {
   return enriched;
 }
 
+// ============================================================================
+// NEW PIPELINE (Prompt Library)
+// ============================================================================
+
 /**
- * Generate investment ideas using LLM with enriched data
+ * Run Lane A using the new Prompt Library system
  */
-async function generateIdeas(
+async function runWithPromptLibrary(
+  enrichedStocks: EnrichedStock[],
+  config: DiscoveryConfig
+): Promise<{
+  ideas: RawIdea[];
+  telemetry: { total_cost: number; total_latency_ms: number; prompts_executed: number };
+}> {
+  await initializePromptSystem();
+  
+  const ideas: RawIdea[] = [];
+  let totalCost = 0;
+  let totalLatency = 0;
+  let totalPrompts = 0;
+
+  for (const stock of enrichedStocks) {
+    try {
+      const result = await executeLaneAWithLibrary(stock.ticker);
+      
+      // Aggregate telemetry
+      if (result.telemetry) {
+        totalCost += result.telemetry.total_cost;
+        totalLatency += result.telemetry.total_latency_ms;
+        totalPrompts += result.telemetry.prompts_executed;
+      }
+
+      // Check if idea passed all gates and has potential
+      if (result.hasInvestmentPotential && result.thesis) {
+        ideas.push({
+          ticker: stock.ticker,
+          companyName: stock.profile.companyName,
+          thesis: result.thesis,
+          styleTag: (result.styleTag as 'quality_compounder' | 'garp' | 'cigar_butt') || 'garp',
+          mechanism: result.mechanism || 'Value realization',
+          edgeType: result.edgeType || ['analytical'],
+          marketCap: stock.profile.marketCap,
+          sector: stock.profile.sector,
+          currentPrice: stock.price?.close || null,
+          priceChange1D: null,
+          volume: stock.price?.volume || null,
+          catalysts: result.catalysts,
+          keyRisks: result.keyRisks,
+          timeHorizon: result.timeHorizon,
+          conviction: result.conviction,
+        });
+        console.log(`[Lane A/Library] Generated idea for ${stock.ticker} (conviction: ${result.conviction})`);
+      }
+
+      // Rate limiting
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (error) {
+      console.warn(`[Lane A/Library] Error processing ${stock.ticker}:`, (error as Error).message);
+    }
+  }
+
+  return {
+    ideas,
+    telemetry: {
+      total_cost: totalCost,
+      total_latency_ms: totalLatency,
+      prompts_executed: totalPrompts,
+    },
+  };
+}
+
+// ============================================================================
+// LEGACY PIPELINE (Hardcoded prompts)
+// ============================================================================
+
+/**
+ * Generate investment ideas using LLM with enriched data (legacy)
+ */
+async function generateIdeasLegacy(
   stocks: EnrichedStock[],
   llm: LLMClient
 ): Promise<RawIdea[]> {
@@ -237,6 +337,10 @@ Respond ONLY in valid JSON format:
   return ideas;
 }
 
+// ============================================================================
+// SHARED LOGIC
+// ============================================================================
+
 /**
  * Apply novelty filter to ideas
  */
@@ -280,6 +384,13 @@ async function applyNoveltyFilter(ideas: RawIdea[]): Promise<RawIdea[]> {
  */
 function rankIdeas(ideas: RawIdea[]): RawIdea[] {
   return [...ideas].sort((a, b) => {
+    // If conviction is available (from new pipeline), use it
+    if (a.conviction !== undefined && b.conviction !== undefined) {
+      if (b.conviction !== a.conviction) {
+        return b.conviction - a.conviction;
+      }
+    }
+
     // Prefer mid-cap ($1B-$20B)
     const aCapScore = getMarketCapScore(a.marketCap);
     const bCapScore = getMarketCapScore(b.marketCap);
@@ -309,6 +420,10 @@ function getMarketCapScore(marketCap: number | null): number {
   return 1;
 }
 
+// ============================================================================
+// MAIN ENTRY POINT
+// ============================================================================
+
 /**
  * Main daily discovery run
  */
@@ -317,12 +432,14 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
   const runId = uuidv4();
   const errors: string[] = [];
   const asOf = new Date().toISOString().split('T')[0];
+  const usePromptLibrary = isPromptLibraryEnabled();
 
   console.log(`[Lane A] Starting daily discovery run at ${new Date().toISOString()}`);
   console.log(`[Lane A] Run ID: ${runId}`);
   console.log(`[Lane A] Timezone: ${SYSTEM_TIMEZONE}`);
   console.log(`[Lane A] Daily limit: ${LANE_A_DAILY_LIMIT}, Cap: ${LANE_A_DAILY_CAP}`);
   console.log(`[Lane A] Novelty window: ${NOVELTY_NEW_TICKER_DAYS} days, Penalty: ${NOVELTY_PENALTY_WINDOW_DAYS} days`);
+  console.log(`[Lane A] Using Prompt Library: ${usePromptLibrary ? 'YES' : 'NO (legacy)'}`);
 
   // Create run record
   await runsRepository.create({
@@ -346,6 +463,8 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
     };
   }
 
+  let telemetry: { total_cost: number; total_latency_ms: number; prompts_executed: number } | undefined;
+
   try {
     // Step 1: Fetch universe from FMP
     console.log('[Lane A] Step 1: Fetching universe from FMP...');
@@ -365,10 +484,20 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
       throw new Error('Failed to enrich any stocks');
     }
 
-    // Step 3: Generate ideas using LLM
-    console.log('[Lane A] Step 3: Generating ideas with LLM...');
-    const llm = createResilientClient();
-    const rawIdeas = await generateIdeas(enrichedStocks, llm);
+    // Step 3: Generate ideas (using new or legacy pipeline)
+    let rawIdeas: RawIdea[];
+
+    if (usePromptLibrary) {
+      console.log('[Lane A] Step 3: Generating ideas with Prompt Library...');
+      const result = await runWithPromptLibrary(enrichedStocks, config);
+      rawIdeas = result.ideas;
+      telemetry = result.telemetry;
+      console.log(`[Lane A] Prompt Library telemetry: ${telemetry.prompts_executed} prompts, $${telemetry.total_cost.toFixed(4)} cost`);
+    } else {
+      console.log('[Lane A] Step 3: Generating ideas with LLM (legacy)...');
+      const llm = createResilientClient();
+      rawIdeas = await generateIdeasLegacy(enrichedStocks, llm);
+    }
     console.log(`[Lane A] Generated ${rawIdeas.length} raw ideas`);
 
     // Step 4: Apply novelty filter
@@ -433,6 +562,8 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
       persisted: persistedCount,
       errors: errors.length,
       duration_ms: Date.now() - startTime,
+      usePromptLibrary,
+      telemetry,
     });
 
     console.log(`[Lane A] Discovery run completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
@@ -444,14 +575,19 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
       ideasInbox: persistedCount,
       errors,
       duration_ms: Date.now() - startTime,
+      telemetry,
     };
   } catch (error) {
     const errorMessage = (error as Error).message;
     errors.push(errorMessage);
-    
-    await runsRepository.updateStatus(runId, 'failed', errorMessage);
+    console.error(`[Lane A] Fatal error: ${errorMessage}`);
 
-    console.error('[Lane A] Discovery run failed:', errorMessage);
+    await runsRepository.updateStatus(runId, 'failed');
+    await runsRepository.updatePayload(runId, {
+      error: errorMessage,
+      errors,
+      duration_ms: Date.now() - startTime,
+    });
 
     return {
       success: false,
@@ -463,5 +599,3 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
     };
   }
 }
-
-export default { runDailyDiscovery };
