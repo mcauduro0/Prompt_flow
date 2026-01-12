@@ -5,12 +5,12 @@ import { ArrowRight, Activity, Brain, Shield, Search, FileText, BarChart3 } from
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const features = [
-  { icon: Brain, title: "AI-Powered Discovery", description: "Systematic idea generation with novelty scoring and style classification" },
-  { icon: Shield, title: "Governance Gates", description: "5-gate quality control ensuring only high-conviction ideas advance" },
-  { icon: FileText, title: "Deep Research", description: "7 specialized agents producing IC-grade research packets" },
-  { icon: BarChart3, title: "Weekly QA", description: "Automated governance reporting with drift detection" },
-  { icon: Search, title: "Memory System", description: "Track rejection shadows and idea reappearances" },
-  { icon: Activity, title: "Real-time Status", description: "Monitor pipeline health and job execution" }
+  { icon: Brain, title: "Discovery", description: "Systematic idea generation with novelty scoring and style classification." },
+  { icon: Shield, title: "Governance", description: "Five-gate quality control before ideas advance to research." },
+  { icon: FileText, title: "Research", description: "Seven specialized agents producing IC-grade research packets." },
+  { icon: BarChart3, title: "QA Reports", description: "Weekly governance reporting with evidence coverage metrics." },
+  { icon: Search, title: "Memory", description: "Rejection shadows and idea reappearance tracking." },
+  { icon: Activity, title: "Status", description: "Pipeline state and scheduled job monitoring." }
 ];
 
 export default function LandingPage() {
@@ -33,8 +33,8 @@ export default function LandingPage() {
         </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          <Link href="/status" className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors">
-            Enter Dashboard <ArrowRight className="w-4 h-4" />
+          <Link href="/status" className="flex items-center gap-2 px-4 py-2 bg-secondary text-foreground border border-border rounded-md hover:bg-secondary/80 transition-colors">
+            Enter <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </header>
@@ -42,22 +42,22 @@ export default function LandingPage() {
       <main className="relative z-10 px-8 py-20">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-medium tracking-tight mb-6">
-            Investment Committee<br /><span className="text-accent">Intelligence Platform</span>
+            ARC Investment Factory
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12">
-            Systematic idea generation, rigorous governance, and deep research automation for institutional-grade investment decision making.
+            Idea discovery, governance gates, and research automation for investment committee workflows.
           </p>
 
           <div className="grid grid-cols-3 gap-8 max-w-xl mx-auto mb-20">
-            <div className="text-center"><div className="text-3xl font-medium text-accent">120</div><div className="text-sm text-muted-foreground">Ideas/Day</div></div>
-            <div className="text-center"><div className="text-3xl font-medium text-accent">5</div><div className="text-sm text-muted-foreground">Quality Gates</div></div>
-            <div className="text-center"><div className="text-3xl font-medium text-accent">7</div><div className="text-sm text-muted-foreground">Research Agents</div></div>
+            <div className="text-center"><div className="text-3xl font-medium">120</div><div className="text-sm text-muted-foreground">Ideas/Day</div></div>
+            <div className="text-center"><div className="text-3xl font-medium">5</div><div className="text-sm text-muted-foreground">Gates</div></div>
+            <div className="text-center"><div className="text-3xl font-medium">7</div><div className="text-sm text-muted-foreground">Agents</div></div>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
             {features.map((feature, i) => (
-              <div key={i} className="p-6 rounded-lg bg-card border border-border/50 hover:border-accent/30 transition-colors">
-                <feature.icon className="w-8 h-8 text-accent mb-4" />
+              <div key={i} className="p-6 rounded-lg bg-card border border-border/50 hover:border-border transition-colors">
+                <feature.icon className="w-8 h-8 text-muted-foreground mb-4" />
                 <h3 className="font-medium mb-2">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground">{feature.description}</p>
               </div>
@@ -69,7 +69,6 @@ export default function LandingPage() {
       <footer className="relative z-10 px-8 py-6 border-t border-border/50">
         <div className="max-w-4xl mx-auto flex items-center justify-between text-sm text-muted-foreground">
           <span>ARC Investment Factory v1.0</span>
-          <span>Disciplined process. Superior outcomes.</span>
         </div>
       </footer>
     </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ThumbsUp, ThumbsDown, ExternalLink, TrendingUp, Filter } from "lucide-react";
+import { ArrowRight, X, ExternalLink, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Idea {
@@ -31,7 +31,7 @@ const styleColors: Record<string, string> = {
 };
 
 const formatMarketCap = (value: number | null): string => {
-  if (!value) return "N/A";
+  if (!value) return "—";
   if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
   if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
   if (value >= 1e6) return `$${(value / 1e6).toFixed(0)}M`;
@@ -87,7 +87,7 @@ export default function InboxPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="page-header-title">Idea Inbox</h1>
-              <p className="page-header-subtitle">{ideas.length} ideas awaiting review</p>
+              <p className="page-header-subtitle">{ideas.length} ideas pending review</p>
             </div>
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-muted-foreground" />
@@ -110,20 +110,19 @@ export default function InboxPage() {
           <div className="content-area">
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <div className="animate-pulse text-muted-foreground">Loading ideas...</div>
+                <div className="text-muted-foreground">Loading ideas...</div>
               </div>
             ) : filteredIdeas.length === 0 ? (
               <div className="text-center py-20 text-muted-foreground">
-                <p>No ideas in inbox</p>
-                <p className="text-sm mt-2">New ideas will appear after the next discovery run</p>
+                <p>No ideas in inbox.</p>
+                <p className="text-sm mt-2">Ideas will appear after the next discovery run.</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredIdeas.map((idea, idx) => (
+                {filteredIdeas.map((idea) => (
                   <div 
                     key={idea.ideaId} 
-                    className="governance-card hover:border-accent/30 transition-colors animate-fade-in" 
-                    style={{ animationDelay: `${idx * 50}ms` }}
+                    className="governance-card hover:border-border transition-colors"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
@@ -136,11 +135,10 @@ export default function InboxPage() {
                             {idea.styleTag?.replace(/_/g, " ")}
                           </span>
                           {idea.isNewTicker && (
-                            <span className="text-xs px-2 py-0.5 rounded bg-accent/20 text-accent">
-                              NEW
+                            <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                              New
                             </span>
                           )}
-                          <TrendingUp className="w-4 h-4 text-success" />
                         </div>
                         <h3 className="font-medium mb-1">{idea.companyName}</h3>
                         <p className="text-sm text-foreground/80 mb-3">{idea.oneSentenceHypothesis}</p>
@@ -162,23 +160,23 @@ export default function InboxPage() {
                         <Link 
                           href={`/inbox/${idea.ideaId}`} 
                           className="p-2 rounded-md border border-border hover:bg-secondary transition-colors" 
-                          title="View Details"
+                          title="View detail"
                         >
                           <ExternalLink className="w-4 h-4" />
                         </Link>
                         <button 
                           onClick={() => handlePromote(idea.ideaId)} 
-                          className="p-2 rounded-md bg-success/20 text-success hover:bg-success/30 transition-colors" 
-                          title="Promote to Queue"
+                          className="p-2 rounded-md border border-border hover:bg-secondary transition-colors" 
+                          title="Promote to deep research"
                         >
-                          <ThumbsUp className="w-4 h-4" />
+                          <ArrowRight className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleReject(idea.ideaId)} 
-                          className="p-2 rounded-md bg-fail/20 text-fail hover:bg-fail/30 transition-colors" 
-                          title="Reject"
+                          className="p-2 rounded-md border border-border hover:bg-secondary transition-colors" 
+                          title="Reject with reason"
                         >
-                          <ThumbsDown className="w-4 h-4" />
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
