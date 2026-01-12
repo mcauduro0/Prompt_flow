@@ -7,15 +7,24 @@ import { researchPacketsRepository, evidenceRepository } from '@arc/database';
 
 export const researchRouter: Router = Router();
 
-// Get research packet by ID
-researchRouter.get('/packets/:packetId', async (req: Request, res: Response) => {
+// IMPORTANT: Specific routes MUST come before parameterized routes
+
+// Get recent packets for IC bundle
+researchRouter.get('/packets/recent', async (req: Request, res: Response) => {
   try {
-    const packet = await researchPacketsRepository.getById(req.params.packetId);
-    if (!packet) {
-      res.status(404).json({ error: 'Research packet not found' });
-      return;
-    }
-    res.json(packet);
+    const days = parseInt(req.query.days as string) || 7;
+    const packets = await researchPacketsRepository.getRecentPackets(days);
+    res.json({ packets, days, count: packets.length });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Get all research packets (list endpoint)
+researchRouter.get('/packets', async (req: Request, res: Response) => {
+  try {
+    const packets = await researchPacketsRepository.getRecentPackets(30);
+    res.json({ packets, count: packets.length });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -55,12 +64,15 @@ researchRouter.get('/packets/ticker/:ticker', async (req: Request, res: Response
   }
 });
 
-// Get recent packets for IC bundle
-researchRouter.get('/packets/recent', async (req: Request, res: Response) => {
+// Get research packet by ID (MUST be last among /packets routes)
+researchRouter.get('/packets/:packetId', async (req: Request, res: Response) => {
   try {
-    const days = parseInt(req.query.days as string) || 7;
-    const packets = await researchPacketsRepository.getRecentPackets(days);
-    res.json({ packets, days, count: packets.length });
+    const packet = await researchPacketsRepository.getById(req.params.packetId);
+    if (!packet) {
+      res.status(404).json({ error: 'Research packet not found' });
+      return;
+    }
+    res.json(packet);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
