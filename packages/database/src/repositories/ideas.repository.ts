@@ -83,13 +83,15 @@ export const ideasRepository = {
    */
   async updateStatus(
     ideaId: string,
-    status: Idea['status'],
+    status: Idea['status'] | 'researched',
     rejectionReason?: string
   ): Promise<Idea | undefined> {
+    // Map 'researched' to 'promoted' since schema doesn't have 'researched'
+    const actualStatus = status === 'researched' ? 'promoted' : status;
     const [result] = await db
       .update(ideas)
       .set({
-        status,
+        status: actualStatus,
         rejectionReason,
         updatedAt: new Date(),
       })

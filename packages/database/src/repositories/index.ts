@@ -11,3 +11,4 @@ export * from './style-mix-state.repository.js';
 export * from './runs.repository.js';
 export * from './security-master.repository.js';
 export * from './memory.repository.js';
+export * from './qa-reports.repository.js';

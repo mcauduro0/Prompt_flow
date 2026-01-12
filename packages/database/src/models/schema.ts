@@ -344,6 +344,23 @@ export const watchlist = pgTable('watchlist', {
 }));
 
 // ============================================================================
+// QA REPORTS
+// ============================================================================
+
+export const qaReports = pgTable('qa_reports', {
+  reportId: uuid('report_id').primaryKey().defaultRandom(),
+  reportType: text('report_type').notNull(),
+  reportDate: timestamp('report_date').defaultNow().notNull(),
+  overallScore: integer('overall_score').notNull(),
+  status: text('status').notNull(), // pass, warn, fail
+  payload: jsonb('payload'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  reportTypeIdx: index('qa_reports_report_type_idx').on(table.reportType),
+  reportDateIdx: index('qa_reports_report_date_idx').on(table.reportDate),
+}));
+
+// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 
