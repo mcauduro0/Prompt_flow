@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Activity, CheckCircle, AlertCircle, Clock, Database, Cpu, Zap, FileText, Shield } from "lucide-react";
+import { Activity, CheckCircle, AlertCircle, Database, Cpu, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface WarmUpStatus {
@@ -29,23 +29,7 @@ interface WarmUpStatus {
   } | null;
 }
 
-const formatRelativeTime = (dateStr: string | null): string => {
-  if (!dateStr) return "Never";
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-};
-
-const formatDateTime = (dateStr: string | null): string => {
+const formatShortDateTime = (dateStr: string | null): string => {
   if (!dateStr) return "—";
   const date = new Date(dateStr);
   return date.toLocaleString("en-US", {
@@ -102,74 +86,6 @@ export default function StatusPage() {
     return <AlertCircle className="w-5 h-5 text-fail" />;
   };
 
-  const WarmUpItem = ({
-    icon: Icon,
-    label,
-    data,
-    summaryKey,
-  }: {
-    icon: any;
-    label: string;
-    data: WarmUpStatus["laneA"];
-    summaryKey?: string;
-  }) => {
-    const hasRun = data !== null;
-    const isSuccess = data?.status === "completed";
-    const summaryValue = summaryKey && data?.summary ? data.summary[summaryKey] : null;
-
-    return (
-      <div className="flex items-start gap-3 p-4 rounded-lg bg-secondary/50 border border-border/50">
-        <div
-          className={cn(
-            "p-2 rounded-lg flex-shrink-0",
-            hasRun && isSuccess ? "bg-success/20" : hasRun ? "bg-warning/20" : "bg-muted"
-          )}
-        >
-          <Icon
-            className={cn(
-              "w-5 h-5",
-              hasRun && isSuccess
-                ? "text-success"
-                : hasRun
-                ? "text-warning"
-                : "text-muted-foreground"
-            )}
-          />
-        </div>
-        <div className="flex-1 min-w-0 overflow-hidden">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="font-medium text-sm truncate">{label}</span>
-            {hasRun && (
-              <span
-                className={cn(
-                  "text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap flex-shrink-0",
-                  isSuccess ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
-                )}
-              >
-                {data.status}
-              </span>
-            )}
-          </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            {hasRun ? (
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                <span>{formatRelativeTime(data.completedAt || data.runDate)}</span>
-                {summaryValue !== null && (
-                  <span className="text-foreground/70">• {summaryValue} items</span>
-                )}
-              </div>
-            ) : (
-              "No runs yet"
-            )}
-          </div>
-        </div>
-        <div className="text-right text-[10px] text-muted-foreground flex-shrink-0 hidden sm:block">
-          {hasRun && formatDateTime(data.completedAt || data.runDate)}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <AppLayout>
       <div className="min-h-screen flex flex-col">
@@ -192,27 +108,42 @@ export default function StatusPage() {
                     <h2 className="text-section-title">System Warm-Up Status</h2>
                   </div>
                   <div className="governance-card">
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <WarmUpItem
-                        icon={Activity}
-                        label="Lane A (Discovery)"
-                        data={warmUp?.laneA || null}
-                        summaryKey="ideasGenerated"
-                      />
-                      <WarmUpItem
-                        icon={FileText}
-                        label="Lane B (Research)"
-                        data={warmUp?.laneB || null}
-                        summaryKey="packetsCompleted"
-                      />
-                      <WarmUpItem
-                        icon={Shield}
-                        label="QA Report"
-                        data={warmUp?.qa || null}
-                      />
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-border/50 text-xs text-muted-foreground text-center">
-                      Last updated: {new Date().toLocaleTimeString()} • Auto-refreshes every 30s
+                    <div className="grid grid-cols-3 gap-6">
+                      {/* Lane A */}
+                      <div className="text-center">
+                        <div className="text-sm font-medium text-foreground mb-1">Lane A</div>
+                        <div className="text-xs text-muted-foreground">
+                          {warmUp?.laneA ? (
+                            formatShortDateTime(warmUp.laneA.completedAt || warmUp.laneA.runDate)
+                          ) : (
+                            "No runs yet"
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Lane B */}
+                      <div className="text-center">
+                        <div className="text-sm font-medium text-foreground mb-1">Lane B</div>
+                        <div className="text-xs text-muted-foreground">
+                          {warmUp?.laneB ? (
+                            formatShortDateTime(warmUp.laneB.completedAt || warmUp.laneB.runDate)
+                          ) : (
+                            "No runs yet"
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* QA */}
+                      <div className="text-center">
+                        <div className="text-sm font-medium text-foreground mb-1">QA Report</div>
+                        <div className="text-xs text-muted-foreground">
+                          {warmUp?.qa ? (
+                            formatShortDateTime(warmUp.qa.completedAt || warmUp.qa.runDate)
+                          ) : (
+                            "No runs yet"
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </section>
