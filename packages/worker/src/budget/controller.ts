@@ -4,6 +4,8 @@
  * Controls budget per run with configurable limits.
  * Prevents LLM calls when budget is exceeded.
  * Code functions can continue for graceful shutdown.
+ * 
+ * Exposes real-time budget state including llm_calls_allowed flag.
  */
 
 import { type BudgetState, type ExecutorType } from '../prompts/types.js';
@@ -16,21 +18,46 @@ export interface BudgetConfig {
   max_total_tokens: number;
   max_total_cost: number;
   max_total_time_seconds: number;
+  warn_threshold_percent?: number;  // Warn when budget reaches this percentage
 }
 
 export const DEFAULT_BUDGET_CONFIG: BudgetConfig = {
   max_total_tokens: 100000,    // 100K tokens per run
   max_total_cost: 5.0,         // $5 per run
   max_total_time_seconds: 600, // 10 minutes per run
+  warn_threshold_percent: 80,  // Warn at 80%
 };
+
+// ============================================================================
+// EXTENDED BUDGET STATE
+// ============================================================================
+
+export interface ExtendedBudgetState extends BudgetState {
+  llm_calls_allowed: boolean;
+  code_calls_allowed: boolean;
+  warning_issued: boolean;
+  tokens_remaining: number;
+  cost_remaining: number;
+  time_remaining_ms: number;
+  usage_percent: {
+    tokens: number;
+    cost: number;
+    time: number;
+    max: number;  // Highest of the three
+  };
+  estimated_calls_remaining: number;  // Rough estimate based on avg usage
+}
 
 // ============================================================================
 // BUDGET CONTROLLER
 // ============================================================================
 
 export class BudgetController {
-  private budgets: Map<string, BudgetState> = new Map();
+  private budgets: Map<string, ExtendedBudgetState> = new Map();
   private config: BudgetConfig;
+  private avgTokensPerCall: number = 2000;  // Running average
+  private avgCostPerCall: number = 0.05;    // Running average
+  private callCount: number = 0;
 
   constructor(config?: Partial<BudgetConfig>) {
     this.config = { ...DEFAULT_BUDGET_CONFIG, ...config };
@@ -42,7 +69,7 @@ export class BudgetController {
   initRun(runId: string, customConfig?: Partial<BudgetConfig>): void {
     const runConfig = { ...this.config, ...customConfig };
     
-    this.budgets.set(runId, {
+    const state: ExtendedBudgetState = {
       run_id: runId,
       total_tokens_used: 0,
       total_cost_used: 0,
@@ -51,12 +78,27 @@ export class BudgetController {
       max_total_cost: runConfig.max_total_cost,
       max_total_time_ms: runConfig.max_total_time_seconds * 1000,
       is_exceeded: false,
-    });
+      llm_calls_allowed: true,
+      code_calls_allowed: true,
+      warning_issued: false,
+      tokens_remaining: runConfig.max_total_tokens,
+      cost_remaining: runConfig.max_total_cost,
+      time_remaining_ms: runConfig.max_total_time_seconds * 1000,
+      usage_percent: {
+        tokens: 0,
+        cost: 0,
+        time: 0,
+        max: 0,
+      },
+      estimated_calls_remaining: Math.floor(runConfig.max_total_tokens / this.avgTokensPerCall),
+    };
+
+    this.budgets.set(runId, state);
 
     console.log(
       `[BudgetController] Initialized budget for run ${runId}: ` +
       `${runConfig.max_total_tokens} tokens, $${runConfig.max_total_cost}, ` +
-      `${runConfig.max_total_time_seconds}s`
+      `${runConfig.max_total_time_seconds}s | Est. ${state.estimated_calls_remaining} calls`
     );
   }
 
@@ -70,26 +112,8 @@ export class BudgetController {
       return { allowed: false, reason: 'Budget not initialized for this run' };
     }
 
-    if (budget.is_exceeded) {
-      return { allowed: false, reason: budget.exceeded_reason };
-    }
-
-    // Check tokens
-    if (budget.total_tokens_used >= budget.max_total_tokens) {
-      this.markExceeded(runId, 'token_limit_exceeded');
-      return { allowed: false, reason: 'Token limit exceeded' };
-    }
-
-    // Check cost
-    if (budget.total_cost_used >= budget.max_total_cost) {
-      this.markExceeded(runId, 'cost_limit_exceeded');
-      return { allowed: false, reason: 'Cost limit exceeded' };
-    }
-
-    // Check time
-    if (budget.total_time_ms >= budget.max_total_time_ms) {
-      this.markExceeded(runId, 'time_limit_exceeded');
-      return { allowed: false, reason: 'Time limit exceeded' };
+    if (!budget.llm_calls_allowed) {
+      return { allowed: false, reason: budget.exceeded_reason || 'LLM calls not allowed' };
     }
 
     return { allowed: true };
@@ -99,9 +123,15 @@ export class BudgetController {
    * Check if any execution is allowed (code functions can run even after budget exceeded)
    */
   canExecute(runId: string, executorType: ExecutorType): { allowed: boolean; reason?: string } {
+    const budget = this.budgets.get(runId);
+    
+    if (!budget) {
+      return { allowed: false, reason: 'Budget not initialized' };
+    }
+
     // Code functions can always run for graceful shutdown
     if (executorType === 'code') {
-      return { allowed: true };
+      return { allowed: budget.code_calls_allowed };
     }
 
     // LLM and hybrid require budget check
@@ -126,48 +156,185 @@ export class BudgetController {
       return;
     }
 
+    const totalTokens = (usage.tokens_in || 0) + (usage.tokens_out || 0);
+
     // Update totals
-    if (usage.tokens_in) budget.total_tokens_used += usage.tokens_in;
-    if (usage.tokens_out) budget.total_tokens_used += usage.tokens_out;
+    budget.total_tokens_used += totalTokens;
     if (usage.cost) budget.total_cost_used += usage.cost;
     budget.total_time_ms += usage.latency_ms;
 
-    // Check if limits exceeded
-    if (budget.total_tokens_used >= budget.max_total_tokens) {
-      this.markExceeded(runId, 'token_limit_exceeded');
-    } else if (budget.total_cost_used >= budget.max_total_cost) {
-      this.markExceeded(runId, 'cost_limit_exceeded');
-    } else if (budget.total_time_ms >= budget.max_total_time_ms) {
-      this.markExceeded(runId, 'time_limit_exceeded');
+    // Update running averages
+    this.callCount++;
+    if (totalTokens > 0) {
+      this.avgTokensPerCall = (this.avgTokensPerCall * (this.callCount - 1) + totalTokens) / this.callCount;
+    }
+    if (usage.cost && usage.cost > 0) {
+      this.avgCostPerCall = (this.avgCostPerCall * (this.callCount - 1) + usage.cost) / this.callCount;
     }
 
+    // Recalculate derived values
+    this.updateDerivedState(budget);
+
+    // Check if limits exceeded
+    this.checkLimits(runId, budget);
+
     this.budgets.set(runId, budget);
+  }
+
+  /**
+   * Update derived state values
+   */
+  private updateDerivedState(budget: ExtendedBudgetState): void {
+    // Calculate remaining
+    budget.tokens_remaining = Math.max(0, budget.max_total_tokens - budget.total_tokens_used);
+    budget.cost_remaining = Math.max(0, budget.max_total_cost - budget.total_cost_used);
+    budget.time_remaining_ms = Math.max(0, budget.max_total_time_ms - budget.total_time_ms);
+
+    // Calculate usage percentages
+    budget.usage_percent = {
+      tokens: (budget.total_tokens_used / budget.max_total_tokens) * 100,
+      cost: (budget.total_cost_used / budget.max_total_cost) * 100,
+      time: (budget.total_time_ms / budget.max_total_time_ms) * 100,
+      max: 0,
+    };
+    budget.usage_percent.max = Math.max(
+      budget.usage_percent.tokens,
+      budget.usage_percent.cost,
+      budget.usage_percent.time
+    );
+
+    // Estimate remaining calls
+    const tokenBasedEstimate = Math.floor(budget.tokens_remaining / this.avgTokensPerCall);
+    const costBasedEstimate = Math.floor(budget.cost_remaining / this.avgCostPerCall);
+    budget.estimated_calls_remaining = Math.min(tokenBasedEstimate, costBasedEstimate);
+  }
+
+  /**
+   * Check limits and update allowed flags
+   */
+  private checkLimits(runId: string, budget: ExtendedBudgetState): void {
+    const warnThreshold = this.config.warn_threshold_percent || 80;
+
+    // Check for warning threshold
+    if (!budget.warning_issued && budget.usage_percent.max >= warnThreshold) {
+      budget.warning_issued = true;
+      console.warn(
+        `[BudgetController] WARNING: Run ${runId} at ${budget.usage_percent.max.toFixed(1)}% budget ` +
+        `(~${budget.estimated_calls_remaining} calls remaining)`
+      );
+    }
+
+    // Check if limits exceeded
+    if (budget.total_tokens_used >= budget.max_total_tokens) {
+      this.markExceeded(runId, budget, 'token_limit_exceeded');
+    } else if (budget.total_cost_used >= budget.max_total_cost) {
+      this.markExceeded(runId, budget, 'cost_limit_exceeded');
+    } else if (budget.total_time_ms >= budget.max_total_time_ms) {
+      this.markExceeded(runId, budget, 'time_limit_exceeded');
+    }
   }
 
   /**
    * Mark budget as exceeded
    */
-  private markExceeded(runId: string, reason: string): void {
-    const budget = this.budgets.get(runId);
-    if (!budget || budget.is_exceeded) return;
+  private markExceeded(runId: string, budget: ExtendedBudgetState, reason: string): void {
+    if (budget.is_exceeded) return;
 
     budget.is_exceeded = true;
     budget.exceeded_reason = reason;
-    this.budgets.set(runId, budget);
+    budget.llm_calls_allowed = false;
+    budget.estimated_calls_remaining = 0;
 
     console.warn(
-      `[BudgetController] Budget exceeded for run ${runId}: ${reason} ` +
-      `(tokens: ${budget.total_tokens_used}/${budget.max_total_tokens}, ` +
-      `cost: $${budget.total_cost_used.toFixed(4)}/$${budget.max_total_cost}, ` +
-      `time: ${budget.total_time_ms}ms/${budget.max_total_time_ms}ms)`
+      `[BudgetController] BUDGET EXCEEDED for run ${runId}: ${reason}\n` +
+      `  Tokens: ${budget.total_tokens_used}/${budget.max_total_tokens} (${budget.usage_percent.tokens.toFixed(1)}%)\n` +
+      `  Cost: $${budget.total_cost_used.toFixed(4)}/$${budget.max_total_cost} (${budget.usage_percent.cost.toFixed(1)}%)\n` +
+      `  Time: ${budget.total_time_ms}ms/${budget.max_total_time_ms}ms (${budget.usage_percent.time.toFixed(1)}%)`
     );
   }
 
   /**
-   * Get current budget state for a run
+   * Get current budget state for a run (basic)
    */
   getBudgetState(runId: string): BudgetState | null {
+    const budget = this.budgets.get(runId);
+    if (!budget) return null;
+
+    // Return basic BudgetState for compatibility
+    return {
+      run_id: budget.run_id,
+      total_tokens_used: budget.total_tokens_used,
+      total_cost_used: budget.total_cost_used,
+      total_time_ms: budget.total_time_ms,
+      max_total_tokens: budget.max_total_tokens,
+      max_total_cost: budget.max_total_cost,
+      max_total_time_ms: budget.max_total_time_ms,
+      is_exceeded: budget.is_exceeded,
+      exceeded_reason: budget.exceeded_reason,
+    };
+  }
+
+  /**
+   * Get extended budget state with real-time metrics
+   */
+  getExtendedBudgetState(runId: string): ExtendedBudgetState | null {
     return this.budgets.get(runId) || null;
+  }
+
+  /**
+   * Get real-time budget status for API exposure
+   */
+  getRealTimeStatus(runId: string): {
+    run_id: string;
+    llm_calls_allowed: boolean;
+    is_exceeded: boolean;
+    exceeded_reason?: string;
+    usage: {
+      tokens: { used: number; max: number; percent: number };
+      cost: { used: number; max: number; percent: number };
+      time: { used_ms: number; max_ms: number; percent: number };
+    };
+    remaining: {
+      tokens: number;
+      cost: number;
+      time_ms: number;
+      estimated_calls: number;
+    };
+    warning_issued: boolean;
+  } | null {
+    const budget = this.budgets.get(runId);
+    if (!budget) return null;
+
+    return {
+      run_id: budget.run_id,
+      llm_calls_allowed: budget.llm_calls_allowed,
+      is_exceeded: budget.is_exceeded,
+      exceeded_reason: budget.exceeded_reason,
+      usage: {
+        tokens: {
+          used: budget.total_tokens_used,
+          max: budget.max_total_tokens,
+          percent: budget.usage_percent.tokens,
+        },
+        cost: {
+          used: budget.total_cost_used,
+          max: budget.max_total_cost,
+          percent: budget.usage_percent.cost,
+        },
+        time: {
+          used_ms: budget.total_time_ms,
+          max_ms: budget.max_total_time_ms,
+          percent: budget.usage_percent.time,
+        },
+      },
+      remaining: {
+        tokens: budget.tokens_remaining,
+        cost: budget.cost_remaining,
+        time_ms: budget.time_remaining_ms,
+        estimated_calls: budget.estimated_calls_remaining,
+      },
+      warning_issued: budget.warning_issued,
+    };
   }
 
   /**
@@ -182,9 +349,9 @@ export class BudgetController {
     if (!budget) return null;
 
     return {
-      tokens: Math.max(0, budget.max_total_tokens - budget.total_tokens_used),
-      cost: Math.max(0, budget.max_total_cost - budget.total_cost_used),
-      time_ms: Math.max(0, budget.max_total_time_ms - budget.total_time_ms),
+      tokens: budget.tokens_remaining,
+      cost: budget.cost_remaining,
+      time_ms: budget.time_remaining_ms,
     };
   }
 
@@ -200,9 +367,9 @@ export class BudgetController {
     if (!budget) return null;
 
     return {
-      tokens: (budget.total_tokens_used / budget.max_total_tokens) * 100,
-      cost: (budget.total_cost_used / budget.max_total_cost) * 100,
-      time: (budget.total_time_ms / budget.max_total_time_ms) * 100,
+      tokens: budget.usage_percent.tokens,
+      cost: budget.usage_percent.cost,
+      time: budget.usage_percent.time,
     };
   }
 
@@ -213,22 +380,73 @@ export class BudgetController {
     const budget = this.budgets.get(runId);
     if (!budget) return null;
 
+    // Create a copy of the state before deleting
+    const finalState: BudgetState = {
+      run_id: budget.run_id,
+      total_tokens_used: budget.total_tokens_used,
+      total_cost_used: budget.total_cost_used,
+      total_time_ms: budget.total_time_ms,
+      max_total_tokens: budget.max_total_tokens,
+      max_total_cost: budget.max_total_cost,
+      max_total_time_ms: budget.max_total_time_ms,
+      is_exceeded: budget.is_exceeded,
+      exceeded_reason: budget.exceeded_reason,
+    };
+
     console.log(
-      `[BudgetController] Finalized run ${runId}: ` +
-      `${budget.total_tokens_used} tokens, $${budget.total_cost_used.toFixed(4)}, ` +
-      `${budget.total_time_ms}ms` +
-      (budget.is_exceeded ? ` (EXCEEDED: ${budget.exceeded_reason})` : '')
+      `[BudgetController] Finalized run ${runId}:\n` +
+      `  Tokens: ${budget.total_tokens_used}/${budget.max_total_tokens} (${budget.usage_percent.tokens.toFixed(1)}%)\n` +
+      `  Cost: $${budget.total_cost_used.toFixed(4)}/$${budget.max_total_cost} (${budget.usage_percent.cost.toFixed(1)}%)\n` +
+      `  Time: ${budget.total_time_ms}ms/${budget.max_total_time_ms}ms (${budget.usage_percent.time.toFixed(1)}%)` +
+      (budget.is_exceeded ? `\n  STATUS: EXCEEDED (${budget.exceeded_reason})` : '')
     );
 
     this.budgets.delete(runId);
-    return budget;
+    return finalState;
   }
 
   /**
    * Get all active budgets
    */
   getActiveBudgets(): BudgetState[] {
+    return Array.from(this.budgets.values()).map(b => ({
+      run_id: b.run_id,
+      total_tokens_used: b.total_tokens_used,
+      total_cost_used: b.total_cost_used,
+      total_time_ms: b.total_time_ms,
+      max_total_tokens: b.max_total_tokens,
+      max_total_cost: b.max_total_cost,
+      max_total_time_ms: b.max_total_time_ms,
+      is_exceeded: b.is_exceeded,
+      exceeded_reason: b.exceeded_reason,
+    }));
+  }
+
+  /**
+   * Get all active extended budgets
+   */
+  getActiveExtendedBudgets(): ExtendedBudgetState[] {
     return Array.from(this.budgets.values());
+  }
+
+  /**
+   * Get global statistics
+   */
+  getGlobalStats(): {
+    active_runs: number;
+    avg_tokens_per_call: number;
+    avg_cost_per_call: number;
+    total_calls_tracked: number;
+    runs_exceeded: number;
+  } {
+    const budgets = Array.from(this.budgets.values());
+    return {
+      active_runs: budgets.length,
+      avg_tokens_per_call: this.avgTokensPerCall,
+      avg_cost_per_call: this.avgCostPerCall,
+      total_calls_tracked: this.callCount,
+      runs_exceeded: budgets.filter(b => b.is_exceeded).length,
+    };
   }
 
   /**

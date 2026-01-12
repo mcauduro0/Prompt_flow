@@ -1,6 +1,6 @@
 /**
  * ARC Investment Factory - Retriever Package
- * Data fetching from external sources (FMP, Polygon, SEC EDGAR)
+ * Data fetching from external sources (FMP, Polygon, SEC EDGAR, FRED, Reddit, Social Trends)
  */
 
 export * from './sources/fmp.js';
@@ -11,4 +11,4 @@ export * from './types.js';
 export * from './hub.js';
 export * from './sources/fred.js';
 export * from './sources/reddit.js';
-export * from './sources/twitter.js';
+export * from './sources/social-trends.js';

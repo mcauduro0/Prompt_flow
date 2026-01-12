@@ -2,7 +2,7 @@
  * ARC Investment Factory - Data Retriever Hub
  * 
  * Centralized data access layer with caching, fallback, and unified interface
- * for all data sources: FMP, Polygon, SEC EDGAR, FRED, Reddit, Twitter.
+ * for all data sources: FMP, Polygon, SEC EDGAR, FRED, Reddit, Social Trends.
  */
 
 import { FMPClient } from './sources/fmp.js';
@@ -10,7 +10,7 @@ import { PolygonClient } from './sources/polygon.js';
 import { SECEdgarClient } from './sources/sec-edgar.js';
 import { FREDClient } from './sources/fred.js';
 import { RedditClient } from './sources/reddit.js';
-import { TwitterClient } from './sources/twitter.js';
+import { SocialTrendsClient } from './sources/social-trends.js';
 import type { RetrieverResult, CompanyProfile, FinancialMetrics, StockPrice, SECFiling } from './types.js';
 
 // ============================================================================
@@ -82,7 +82,7 @@ export class DataRetrieverHub {
   private sec: SECEdgarClient;
   private fred: FREDClient;
   private reddit: RedditClient;
-  private twitter: TwitterClient;
+  private socialTrends: SocialTrendsClient;
   
   private cache: Map<string, CacheEntry<unknown>> = new Map();
   private config: Required<HubConfig>;
@@ -94,7 +94,7 @@ export class DataRetrieverHub {
     this.sec = new SECEdgarClient();
     this.fred = new FREDClient();
     this.reddit = new RedditClient();
-    this.twitter = new TwitterClient();
+    this.socialTrends = new SocialTrendsClient();
 
     this.config = {
       cacheTTL: { ...DEFAULT_TTL, ...config.cacheTTL },
@@ -111,7 +111,7 @@ export class DataRetrieverHub {
       { name: 'SEC EDGAR', key: null },
       { name: 'FRED', key: 'FRED_API_KEY' },
       { name: 'Reddit', key: 'REDDIT_CLIENT_ID' },
-      { name: 'Twitter', key: 'TWITTER_BEARER_TOKEN' },
+      { name: 'Social Trends', key: 'SONAR_API_KEY' },
     ];
 
     for (const source of sources) {
@@ -461,7 +461,7 @@ export class DataRetrieverHub {
   }
 
   // --------------------------------------------------------------------------
-  // SOCIAL SENTIMENT (Reddit, Twitter)
+  // SOCIAL SENTIMENT (Reddit, Social Trends)
   // --------------------------------------------------------------------------
 
   async getRedditSentiment(ticker: string): Promise<RetrieverResult<unknown>> {
@@ -496,23 +496,23 @@ export class DataRetrieverHub {
     return makeResult(false, 'Reddit', undefined, result.error);
   }
 
-  async getTwitterSentiment(ticker: string): Promise<RetrieverResult<unknown>> {
-    const cacheKey = this.getCacheKey('twitter', 'sentiment', { ticker });
+  async getSocialTrendsSentiment(ticker: string): Promise<RetrieverResult<unknown>> {
+    const cacheKey = this.getCacheKey('social-trends', 'sentiment', { ticker });
     const cached = this.getFromCache<unknown>(cacheKey);
-    if (cached) return makeResult(true, 'Twitter (cached)', cached);
+    if (cached) return makeResult(true, 'Social Trends (cached)', cached);
 
     const startTime = Date.now();
-    const result = await this.twitter.searchTweets(`$${ticker}`, 100);
+    const result = await this.socialTrends.searchSocialTrends(`$${ticker}`, 100);
     const latency = Date.now() - startTime;
 
-    this.updateSourceStatus('Twitter', result.success, result.error, latency);
+    this.updateSourceStatus('Social Trends', result.success, result.error, latency);
 
     if (result.success && result.data) {
       this.setCache(cacheKey, result.data, this.config.cacheTTL.social!);
-      return makeResult(true, 'Twitter', result.data);
+      return makeResult(true, 'Social Trends', result.data);
     }
 
-    return makeResult(false, 'Twitter', undefined, result.error);
+    return makeResult(false, 'Social Trends', undefined, result.error);
   }
 
   // --------------------------------------------------------------------------

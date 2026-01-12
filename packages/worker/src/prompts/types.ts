@@ -87,6 +87,12 @@ export interface PromptDefinition {
   template: string;
   pre_process_function?: string;
   post_process_function?: string;
+  
+  // Expected value metadata for intelligent prompt selection
+  expected_value_score?: number;  // 1-10: Higher = more valuable output
+  expected_cost_score?: number;   // 1-10: Higher = more expensive to run
+  min_signal_dependency?: string[]; // Prompt IDs that must run first
+  value_cost_ratio?: number;      // Computed: expected_value / expected_cost
 }
 
 // ============================================================================

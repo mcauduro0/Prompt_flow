@@ -24,6 +24,7 @@ import { getDataRetrieverHub, type DataRetrieverHub } from '@arc/retriever';
 import { getTelemetryStore, type TelemetryStore } from '../telemetry/store.js';
 import { getBudgetController, type BudgetController } from '../budget/controller.js';
 import { getQuarantineStore, type QuarantineStore } from '../quarantine/store.js';
+import { getPromptSelector, type PromptSelector } from './selector.js';
 
 // ============================================================================
 // ORCHESTRATOR CONFIG
@@ -68,6 +69,7 @@ export class PromptOrchestrator {
   private telemetry: TelemetryStore;
   private budget: BudgetController;
   private quarantine: QuarantineStore;
+  private selector: PromptSelector;
   private initialized: boolean = false;
 
   constructor(config?: Partial<OrchestratorConfig>) {
@@ -79,6 +81,7 @@ export class PromptOrchestrator {
     this.telemetry = getTelemetryStore();
     this.budget = getBudgetController();
     this.quarantine = getQuarantineStore();
+    this.selector = getPromptSelector();
   }
 
   /**
@@ -88,8 +91,13 @@ export class PromptOrchestrator {
     if (!this.library.isLoaded()) {
       this.library.load();
     }
+    
+    // Load prompts into selector for value-based selection
+    const allPrompts = this.library.listAll();
+    this.selector.loadPrompts(allPrompts);
+    
     this.initialized = true;
-    console.log('[PromptOrchestrator] Initialized');
+    console.log(`[PromptOrchestrator] Initialized with ${allPrompts.length} prompts`);
   }
 
   /**
@@ -221,10 +229,23 @@ export class PromptOrchestrator {
       date: date || new Date().toISOString().split('T')[0],
     };
 
-    // Get prompts for Lane A
-    const laneAPrompts = this.library.getByLane('lane_a' as Lane);
-    const promptIds = laneAPrompts.length > 0 
-      ? laneAPrompts.map((p: PromptDefinition) => p.prompt_id)
+    // Use value-based prompt selection for Lane A
+    const selectionResult = this.selector.selectPrompts({
+      lane: 'lane_a',
+      stage: 'discovery',
+      completed_prompt_ids: [],
+    });
+    
+    // Log selection results
+    console.log(`[Lane A] Selected ${selectionResult.selected.length} prompts`);
+    console.log(`[Lane A] Expected value: ${selectionResult.total_expected_value}, cost: ${selectionResult.total_expected_cost}`);
+    if (selectionResult.skipped.length > 0) {
+      console.log(`[Lane A] Skipped: ${selectionResult.skipped.map(s => s.prompt_id).join(', ')}`);
+    }
+    
+    // Use execution order from selector (respects dependencies)
+    const promptIds = selectionResult.execution_order.length > 0
+      ? selectionResult.execution_order
       : ['gate_data_sufficiency', 'lane_a_idea_generation', 'gate_coherence'];
 
     // Execute prompts in sequence
@@ -246,14 +267,14 @@ export class PromptOrchestrator {
       }
     }
 
-    const budgetState = this.budget.getBudgetState(runId) || this.createEmptyBudgetState(runId);
+    const finalBudgetState = this.budget.getBudgetState(runId) || this.createEmptyBudgetState(runId);
 
     return {
       run_id: runId,
       success: Object.values(outputs).every((o) => o.success),
       outputs,
       telemetry: telemetryRecords,
-      budget_state: budgetState,
+      budget_state: finalBudgetState,
       total_latency_ms: Date.now() - startTime.getTime(),
       sources_succeeded: [],
       sources_failed: [],
@@ -292,10 +313,25 @@ export class PromptOrchestrator {
       date: date || new Date().toISOString().split('T')[0],
     };
 
-    // Get prompts for Lane B
-    const laneBPrompts = this.library.getByLane('lane_b' as Lane);
-    const promptIds = laneBPrompts.length > 0
-      ? laneBPrompts.map((p: PromptDefinition) => p.prompt_id)
+    // Use value-based prompt selection for Lane B
+    const currentBudget = this.budget.getBudgetState(runId);
+    const selectionResult = currentBudget
+      ? this.selector.selectForBudget('lane_b', currentBudget, [])
+      : this.selector.selectPrompts({
+          lane: 'lane_b',
+          completed_prompt_ids: [],
+        });
+    
+    // Log selection results
+    console.log(`[Lane B] Selected ${selectionResult.selected.length} prompts for ${ticker}`);
+    console.log(`[Lane B] Expected value: ${selectionResult.total_expected_value}, cost: ${selectionResult.total_expected_cost}`);
+    if (selectionResult.skipped.length > 0) {
+      console.log(`[Lane B] Skipped ${selectionResult.skipped.length} prompts due to constraints`);
+    }
+    
+    // Use execution order from selector (respects dependencies and value)
+    const promptIds = selectionResult.execution_order.length > 0
+      ? selectionResult.execution_order
       : [
           'gate_data_sufficiency',
           'business_model_analysis',
@@ -328,14 +364,14 @@ export class PromptOrchestrator {
       }
     }
 
-    const budgetState = this.budget.getBudgetState(runId) || this.createEmptyBudgetState(runId);
+    const laneBBudgetState = this.budget.getBudgetState(runId) || this.createEmptyBudgetState(runId);
 
     return {
       run_id: runId,
       success: Object.values(outputs).every((o) => o.success),
       outputs,
       telemetry: telemetryRecords,
-      budget_state: budgetState,
+      budget_state: laneBBudgetState,
       total_latency_ms: Date.now() - startTime.getTime(),
       sources_succeeded: [],
       sources_failed: [],

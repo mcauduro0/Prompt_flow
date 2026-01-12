@@ -23,6 +23,26 @@ interface TelemetryEntry {
   created_at: string;
 }
 
+interface QualityMetrics {
+  overall_quality_score: number;
+  gate_pass_rate: number;
+  validation_pass_rate: number;
+  data_sufficiency_rate: number;
+  coherence_rate: number;
+  edge_claim_rate: number;
+  style_fit_rate: number;
+}
+
+interface LaneOutcomeStats {
+  total: number;
+  byLane: Record<string, number>;
+  byOutcome: Record<string, number>;
+  avgQualityScore: number;
+  avgCostPerOutcome: number;
+  ideasGenerated: number;
+  researchCompleted: number;
+}
+
 interface TelemetryStats {
   total_executions: number;
   success_rate: number;
@@ -45,6 +65,8 @@ interface TelemetryStats {
     error: string;
     created_at: string;
   }>;
+  qualityMetrics?: QualityMetrics;
+  laneOutcomeStats?: LaneOutcomeStats;
 }
 
 interface BudgetStatus {
@@ -55,11 +77,22 @@ interface BudgetStatus {
   monthly_spent_usd: number;
   monthly_remaining_usd: number;
   token_limit_per_run: number;
+  llm_calls_allowed: boolean;
+  estimated_calls_remaining: number;
   alerts: Array<{
     type: 'warning' | 'critical';
     message: string;
     timestamp: string;
   }>;
+}
+
+interface QuarantineStats {
+  total: number;
+  pending: number;
+  escalated: number;
+  resolved: number;
+  byPriority: Record<string, number>;
+  pendingRetries: number;
 }
 
 // ============================================================================
@@ -142,6 +175,60 @@ function ProgressBar({
   );
 }
 
+function QualityGauge({ 
+  score, 
+  label 
+}: { 
+  score: number; 
+  label: string;
+}) {
+  const getColor = (s: number) => {
+    if (s >= 80) return 'text-emerald-400';
+    if (s >= 60) return 'text-amber-400';
+    return 'text-red-400';
+  };
+
+  const getBgColor = (s: number) => {
+    if (s >= 80) return 'bg-emerald-500';
+    if (s >= 60) return 'bg-amber-500';
+    return 'bg-red-500';
+  };
+
+  return (
+    <div className="text-center">
+      <div className="relative w-20 h-20 mx-auto">
+        <svg className="w-20 h-20 transform -rotate-90">
+          <circle
+            cx="40"
+            cy="40"
+            r="36"
+            stroke="currentColor"
+            strokeWidth="6"
+            fill="none"
+            className="text-muted"
+          />
+          <circle
+            cx="40"
+            cy="40"
+            r="36"
+            stroke="currentColor"
+            strokeWidth="6"
+            fill="none"
+            strokeDasharray={`${score * 2.26} 226`}
+            className={getBgColor(score)}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className={`text-lg font-semibold ${getColor(score)}`}>
+            {score}
+          </span>
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground mt-2">{label}</p>
+    </div>
+  );
+}
+
 function AlertBanner({ alerts }: { alerts: BudgetStatus['alerts'] }) {
   if (alerts.length === 0) return null;
 
@@ -171,6 +258,38 @@ function AlertBanner({ alerts }: { alerts: BudgetStatus['alerts'] }) {
   );
 }
 
+function GatePassRateBar({ 
+  name, 
+  rate 
+}: { 
+  name: string; 
+  rate: number;
+}) {
+  const percentage = rate * 100;
+  const status = percentage >= 80 ? 'good' : percentage >= 60 ? 'warning' : 'critical';
+  
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-sm text-muted-foreground w-32 truncate">{name}</span>
+      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+        <div 
+          className={`h-full transition-all duration-500 ${
+            status === 'good' ? 'bg-emerald-500' :
+            status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
+          }`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+      <span className={`text-sm w-12 text-right ${
+        status === 'good' ? 'text-emerald-400' :
+        status === 'warning' ? 'text-amber-400' : 'text-red-400'
+      }`}>
+        {percentage.toFixed(0)}%
+      </span>
+    </div>
+  );
+}
+
 // ============================================================================
 // MAIN PAGE
 // ============================================================================
@@ -178,6 +297,7 @@ function AlertBanner({ alerts }: { alerts: BudgetStatus['alerts'] }) {
 export default function TelemetryPage() {
   const [stats, setStats] = useState<TelemetryStats | null>(null);
   const [budget, setBudget] = useState<BudgetStatus | null>(null);
+  const [quarantine, setQuarantine] = useState<QuarantineStats | null>(null);
   const [recentExecutions, setRecentExecutions] = useState<TelemetryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
@@ -190,10 +310,11 @@ export default function TelemetryPage() {
 
   async function fetchTelemetryData() {
     try {
-      const [statsRes, budgetRes, executionsRes] = await Promise.all([
+      const [statsRes, budgetRes, executionsRes, quarantineRes] = await Promise.all([
         fetch(`/api/telemetry/stats?range=${timeRange}`),
         fetch('/api/telemetry/budget'),
         fetch(`/api/telemetry/executions?limit=20&range=${timeRange}`),
+        fetch('/api/telemetry/quarantine'),
       ]);
 
       if (statsRes.ok) {
@@ -209,6 +330,11 @@ export default function TelemetryPage() {
       if (executionsRes.ok) {
         const data = await executionsRes.json();
         setRecentExecutions(data.executions || []);
+      }
+
+      if (quarantineRes.ok) {
+        const data = await quarantineRes.json();
+        setQuarantine(data);
       }
     } catch (error) {
       console.error('Failed to fetch telemetry data:', error);
@@ -234,6 +360,24 @@ export default function TelemetryPage() {
       valuation_analysis: { count: 28, success_rate: 92, avg_latency: 2800 },
     },
     recent_errors: [],
+    qualityMetrics: {
+      overall_quality_score: 78,
+      gate_pass_rate: 0.85,
+      validation_pass_rate: 0.92,
+      data_sufficiency_rate: 0.95,
+      coherence_rate: 0.88,
+      edge_claim_rate: 0.72,
+      style_fit_rate: 0.80,
+    },
+    laneOutcomeStats: {
+      total: 45,
+      byLane: { lane_a: 30, lane_b: 15 },
+      byOutcome: { idea_generated: 25, research_complete: 12, idea_rejected: 5, research_partial: 3 },
+      avgQualityScore: 76,
+      avgCostPerOutcome: 0.28,
+      ideasGenerated: 25,
+      researchCompleted: 12,
+    },
   };
 
   const mockBudget: BudgetStatus = budget || {
@@ -244,7 +388,18 @@ export default function TelemetryPage() {
     monthly_spent_usd: 156.78,
     monthly_remaining_usd: 343.22,
     token_limit_per_run: 100000,
+    llm_calls_allowed: true,
+    estimated_calls_remaining: 150,
     alerts: [],
+  };
+
+  const mockQuarantine: QuarantineStats = quarantine || {
+    total: 12,
+    pending: 5,
+    escalated: 2,
+    resolved: 5,
+    byPriority: { critical: 1, high: 3, medium: 5, low: 3 },
+    pendingRetries: 3,
   };
 
   const dailyBudgetStatus = mockBudget.daily_spent_usd / mockBudget.daily_limit_usd > 0.9 
@@ -259,15 +414,18 @@ export default function TelemetryPage() {
       ? 'warning' 
       : 'good';
 
+  const qualityMetrics = mockStats.qualityMetrics!;
+  const laneOutcomes = mockStats.laneOutcomeStats!;
+
   return (
     <AppLayout>
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Telemetry</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              System performance and cost monitoring
+              System performance, quality metrics, and cost monitoring
             </p>
           </div>
           
@@ -292,10 +450,80 @@ export default function TelemetryPage() {
         {/* Budget Alerts */}
         <AlertBanner alerts={mockBudget.alerts} />
 
+        {/* LLM Status Banner */}
+        {!mockBudget.llm_calls_allowed && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <div className="flex items-center gap-3">
+              <span className="text-red-400 text-lg">⛔</span>
+              <div>
+                <p className="text-red-400 font-medium">LLM Calls Disabled</p>
+                <p className="text-sm text-red-400/80">Budget exceeded. Only code functions are allowed.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quality Score Overview */}
+        <section className="mb-8">
+          <h2 className="text-lg font-medium text-foreground mb-4">Quality Metrics</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Quality Gauges */}
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h3 className="text-sm font-medium text-foreground mb-4">Quality Scores</h3>
+              <div className="flex justify-around">
+                <QualityGauge score={qualityMetrics.overall_quality_score} label="Overall" />
+                <QualityGauge score={Math.round(qualityMetrics.gate_pass_rate * 100)} label="Gates" />
+                <QualityGauge score={Math.round(qualityMetrics.validation_pass_rate * 100)} label="Validation" />
+              </div>
+            </div>
+
+            {/* Gate Pass Rates */}
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h3 className="text-sm font-medium text-foreground mb-4">Gate Pass Rates</h3>
+              <div className="space-y-3">
+                <GatePassRateBar name="Data Sufficiency" rate={qualityMetrics.data_sufficiency_rate} />
+                <GatePassRateBar name="Coherence" rate={qualityMetrics.coherence_rate} />
+                <GatePassRateBar name="Edge Claim" rate={qualityMetrics.edge_claim_rate} />
+                <GatePassRateBar name="Style Fit" rate={qualityMetrics.style_fit_rate} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Lane Outcomes */}
+        <section className="mb-8">
+          <h2 className="text-lg font-medium text-foreground mb-4">Lane Outcomes</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatCard 
+              title="Ideas Generated" 
+              value={laneOutcomes.ideasGenerated}
+              subtitle="Lane A output"
+              status="good"
+            />
+            <StatCard 
+              title="Research Completed" 
+              value={laneOutcomes.researchCompleted}
+              subtitle="Lane B output"
+              status="good"
+            />
+            <StatCard 
+              title="Avg Quality Score" 
+              value={laneOutcomes.avgQualityScore}
+              subtitle="0-100 scale"
+              status={laneOutcomes.avgQualityScore >= 75 ? 'good' : laneOutcomes.avgQualityScore >= 60 ? 'warning' : 'critical'}
+            />
+            <StatCard 
+              title="Cost per Outcome" 
+              value={`$${laneOutcomes.avgCostPerOutcome.toFixed(2)}`}
+              subtitle="avg cost"
+            />
+          </div>
+        </section>
+
         {/* Budget Overview */}
         <section className="mb-8">
           <h2 className="text-lg font-medium text-foreground mb-4">Budget Status</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-card border border-border rounded-lg p-4">
               <h3 className="text-sm font-medium text-foreground mb-3">Daily Budget</h3>
               <ProgressBar 
@@ -321,12 +549,55 @@ export default function TelemetryPage() {
                 ${mockBudget.monthly_remaining_usd.toFixed(2)} remaining this month
               </p>
             </div>
+
+            <div className="bg-card border border-border rounded-lg p-4">
+              <h3 className="text-sm font-medium text-foreground mb-3">Estimated Capacity</h3>
+              <div className="flex items-baseline gap-2">
+                <span className={`text-3xl font-semibold ${mockBudget.llm_calls_allowed ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {mockBudget.estimated_calls_remaining}
+                </span>
+                <span className="text-sm text-muted-foreground">calls remaining</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {mockBudget.llm_calls_allowed ? 'LLM calls enabled' : 'LLM calls disabled'}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Quarantine Status */}
+        <section className="mb-8">
+          <h2 className="text-lg font-medium text-foreground mb-4">Quarantine Status</h2>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <StatCard 
+              title="Total Quarantined" 
+              value={mockQuarantine.total}
+            />
+            <StatCard 
+              title="Pending Review" 
+              value={mockQuarantine.pending}
+              status={mockQuarantine.pending > 10 ? 'warning' : 'neutral'}
+            />
+            <StatCard 
+              title="Escalated" 
+              value={mockQuarantine.escalated}
+              status={mockQuarantine.escalated > 0 ? 'critical' : 'good'}
+            />
+            <StatCard 
+              title="Pending Retries" 
+              value={mockQuarantine.pendingRetries}
+            />
+            <StatCard 
+              title="Resolved" 
+              value={mockQuarantine.resolved}
+              status="good"
+            />
           </div>
         </section>
 
         {/* Key Metrics */}
         <section className="mb-8">
-          <h2 className="text-lg font-medium text-foreground mb-4">Key Metrics</h2>
+          <h2 className="text-lg font-medium text-foreground mb-4">Execution Metrics</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard 
               title="Total Executions" 
@@ -451,7 +722,7 @@ export default function TelemetryPage() {
               { name: 'SEC EDGAR', status: 'online', latency: 340 },
               { name: 'FRED', status: 'online', latency: 95 },
               { name: 'Reddit', status: 'online', latency: 450 },
-              { name: 'Twitter', status: 'degraded', latency: 1200 },
+              { name: 'Social Trends', status: 'online', latency: 1200 },
               { name: 'Perplexity', status: 'online', latency: 2100 },
               { name: 'OpenAI', status: 'online', latency: 1800 },
             ].map((source) => (
