@@ -2,12 +2,12 @@
  * ARC Investment Factory - Health Routes
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { checkDatabaseConnection } from '@arc/database';
 
-export const healthRouter = Router();
+export const healthRouter: Router = Router();
 
-healthRouter.get('/', async (req, res) => {
+healthRouter.get('/', async (_req: Request, res: Response) => {
   const dbHealthy = await checkDatabaseConnection();
 
   res.json({
@@ -19,7 +19,7 @@ healthRouter.get('/', async (req, res) => {
   });
 });
 
-healthRouter.get('/ready', async (req, res) => {
+healthRouter.get('/ready', async (_req: Request, res: Response) => {
   const dbHealthy = await checkDatabaseConnection();
 
   if (dbHealthy) {

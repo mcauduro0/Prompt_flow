@@ -2,13 +2,13 @@
  * ARC Investment Factory - Ideas Routes
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { ideasRepository } from '@arc/database';
 
-export const ideasRouter = Router();
+export const ideasRouter: Router = Router();
 
 // GET /api/ideas - List ideas with optional status filter (for UI)
-ideasRouter.get('/', async (req, res) => {
+ideasRouter.get('/', async (req: Request, res: Response) => {
   try {
     const status = req.query.status as string | undefined;
     const limit = parseInt(req.query.limit as string) || 100;
@@ -42,7 +42,7 @@ ideasRouter.get('/', async (req, res) => {
 });
 
 // Get ideas inbox for today
-ideasRouter.get('/inbox', async (req, res) => {
+ideasRouter.get('/inbox', async (req: Request, res: Response) => {
   try {
     const asOf = req.query.date as string ?? new Date().toISOString().split('T')[0];
     const limit = parseInt(req.query.limit as string) || 120;
@@ -54,10 +54,13 @@ ideasRouter.get('/inbox', async (req, res) => {
 });
 
 // Get idea by ID
-ideasRouter.get('/:ideaId', async (req, res) => {
+ideasRouter.get('/:ideaId', async (req: Request, res: Response) => {
   try {
     const idea = await ideasRepository.getById(req.params.ideaId);
-    if (!idea) return res.status(404).json({ error: 'Idea not found' });
+    if (!idea) {
+      res.status(404).json({ error: 'Idea not found' });
+      return;
+    }
     // Transform to UI format
     const transformed = {
       ...idea,
@@ -74,10 +77,13 @@ ideasRouter.get('/:ideaId', async (req, res) => {
 });
 
 // POST /api/ideas/:ideaId/promote - Promote single idea (for UI)
-ideasRouter.post('/:ideaId/promote', async (req, res) => {
+ideasRouter.post('/:ideaId/promote', async (req: Request, res: Response) => {
   try {
     const promoted = await ideasRepository.promoteIdeas([req.params.ideaId]);
-    if (promoted.length === 0) return res.status(404).json({ error: 'Idea not found' });
+    if (promoted.length === 0) {
+      res.status(404).json({ error: 'Idea not found' });
+      return;
+    }
     res.json({ success: true, message: 'Idea promoted to research queue' });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -85,11 +91,14 @@ ideasRouter.post('/:ideaId/promote', async (req, res) => {
 });
 
 // POST /api/ideas/:ideaId/reject - Reject single idea (for UI)
-ideasRouter.post('/:ideaId/reject', async (req, res) => {
+ideasRouter.post('/:ideaId/reject', async (req: Request, res: Response) => {
   try {
     const reason = req.body.reason || 'Manual rejection';
     const idea = await ideasRepository.updateStatus(req.params.ideaId, 'rejected', reason);
-    if (!idea) return res.status(404).json({ error: 'Idea not found' });
+    if (!idea) {
+      res.status(404).json({ error: 'Idea not found' });
+      return;
+    }
     res.json({ success: true, message: 'Idea rejected' });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -97,7 +106,7 @@ ideasRouter.post('/:ideaId/reject', async (req, res) => {
 });
 
 // Get ideas by ticker
-ideasRouter.get('/ticker/:ticker', async (req, res) => {
+ideasRouter.get('/ticker/:ticker', async (req: Request, res: Response) => {
   try {
     const ideas = await ideasRepository.getByTicker(req.params.ticker);
     res.json({ ideas, count: ideas.length });
@@ -107,7 +116,7 @@ ideasRouter.get('/ticker/:ticker', async (req, res) => {
 });
 
 // Get ideas by status
-ideasRouter.get('/status/:status', async (req, res) => {
+ideasRouter.get('/status/:status', async (req: Request, res: Response) => {
   try {
     const status = req.params.status as 'new' | 'monitoring' | 'promoted' | 'rejected';
     const limit = parseInt(req.query.limit as string) || 100;
@@ -119,11 +128,14 @@ ideasRouter.get('/status/:status', async (req, res) => {
 });
 
 // Update idea status
-ideasRouter.patch('/:ideaId/status', async (req, res) => {
+ideasRouter.patch('/:ideaId/status', async (req: Request, res: Response) => {
   try {
     const { status, rejectionReason } = req.body;
     const idea = await ideasRepository.updateStatus(req.params.ideaId, status, rejectionReason);
-    if (!idea) return res.status(404).json({ error: 'Idea not found' });
+    if (!idea) {
+      res.status(404).json({ error: 'Idea not found' });
+      return;
+    }
     res.json(idea);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -131,10 +143,13 @@ ideasRouter.patch('/:ideaId/status', async (req, res) => {
 });
 
 // Promote ideas to Lane B (batch)
-ideasRouter.post('/promote', async (req, res) => {
+ideasRouter.post('/promote', async (req: Request, res: Response) => {
   try {
     const { ideaIds } = req.body;
-    if (!Array.isArray(ideaIds) || ideaIds.length === 0) return res.status(400).json({ error: 'ideaIds array required' });
+    if (!Array.isArray(ideaIds) || ideaIds.length === 0) {
+      res.status(400).json({ error: 'ideaIds array required' });
+      return;
+    }
     const promoted = await ideasRepository.promoteIdeas(ideaIds);
     res.json({ promoted, count: promoted.length });
   } catch (error) {
@@ -143,7 +158,7 @@ ideasRouter.post('/promote', async (req, res) => {
 });
 
 // Get promotion candidates
-ideasRouter.get('/candidates/promotion', async (req, res) => {
+ideasRouter.get('/candidates/promotion', async (req: Request, res: Response) => {
   try {
     const asOf = req.query.date as string ?? new Date().toISOString().split('T')[0];
     const candidates = await ideasRepository.getPromotionCandidates(asOf);
@@ -154,7 +169,7 @@ ideasRouter.get('/candidates/promotion', async (req, res) => {
 });
 
 // Get idea counts by status for a date
-ideasRouter.get('/stats/:date', async (req, res) => {
+ideasRouter.get('/stats/:date', async (req: Request, res: Response) => {
   try {
     const counts = await ideasRepository.countByStatusForDate(req.params.date);
     res.json({ date: req.params.date, counts });

@@ -2,17 +2,18 @@
  * ARC Investment Factory - Research Routes
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { researchPacketsRepository, evidenceRepository } from '@arc/database';
 
-export const researchRouter = Router();
+export const researchRouter: Router = Router();
 
 // Get research packet by ID
-researchRouter.get('/packets/:packetId', async (req, res) => {
+researchRouter.get('/packets/:packetId', async (req: Request, res: Response) => {
   try {
     const packet = await researchPacketsRepository.getById(req.params.packetId);
     if (!packet) {
-      return res.status(404).json({ error: 'Research packet not found' });
+      res.status(404).json({ error: 'Research packet not found' });
+      return;
     }
     res.json(packet);
   } catch (error) {
@@ -21,11 +22,12 @@ researchRouter.get('/packets/:packetId', async (req, res) => {
 });
 
 // Get research packet by idea ID
-researchRouter.get('/packets/idea/:ideaId', async (req, res) => {
+researchRouter.get('/packets/idea/:ideaId', async (req: Request, res: Response) => {
   try {
     const packet = await researchPacketsRepository.getByIdeaId(req.params.ideaId);
     if (!packet) {
-      return res.status(404).json({ error: 'Research packet not found for idea' });
+      res.status(404).json({ error: 'Research packet not found for idea' });
+      return;
     }
     res.json(packet);
   } catch (error) {
@@ -34,7 +36,7 @@ researchRouter.get('/packets/idea/:ideaId', async (req, res) => {
 });
 
 // Get all versions for an idea
-researchRouter.get('/packets/idea/:ideaId/versions', async (req, res) => {
+researchRouter.get('/packets/idea/:ideaId/versions', async (req: Request, res: Response) => {
   try {
     const packets = await researchPacketsRepository.getAllVersionsByIdeaId(req.params.ideaId);
     res.json({ packets, count: packets.length });
@@ -44,7 +46,7 @@ researchRouter.get('/packets/idea/:ideaId/versions', async (req, res) => {
 });
 
 // Get research packets by ticker
-researchRouter.get('/packets/ticker/:ticker', async (req, res) => {
+researchRouter.get('/packets/ticker/:ticker', async (req: Request, res: Response) => {
   try {
     const packets = await researchPacketsRepository.getByTicker(req.params.ticker);
     res.json({ packets, count: packets.length });
@@ -54,7 +56,7 @@ researchRouter.get('/packets/ticker/:ticker', async (req, res) => {
 });
 
 // Get recent packets for IC bundle
-researchRouter.get('/packets/recent', async (req, res) => {
+researchRouter.get('/packets/recent', async (req: Request, res: Response) => {
   try {
     const days = parseInt(req.query.days as string) || 7;
     const packets = await researchPacketsRepository.getRecentPackets(days);
@@ -65,7 +67,7 @@ researchRouter.get('/packets/recent', async (req, res) => {
 });
 
 // Get evidence for an idea
-researchRouter.get('/evidence/idea/:ideaId', async (req, res) => {
+researchRouter.get('/evidence/idea/:ideaId', async (req: Request, res: Response) => {
   try {
     const evidence = await evidenceRepository.getByIdeaId(req.params.ideaId);
     res.json({ evidence, count: evidence.length });
@@ -75,7 +77,7 @@ researchRouter.get('/evidence/idea/:ideaId', async (req, res) => {
 });
 
 // Get evidence by ticker
-researchRouter.get('/evidence/ticker/:ticker', async (req, res) => {
+researchRouter.get('/evidence/ticker/:ticker', async (req: Request, res: Response) => {
   try {
     const evidence = await evidenceRepository.getByTicker(req.params.ticker);
     res.json({ evidence, count: evidence.length });
@@ -85,7 +87,7 @@ researchRouter.get('/evidence/ticker/:ticker', async (req, res) => {
 });
 
 // Get weekly packet count
-researchRouter.get('/stats/weekly-count', async (req, res) => {
+researchRouter.get('/stats/weekly-count', async (req: Request, res: Response) => {
   try {
     const count = await researchPacketsRepository.countWeeklyPackets();
     res.json({ weeklyCount: count });

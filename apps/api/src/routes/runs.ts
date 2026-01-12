@@ -2,13 +2,13 @@
  * ARC Investment Factory - Runs Routes
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { runsRepository } from '@arc/database';
 
-export const runsRouter = Router();
+export const runsRouter: Router = Router();
 
 // GET /api/runs - Get all runs (for UI)
-runsRouter.get('/', async (req, res) => {
+runsRouter.get('/', async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 100;
     const runs = await runsRepository.getAll(limit);
@@ -32,11 +32,12 @@ runsRouter.get('/', async (req, res) => {
 });
 
 // Get run by ID
-runsRouter.get('/:runId', async (req, res) => {
+runsRouter.get('/:runId', async (req: Request, res: Response) => {
   try {
     const run = await runsRepository.getById(req.params.runId);
     if (!run) {
-      return res.status(404).json({ error: 'Run not found' });
+      res.status(404).json({ error: 'Run not found' });
+      return;
     }
     // Transform to UI format
     const transformed = {
@@ -56,7 +57,7 @@ runsRouter.get('/:runId', async (req, res) => {
 });
 
 // Get recent runs by type
-runsRouter.get('/type/:runType', async (req, res) => {
+runsRouter.get('/type/:runType', async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 10;
     const runs = await runsRepository.getRecentByType(req.params.runType, limit);
@@ -67,11 +68,12 @@ runsRouter.get('/type/:runType', async (req, res) => {
 });
 
 // Get latest run by type
-runsRouter.get('/type/:runType/latest', async (req, res) => {
+runsRouter.get('/type/:runType/latest', async (req: Request, res: Response) => {
   try {
     const run = await runsRepository.getLatestByType(req.params.runType);
     if (!run) {
-      return res.status(404).json({ error: 'No runs found for type' });
+      res.status(404).json({ error: 'No runs found for type' });
+      return;
     }
     res.json(run);
   } catch (error) {
@@ -80,7 +82,7 @@ runsRouter.get('/type/:runType/latest', async (req, res) => {
 });
 
 // Get failed runs
-runsRouter.get('/status/failed', async (req, res) => {
+runsRouter.get('/status/failed', async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 10;
     const runs = await runsRepository.getFailedRuns(limit);
@@ -91,7 +93,7 @@ runsRouter.get('/status/failed', async (req, res) => {
 });
 
 // Trigger a job manually
-runsRouter.post('/trigger/:jobName', async (req, res) => {
+runsRouter.post('/trigger/:jobName', async (req: Request, res: Response) => {
   try {
     const { jobName } = req.params;
     // Note: runJob import removed to avoid circular dependency
@@ -103,7 +105,7 @@ runsRouter.post('/trigger/:jobName', async (req, res) => {
 });
 
 // Get scheduled jobs info
-runsRouter.get('/scheduled/list', async (req, res) => {
+runsRouter.get('/scheduled/list', async (req: Request, res: Response) => {
   try {
     const jobs = [
       { name: 'daily_discovery', schedule: '0 6 * * 1-5', timezone: 'America/Sao_Paulo', description: 'Lane A Discovery' },

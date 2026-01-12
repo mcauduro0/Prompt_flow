@@ -2,13 +2,13 @@
  * ARC Investment Factory - QA Routes
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { runsRepository } from '@arc/database';
 
-export const qaRouter = Router();
+export const qaRouter: Router = Router();
 
 // GET /api/qa - Get QA reports
-qaRouter.get('/', async (req, res) => {
+qaRouter.get('/', async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 8;
     // Get runs of type weekly_qa
@@ -16,13 +16,13 @@ qaRouter.get('/', async (req, res) => {
     
     // Transform to QA report format
     const reports = runs.map((run: any) => ({
-      id: run.id,
-      week_start: run.startedAt,
+      id: run.runId,
+      week_start: run.runDate,
       week_end: run.completedAt,
-      status: run.summary?.status || (run.status === 'completed' ? 'pass' : 'fail'),
-      overall_score: run.summary?.overall_score || 0,
-      sections: run.summary?.sections || [],
-      drift_alarms: run.summary?.drift_alarms || [],
+      status: run.payload?.status || (run.status === 'completed' ? 'pass' : 'fail'),
+      overall_score: run.payload?.overall_score || 0,
+      sections: run.payload?.sections || [],
+      drift_alarms: run.payload?.drift_alarms || [],
     }));
     
     res.json({ reports });
@@ -32,19 +32,22 @@ qaRouter.get('/', async (req, res) => {
 });
 
 // GET /api/qa/:id - Get single QA report
-qaRouter.get('/:id', async (req, res) => {
+qaRouter.get('/:id', async (req: Request, res: Response) => {
   try {
     const run = await runsRepository.getById(req.params.id);
-    if (!run) return res.status(404).json({ error: 'QA report not found' });
+    if (!run) {
+      res.status(404).json({ error: 'QA report not found' });
+      return;
+    }
     
     const report = {
-      id: run.id,
-      week_start: run.startedAt,
+      id: run.runId,
+      week_start: run.runDate,
       week_end: run.completedAt,
-      status: (run as any).summary?.status || (run.status === 'completed' ? 'pass' : 'fail'),
-      overall_score: (run as any).summary?.overall_score || 0,
-      sections: (run as any).summary?.sections || [],
-      drift_alarms: (run as any).summary?.drift_alarms || [],
+      status: (run as any).payload?.status || (run.status === 'completed' ? 'pass' : 'fail'),
+      overall_score: (run as any).payload?.overall_score || 0,
+      sections: (run as any).payload?.sections || [],
+      drift_alarms: (run as any).payload?.drift_alarms || [],
     };
     
     res.json(report);
@@ -54,14 +57,17 @@ qaRouter.get('/:id', async (req, res) => {
 });
 
 // GET /api/qa/:id/json - Download QA report as JSON
-qaRouter.get('/:id/json', async (req, res) => {
+qaRouter.get('/:id/json', async (req: Request, res: Response) => {
   try {
     const run = await runsRepository.getById(req.params.id);
-    if (!run) return res.status(404).json({ error: 'QA report not found' });
+    if (!run) {
+      res.status(404).json({ error: 'QA report not found' });
+      return;
+    }
     
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', `attachment; filename=qa-report-${req.params.id}.json`);
-    res.json((run as any).summary || {});
+    res.json((run as any).payload || {});
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

@@ -3,16 +3,19 @@
  * Search rejection history and idea reappearances
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { ideasRepository, noveltyStateRepository } from '@arc/database';
 
-export const memoryRouter = Router();
+export const memoryRouter: Router = Router();
 
 // GET /api/memory/search - Search memory/rejection history
-memoryRouter.get('/search', async (req, res) => {
+memoryRouter.get('/search', async (req: Request, res: Response) => {
   try {
     const query = (req.query.q as string || '').toLowerCase().trim();
-    if (!query) return res.json({ results: [] });
+    if (!query) {
+      res.json({ results: [] });
+      return;
+    }
     
     // Search by ticker first
     let results: any[] = [];
@@ -45,7 +48,7 @@ memoryRouter.get('/search', async (req, res) => {
         status: idea.status,
         rejection_reason: idea.rejectionReason || idea.rejection_reason,
         whats_new: idea.whatsNewSinceLastTime || idea.whats_new_since_last_time,
-        reappearance_count: noveltyState?.reappearanceCount || 0,
+        reappearance_count: noveltyState?.seenCount || 0,
         last_seen: idea.updatedAt || idea.createdAt,
         days_since_rejection: daysSinceRejection,
       };
@@ -58,7 +61,7 @@ memoryRouter.get('/search', async (req, res) => {
 });
 
 // GET /api/memory/rejections - Get recent rejections
-memoryRouter.get('/rejections', async (req, res) => {
+memoryRouter.get('/rejections', async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 50;
     const rejections = await ideasRepository.getByStatus('rejected', limit);
@@ -79,10 +82,12 @@ memoryRouter.get('/rejections', async (req, res) => {
 });
 
 // GET /api/memory/reappearances - Get ideas that have reappeared
-memoryRouter.get('/reappearances', async (req, res) => {
+memoryRouter.get('/reappearances', async (req: Request, res: Response) => {
   try {
-    const states = await noveltyStateRepository.getReappearances(30);
-    res.json({ reappearances: states, count: states.length });
+    // Get all novelty states and filter for reappearances (seenCount > 1)
+    const allStates = await noveltyStateRepository.getAll();
+    const reappearances = allStates.filter((s: any) => s.seenCount > 1);
+    res.json({ reappearances, count: reappearances.length });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
