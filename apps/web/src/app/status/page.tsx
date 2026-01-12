@@ -118,10 +118,10 @@ export default function StatusPage() {
     const summaryValue = summaryKey && data?.summary ? data.summary[summaryKey] : null;
 
     return (
-      <div className="flex items-center gap-4 p-4 rounded-lg bg-secondary/50 border border-border/50">
+      <div className="flex items-start gap-3 p-4 rounded-lg bg-secondary/50 border border-border/50">
         <div
           className={cn(
-            "p-2 rounded-lg",
+            "p-2 rounded-lg flex-shrink-0",
             hasRun && isSuccess ? "bg-success/20" : hasRun ? "bg-warning/20" : "bg-muted"
           )}
         >
@@ -136,13 +136,13 @@ export default function StatusPage() {
             )}
           />
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">{label}</span>
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="font-medium text-sm truncate">{label}</span>
             {hasRun && (
               <span
                 className={cn(
-                  "text-xs px-1.5 py-0.5 rounded",
+                  "text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap flex-shrink-0",
                   isSuccess ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
                 )}
               >
@@ -150,20 +150,20 @@ export default function StatusPage() {
               </span>
             )}
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5">
+          <div className="text-xs text-muted-foreground mt-1">
             {hasRun ? (
-              <>
-                {formatRelativeTime(data.completedAt || data.runDate)}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span>{formatRelativeTime(data.completedAt || data.runDate)}</span>
                 {summaryValue !== null && (
-                  <span className="ml-2 text-foreground/70">• {summaryValue} items</span>
+                  <span className="text-foreground/70">• {summaryValue} items</span>
                 )}
-              </>
+              </div>
             ) : (
               "No runs yet"
             )}
           </div>
         </div>
-        <div className="text-right text-xs text-muted-foreground">
+        <div className="text-right text-[10px] text-muted-foreground flex-shrink-0 hidden sm:block">
           {hasRun && formatDateTime(data.completedAt || data.runDate)}
         </div>
       </div>
