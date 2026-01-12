@@ -1,0 +1,2012 @@
+{
+  "total_prompts": 116,
+  "categories": [
+    "Due Diligence",
+    "Idea Generation",
+    "Macro",
+    "Market Analysis",
+    "Monitoring",
+    "Other",
+    "Portfolio Management",
+    "Research Synthesis",
+    "Special Situations",
+    "Thesis"
+  ],
+  "lanes": [
+    "lane_b",
+    "lane_a",
+    "monitoring",
+    "utility",
+    "portfolio"
+  ],
+  "prompts": [
+    {
+      "category": "Due Diligence",
+      "title": "Bull Bear Analysis",
+      "name": "bull_bear_analysis",
+      "subcategory": "thesis",
+      "description": "Develops bull and bear investment cases",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a research analyst developing investment scenarios.\n\nCompany: {{ticker}}\n\nSCENARIO ANALYSIS:\n\n1. BULL CASE\n   - Key assumptions\n   - Revenue/earnings trajectory\n   - Multiple expansion potential\n   - Target price and upside\n   - Probability assessment\n\n2. BASE CASE\n   - Consensus assumptions\n   - Expected performance\n   - Fair value estimate\n   - Key drivers\n\n3. BEAR CASE\n   - Risk scenarios\n   - Downside assumptions\n   - Trough valuation\n   - Target price and downside\n   - Probability assessment\n\n4. SCENARIO COMPARISON\n   - Key differentiating factors\n   - Signposts to monitor\n   - Decision triggers\n\n5. EXPECTED VALUE\n   - Probability-weighted return\n   - Risk/reward assessment\n   - Position sizing implications\n\nProvide specific price targets for each scenario.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "thesis_development"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Business Economics",
+      "name": "business_economics",
+      "subcategory": "business_model",
+      "description": "Analyzes unit economics and business model sustainability",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "You are a business analyst evaluating unit economics.\n\nCompany: {{ticker}}\n\nAnalyze the business economics:\n\n1. UNIT ECONOMICS\n   - Customer acquisition cost (CAC)\n   - Lifetime value (LTV)\n   - LTV/CAC ratio\n   - Payback period\n   - Contribution margin\n\n2. OPERATING LEVERAGE\n   - Fixed vs variable cost structure\n   - Breakeven analysis\n   - Margin expansion potential\n\n3. CAPITAL EFFICIENCY\n   - Return on invested capital (ROIC)\n   - Asset turnover\n   - Working capital requirements\n   - Capital intensity\n\n4. SCALABILITY\n   - Marginal economics at scale\n   - Network effects\n   - Economies of scale/scope\n\n5. SUSTAINABILITY\n   - Recurring revenue %\n   - Customer retention/churn\n   - Pricing power\n\nProvide quantitative analysis with historical trends.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "business_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Business Overview Report",
+      "name": "business_overview_report",
+      "subcategory": "business_model",
+      "description": "Comprehensive business overview and model analysis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 5000,
+      "template": "You are a senior equity research analyst preparing a comprehensive business overview.\n\nCompany: {{ticker}}\n\nProvide a detailed analysis covering:\n\n1. BUSINESS DESCRIPTION\n   - What does the company do?\n   - Core products and services\n   - Revenue model and pricing\n   - Customer segments\n\n2. BUSINESS MODEL ANALYSIS\n   - Value proposition\n   - Key resources and capabilities\n   - Cost structure\n   - Revenue streams breakdown\n\n3. COMPETITIVE POSITION\n   - Market position and share\n   - Key competitors\n   - Competitive advantages (moat)\n   - Barriers to entry\n\n4. GROWTH STRATEGY\n   - Organic growth initiatives\n   - M&A strategy\n   - Geographic expansion\n   - New product development\n\n5. KEY SUCCESS FACTORS\n   - Critical success factors\n   - Key performance indicators\n   - Management priorities\n\nProvide specific data points and cite sources where possible.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "business_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Capital Allocation Analysis",
+      "name": "capital_allocation_analysis",
+      "subcategory": "financial",
+      "description": "Evaluates capital allocation decisions and returns",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "You are a capital allocation specialist.\n\nCompany: {{ticker}}\n\nCAPITAL ALLOCATION ANALYSIS:\n\n1. HISTORICAL ALLOCATION\n   - CapEx (maintenance vs growth)\n   - M&A activity and returns\n   - R&D investment\n   - Dividends and buybacks\n   - Debt paydown\n\n2. RETURN ON CAPITAL\n   - ROIC by segment\n   - Incremental ROIC\n   - Return on acquisitions\n   - Buyback effectiveness\n\n3. BALANCE SHEET OPTIMIZATION\n   - Optimal capital structure\n   - Current vs target leverage\n   - Cash deployment priorities\n\n4. MANAGEMENT FRAMEWORK\n   - Stated capital allocation priorities\n   - Hurdle rates\n   - Decision-making process\n\n5. FORWARD OUTLOOK\n   - Expected allocation mix\n   - M&A pipeline\n   - Capacity for shareholder returns\n\nAssess management's capital allocation skill and alignment.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "financial_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Capital Structure Optimizer",
+      "name": "capital_structure_optimizer",
+      "subcategory": "financial_analysis",
+      "description": "Analyzes and optimizes capital structure",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are a corporate finance specialist analyzing capital structure.\n\nCompany: {{ticker}}\nBalance Sheet: {{balance_sheet}}\nDebt Details: {{debt_data}}\n\nAnalyze:\n1. Current leverage ratios vs. peers\n2. Debt maturity profile\n3. Interest coverage and debt service\n4. Credit rating implications\n5. Optimal capital structure\n6. Refinancing opportunities\n7. Capital return capacity\n\nProvide recommendations for capital structure optimization.",
+      "variables": [],
+      "lane": "lane_b",
+      "stage": "financial_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Catalyst Identification",
+      "name": "catalyst_identification",
+      "subcategory": "catalysts",
+      "description": "Identifies potential stock price catalysts",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are an event-driven analyst identifying catalysts.\n\nCompany: {{ticker}}\n\nCATALYST ANALYSIS:\n\n1. NEAR-TERM CATALYSTS (0-6 months)\n   - Earnings releases\n   - Product launches\n   - Regulatory decisions\n   - M&A announcements\n   - Management changes\n\n2. MEDIUM-TERM CATALYSTS (6-18 months)\n   - Strategic initiatives\n   - Market expansion\n   - Cost restructuring\n   - Capital returns\n\n3. LONG-TERM CATALYSTS (18+ months)\n   - Industry transformation\n   - Technology adoption\n   - Regulatory changes\n   - Competitive dynamics\n\n4. NEGATIVE CATALYSTS (RISKS)\n   - Potential disappointments\n   - Competitive threats\n   - Regulatory risks\n   - Macro headwinds\n\nFor each catalyst:\n- Expected timing\n- Probability\n- Potential price impact\n- How to monitor\n\nCreate a catalyst calendar with expected dates.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "catalyst_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Ceo Track Record",
+      "name": "ceo_track_record",
+      "subcategory": "management",
+      "description": "Detailed CEO track record and performance analysis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are an executive assessment specialist.\n\nAnalyze the CEO track record for: {{ticker}}\nCEO Name: {{ceo_name}}\n\nCEO TRACK RECORD ANALYSIS:\n\n1. CAREER HISTORY\n   - Previous roles and companies\n   - Performance at each role\n   - Industry experience\n   - Education and credentials\n\n2. CURRENT TENURE\n   - Time in role\n   - Stock performance during tenure\n   - Operational achievements\n   - Strategic decisions\n\n3. CAPITAL ALLOCATION\n   - M&A track record\n   - Organic investment returns\n   - Shareholder return decisions\n\n4. LEADERSHIP STYLE\n   - Management philosophy\n   - Organizational changes\n   - Culture impact\n   - Communication style\n\n5. COMPENSATION ANALYSIS\n   - Pay structure\n   - Performance alignment\n   - Ownership stake\n   - Peer comparison\n\nProvide a CEO quality score with detailed justification.",
+      "variables": [
+        "ticker",
+        "ceo_name"
+      ],
+      "lane": "lane_b",
+      "stage": "management_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Competitive Analysis",
+      "name": "competitive_analysis",
+      "subcategory": "industry",
+      "description": "Detailed competitive positioning analysis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a competitive intelligence analyst.\n\nCompany: {{ticker}}\nCompetitors: {{competitors}}\n\nCOMPETITIVE ANALYSIS:\n\n1. MARKET POSITIONING\n   - Market share by segment\n   - Geographic positioning\n   - Customer segment focus\n   - Price positioning\n\n2. COMPETITIVE ADVANTAGES\n   - Source of competitive advantage\n   - Sustainability of moat\n   - Relative strengths/weaknesses\n\n3. COMPARATIVE ANALYSIS\n   - Financial comparison (growth, margins, returns)\n   - Operational comparison\n   - Strategic comparison\n   - Valuation comparison\n\n4. COMPETITIVE THREATS\n   - Direct competitors\n   - New entrants\n   - Substitutes\n   - Disruptive technologies\n\n5. COMPETITIVE RESPONSE\n   - Historical competitive actions\n   - Likely responses to threats\n   - Strategic options\n\nCreate a competitive scorecard with rankings.",
+      "variables": [
+        "ticker",
+        "competitors"
+      ],
+      "lane": "lane_b",
+      "stage": "industry_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Customer Analysis",
+      "name": "customer_analysis",
+      "subcategory": "business_model",
+      "description": "Analyzes customer base and concentration",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a customer analytics specialist.\n\nCompany: {{ticker}}\n\nCUSTOMER ANALYSIS:\n\n1. CUSTOMER BASE\n   - Total customers/users\n   - Customer segments\n   - Geographic distribution\n   - Customer size distribution\n\n2. CONCENTRATION\n   - Top 10 customer revenue %\n   - Single customer dependency\n   - Sector concentration\n\n3. CUSTOMER ECONOMICS\n   - Customer acquisition cost\n   - Lifetime value\n   - Retention/churn rates\n   - Net revenue retention\n\n4. CUSTOMER SATISFACTION\n   - NPS scores\n   - Customer reviews\n   - Complaint trends\n   - Competitive win rates\n\n5. GROWTH DYNAMICS\n   - New customer growth\n   - Expansion revenue\n   - Cross-sell/upsell success\n   - Market penetration\n\nAssess customer quality and concentration risk.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "business_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Debt Structure Analysis",
+      "name": "debt_structure_analysis",
+      "subcategory": "financial",
+      "description": "Analyzes debt structure and credit profile",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "You are a credit analyst evaluating debt structure.\n\nCompany: {{ticker}}\nDebt Data: {{debt_data}}\n\nDEBT STRUCTURE ANALYSIS:\n\n1. DEBT OVERVIEW\n   - Total debt outstanding\n   - Debt composition (bank, bonds, other)\n   - Maturity profile\n   - Interest rates (fixed vs floating)\n\n2. CREDIT METRICS\n   - Leverage ratios\n   - Interest coverage\n   - Debt/EBITDA\n   - Net debt/equity\n\n3. COVENANT ANALYSIS\n   - Key covenants\n   - Current compliance\n   - Headroom analysis\n   - Amendment history\n\n4. REFINANCING RISK\n   - Near-term maturities\n   - Market access\n   - Credit rating trajectory\n   - Refinancing costs\n\n5. CAPITAL STRUCTURE\n   - Optimal leverage\n   - Peer comparison\n   - Rating agency views\n\nAssess credit risk and refinancing capacity.",
+      "variables": [
+        "ticker",
+        "debt_data"
+      ],
+      "lane": "lane_b",
+      "stage": "financial_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Earnings Quality Analysis",
+      "name": "earnings_quality_analysis",
+      "subcategory": "financial",
+      "description": "Assesses quality and sustainability of earnings",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "You are a forensic accountant assessing earnings quality.\n\nCompany: {{ticker}}\nFinancial Data: {{financial_data}}\n\nEARNINGS QUALITY ASSESSMENT:\n\n1. ACCRUALS ANALYSIS\n   - Accruals ratio\n   - Change in working capital\n   - Deferred revenue trends\n   - Accrued expenses\n\n2. CASH CONVERSION\n   - CFO to Net Income ratio\n   - Free cash flow yield\n   - Cash earnings vs reported\n\n3. REVENUE QUALITY\n   - Revenue recognition policies\n   - Deferred revenue\n   - Contract assets/liabilities\n   - Channel stuffing indicators\n\n4. EXPENSE QUALITY\n   - Capitalization policies\n   - Depreciation/amortization\n   - Stock compensation\n   - Restructuring charges\n\n5. ONE-TIME ITEMS\n   - Non-recurring gains/losses\n   - Asset sales\n   - Tax benefits\n   - Pension adjustments\n\n6. RED FLAGS\n   - Beneish M-Score\n   - Altman Z-Score\n   - Piotroski F-Score\n   - Audit opinion\n\nProvide an earnings quality score (1-10) with detailed justification.",
+      "variables": [
+        "ticker",
+        "financial_data"
+      ],
+      "lane": "lane_b",
+      "stage": "financial_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Esg Analysis",
+      "name": "esg_analysis",
+      "subcategory": "esg",
+      "description": "Environmental, Social, and Governance analysis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are an ESG analyst evaluating sustainability factors.\n\nCompany: {{ticker}}\n\nESG ANALYSIS:\n\n1. ENVIRONMENTAL\n   - Carbon footprint and targets\n   - Energy efficiency\n   - Waste management\n   - Water usage\n   - Climate risk exposure\n\n2. SOCIAL\n   - Employee relations\n   - Diversity and inclusion\n   - Supply chain labor practices\n   - Community impact\n   - Product safety\n\n3. GOVERNANCE\n   - Board composition\n   - Executive compensation\n   - Shareholder rights\n   - Business ethics\n   - Transparency\n\n4. MATERIALITY ASSESSMENT\n   - Industry-specific ESG factors\n   - Financial materiality\n   - Stakeholder priorities\n\n5. RATINGS & BENCHMARKS\n   - Third-party ESG ratings\n   - Peer comparison\n   - Improvement trajectory\n\n6. INVESTMENT IMPLICATIONS\n   - ESG risks to thesis\n   - Opportunities from ESG leadership\n   - Regulatory considerations\n\nProvide ESG scores by category and overall.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "esg_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Financial Statement Analysis",
+      "name": "financial_statement_analysis",
+      "subcategory": "financial",
+      "description": "Comprehensive financial statement analysis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 5000,
+      "template": "You are a forensic accountant analyzing financial statements.\n\nCompany: {{ticker}}\nFinancial Data: {{financial_data}}\n\nPerform a comprehensive analysis:\n\n1. INCOME STATEMENT ANALYSIS\n   - Revenue recognition policies\n   - Gross margin trends and drivers\n   - Operating expense analysis\n   - Non-recurring items\n   - Earnings quality assessment\n\n2. BALANCE SHEET ANALYSIS\n   - Asset quality review\n   - Working capital analysis\n   - Debt structure and covenants\n   - Off-balance sheet items\n   - Goodwill and intangibles\n\n3. CASH FLOW ANALYSIS\n   - Operating cash flow quality\n   - CapEx requirements\n   - Free cash flow generation\n   - Cash conversion cycle\n\n4. RED FLAGS SCREENING\n   - Aggressive accounting\n   - Related party transactions\n   - Audit opinion issues\n   - Restatement history\n\n5. KEY RATIOS\n   - Profitability ratios\n   - Liquidity ratios\n   - Solvency ratios\n   - Efficiency ratios\n\nHighlight any concerns or areas requiring further investigation.",
+      "variables": [
+        "ticker",
+        "financial_data"
+      ],
+      "lane": "lane_b",
+      "stage": "financial_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Geographic Analysis",
+      "name": "geographic_analysis",
+      "subcategory": "operations",
+      "description": "Analyzes geographic revenue and risk exposure",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a geographic analyst evaluating regional exposure.\n\nCompany: {{ticker}}\n\nGEOGRAPHIC ANALYSIS:\n\n1. REVENUE BREAKDOWN\n   - Revenue by region\n   - Growth rates by geography\n   - Market share by region\n   - Customer concentration\n\n2. OPERATIONAL FOOTPRINT\n   - Manufacturing locations\n   - Distribution centers\n   - Employee distribution\n   - R&D centers\n\n3. REGIONAL DYNAMICS\n   - Market maturity\n   - Competitive intensity\n   - Regulatory environment\n   - Growth opportunities\n\n4. RISK ASSESSMENT\n   - Currency exposure\n   - Political risk\n   - Trade policy impact\n   - Tax considerations\n\n5. STRATEGIC PRIORITIES\n   - Expansion plans\n   - Market exits\n   - Localization strategy\n\nIdentify geographic opportunities and risks.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "business_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Growth Margin Drivers",
+      "name": "growth_margin_drivers",
+      "subcategory": "financial",
+      "description": "Identifies and analyzes key growth and margin drivers",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "You are a financial analyst identifying growth and margin drivers.\n\nCompany: {{ticker}}\n\nGROWTH DRIVERS ANALYSIS:\n\n1. REVENUE GROWTH DRIVERS\n   - Volume growth (units, customers, transactions)\n   - Price/mix improvement\n   - New product contribution\n   - Geographic expansion\n   - M&A contribution\n\n2. HISTORICAL DECOMPOSITION\n   - Break down historical growth by driver\n   - Identify sustainable vs one-time factors\n   - Trend analysis by driver\n\n3. MARGIN DRIVERS\n   - Gross margin drivers\n   - Operating leverage\n   - Cost reduction initiatives\n   - Mix shift impact\n\n4. FORWARD PROJECTIONS\n   - Expected contribution by driver\n   - Risks to each driver\n   - Sensitivity analysis\n\nProvide specific percentages and dollar amounts where possible.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "financial_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Industry Overview",
+      "name": "industry_overview",
+      "subcategory": "industry",
+      "description": "Comprehensive industry analysis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are an industry analyst providing a sector overview.\n\nIndustry: {{industry}}\n\nINDUSTRY ANALYSIS:\n\n1. MARKET STRUCTURE\n   - Market size and growth\n   - Key segments\n   - Geographic breakdown\n   - Cyclicality\n\n2. COMPETITIVE DYNAMICS\n   - Porter's Five Forces analysis\n   - Market concentration\n   - Key success factors\n   - Barriers to entry\n\n3. VALUE CHAIN\n   - Industry value chain map\n   - Margin distribution\n   - Power dynamics\n\n4. TRENDS & DISRUPTION\n   - Key industry trends\n   - Technology impact\n   - Regulatory environment\n   - ESG considerations\n\n5. OUTLOOK\n   - Growth projections\n   - Key catalysts/risks\n   - Structural changes\n\nIdentify the most attractive segments and positioning.",
+      "variables": [
+        "industry"
+      ],
+      "lane": "lane_b",
+      "stage": "industry_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Insider Activity Analysis",
+      "name": "insider_activity_analysis",
+      "subcategory": "technical",
+      "description": "Analyzes insider buying and selling patterns",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "You are an analyst specializing in insider transaction analysis.\n\nCompany: {{ticker}}\nInsider Data: {{insider_data}}\n\nINSIDER ACTIVITY ANALYSIS:\n\n1. RECENT TRANSACTIONS\n   - Purchases vs sales\n   - Transaction sizes\n   - Insider roles\n   - Transaction types\n\n2. PATTERN ANALYSIS\n   - Historical patterns\n   - Timing relative to announcements\n   - Cluster activity\n\n3. SIGNAL ASSESSMENT\n   - Open market purchases (bullish)\n   - 10b5-1 plan sales (neutral)\n   - Discretionary sales (potentially bearish)\n   - Option exercises\n\n4. CONTEXT\n   - Compensation structure\n   - Diversification needs\n   - Historical accuracy of signals\n\n5. PEER COMPARISON\n   - Relative insider activity\n   - Sector trends\n\nProvide an insider sentiment score and key observations.",
+      "variables": [
+        "ticker",
+        "insider_data"
+      ],
+      "lane": "lane_b",
+      "stage": "technical_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Ma History Analysis",
+      "name": "ma_history_analysis",
+      "subcategory": "financial",
+      "description": "Analyzes M&A track record and integration success",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are an M&A analyst evaluating acquisition history.\n\nCompany: {{ticker}}\n\nM&A HISTORY ANALYSIS:\n\n1. ACQUISITION HISTORY\n   - List of acquisitions (last 10 years)\n   - Deal sizes and multiples paid\n   - Strategic rationale\n   - Financing methods\n\n2. INTEGRATION SUCCESS\n   - Revenue synergies achieved\n   - Cost synergies realized\n   - Integration timeline\n   - Cultural integration\n\n3. RETURN ANALYSIS\n   - Return on acquisitions\n   - Goodwill impairments\n   - Write-downs\n   - Divestitures\n\n4. CURRENT PIPELINE\n   - Stated M&A strategy\n   - Potential targets\n   - Financial capacity\n   - Regulatory constraints\n\n5. LESSONS LEARNED\n   - Successful patterns\n   - Failed acquisitions\n   - Management learnings\n\nAssess M&A capability and future deal risk.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "financial_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Management Quality Assessment",
+      "name": "management_quality_assessment",
+      "subcategory": "management",
+      "description": "Evaluates management team quality and track record",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are an executive assessment specialist evaluating management.\n\nCompany: {{ticker}}\n\nMANAGEMENT ASSESSMENT:\n\n1. CEO EVALUATION\n   - Background and experience\n   - Track record at current company\n   - Previous company performance\n   - Leadership style\n   - Compensation alignment\n\n2. MANAGEMENT TEAM\n   - Key executives and tenure\n   - Depth of bench\n   - Recent departures\n   - Insider ownership\n\n3. CAPITAL ALLOCATION TRACK RECORD\n   - M&A history and returns\n   - Organic investment returns\n   - Dividend/buyback decisions\n   - Balance sheet management\n\n4. CORPORATE GOVERNANCE\n   - Board composition and independence\n   - Shareholder rights\n   - Related party transactions\n   - ESG considerations\n\n5. COMMUNICATION & CREDIBILITY\n   - Guidance accuracy\n   - Transparency\n   - Investor relations quality\n\nProvide a management quality score (1-10) with justification.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "management_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Regulatory Risk Analysis",
+      "name": "regulatory_risk_analysis",
+      "subcategory": "risk",
+      "description": "Assesses regulatory and legal risks",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a regulatory affairs analyst.\n\nCompany: {{ticker}}\nIndustry: {{industry}}\n\nREGULATORY RISK ANALYSIS:\n\n1. REGULATORY ENVIRONMENT\n   - Key regulators\n   - Current regulations\n   - Compliance requirements\n   - Licensing/permits\n\n2. PENDING CHANGES\n   - Proposed regulations\n   - Legislative activity\n   - Regulatory trends\n   - Timeline for changes\n\n3. COMPLIANCE STATUS\n   - Historical compliance\n   - Current investigations\n   - Consent decrees\n   - Remediation efforts\n\n4. LITIGATION\n   - Pending lawsuits\n   - Class actions\n   - Patent disputes\n   - Potential liabilities\n\n5. POLITICAL RISK\n   - Policy sensitivity\n   - Lobbying activity\n   - Political exposure\n   - Trade policy impact\n\nQuantify potential financial impact of regulatory risks.",
+      "variables": [
+        "ticker",
+        "industry"
+      ],
+      "lane": "lane_b",
+      "stage": "risk_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Risk Assessment",
+      "name": "risk_assessment",
+      "subcategory": "risk",
+      "description": "Comprehensive risk identification and assessment",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a risk analyst identifying investment risks.\n\nCompany: {{ticker}}\n\nRISK ASSESSMENT:\n\n1. BUSINESS RISKS\n   - Customer concentration\n   - Supplier dependency\n   - Technology obsolescence\n   - Competitive threats\n   - Execution risks\n\n2. FINANCIAL RISKS\n   - Leverage and liquidity\n   - Currency exposure\n   - Interest rate sensitivity\n   - Covenant compliance\n   - Pension obligations\n\n3. REGULATORY/LEGAL RISKS\n   - Regulatory environment\n   - Pending litigation\n   - Compliance issues\n   - Political/policy risks\n\n4. ESG RISKS\n   - Environmental liabilities\n   - Social/labor issues\n   - Governance concerns\n\n5. MACRO RISKS\n   - Economic sensitivity\n   - Geopolitical exposure\n   - Commodity exposure\n\nFor each risk:\n- Probability (High/Medium/Low)\n- Impact (High/Medium/Low)\n- Mitigants\n- Monitoring indicators\n\nCreate a risk matrix and overall risk score.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "risk_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Risk Factor Identifier",
+      "name": "risk_factor_identifier",
+      "subcategory": "risk_analysis",
+      "description": "Identifies and quantifies investment risks",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are a risk analyst identifying investment risks.\n\nCompany: {{ticker}}\nBusiness Description: {{business_data}}\n10-K Risk Factors: {{risk_factors}}\n\nCategorize and assess risks:\n1. Business/operational risks\n2. Financial/leverage risks\n3. Regulatory/legal risks\n4. Competitive risks\n5. Macro/cyclical risks\n6. ESG risks\n\nFor each risk:\n- Probability of occurrence\n- Potential impact on value\n- Mitigation factors\n\nProvide a risk-adjusted investment recommendation.",
+      "variables": [],
+      "lane": "lane_b",
+      "stage": "risk_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Segment Analysis",
+      "name": "segment_analysis",
+      "subcategory": "financial",
+      "description": "Analyzes business segment performance",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "You are a segment analyst evaluating business units.\n\nCompany: {{ticker}}\n\nSEGMENT ANALYSIS:\n\n1. SEGMENT OVERVIEW\n   - Business segments defined\n   - Revenue by segment\n   - Operating income by segment\n   - Asset allocation\n\n2. PERFORMANCE METRICS\n   - Growth rates by segment\n   - Margin trends\n   - Return on assets\n   - Market position\n\n3. STRATEGIC FIT\n   - Synergies between segments\n   - Shared resources\n   - Cross-selling opportunities\n   - Portfolio coherence\n\n4. VALUATION\n   - Sum-of-the-parts analysis\n   - Segment multiples\n   - Conglomerate discount\n   - Spin-off potential\n\n5. OUTLOOK\n   - Growth prospects by segment\n   - Investment priorities\n   - Potential divestitures\n\nIdentify value creation opportunities by segment.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "financial_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Short Interest Analysis",
+      "name": "short_interest_analysis",
+      "subcategory": "technical",
+      "description": "Analyzes short interest and potential short squeeze dynamics",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "You are a quantitative analyst analyzing short interest.\n\nCompany: {{ticker}}\nShort Interest Data: {{short_data}}\n\nSHORT INTEREST ANALYSIS:\n\n1. CURRENT METRICS\n   - Short interest (shares and %)\n   - Days to cover\n   - Short interest ratio\n   - Cost to borrow\n\n2. HISTORICAL TRENDS\n   - Short interest over time\n   - Correlation with price\n   - Changes around events\n\n3. PEER COMPARISON\n   - Relative short interest\n   - Sector average\n   - Outlier analysis\n\n4. SHORT THESIS ASSESSMENT\n   - Likely short thesis\n   - Validity of concerns\n   - Potential catalysts for covering\n\n5. SQUEEZE POTENTIAL\n   - Technical setup\n   - Float analysis\n   - Institutional ownership\n   - Options market activity\n\nProvide a short squeeze probability score and key triggers.",
+      "variables": [
+        "ticker",
+        "short_data"
+      ],
+      "lane": "lane_b",
+      "stage": "technical_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Supply Chain Analysis",
+      "name": "supply_chain_analysis",
+      "subcategory": "operations",
+      "description": "Analyzes supply chain risks and dependencies",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a supply chain analyst.\n\nCompany: {{ticker}}\n\nSUPPLY CHAIN ANALYSIS:\n\n1. SUPPLIER ANALYSIS\n   - Key suppliers and dependencies\n   - Geographic concentration\n   - Single-source risks\n   - Supplier financial health\n\n2. MANUFACTURING\n   - Production facilities\n   - Capacity utilization\n   - Automation level\n   - Quality control\n\n3. LOGISTICS\n   - Distribution network\n   - Inventory management\n   - Lead times\n   - Transportation costs\n\n4. RISK ASSESSMENT\n   - Supply disruption risks\n   - Geopolitical exposure\n   - Natural disaster vulnerability\n   - Commodity price exposure\n\n5. RESILIENCE\n   - Diversification efforts\n   - Safety stock levels\n   - Alternative sourcing\n   - Vertical integration\n\nIdentify key supply chain risks and mitigants.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "business_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Tam Sam Som Analyzer",
+      "name": "tam_sam_som_analyzer",
+      "subcategory": "market_analysis",
+      "description": "Analyzes total addressable market and market share potential",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are a market analyst sizing the opportunity.\n\nCompany: {{ticker}}\nMarket Data: {{market_data}}\n\nAnalyze:\n1. Total Addressable Market (TAM) - top-down and bottom-up\n2. Serviceable Addressable Market (SAM)\n3. Serviceable Obtainable Market (SOM)\n4. Current market share and trajectory\n5. Market growth drivers and inhibitors\n6. Competitive intensity and share dynamics\n\nProvide market opportunity assessment with revenue implications.",
+      "variables": [],
+      "lane": "lane_b",
+      "stage": "industry_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Technology Ip Analysis",
+      "name": "technology_ip_analysis",
+      "subcategory": "operations",
+      "description": "Analyzes technology assets and intellectual property",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a technology and IP analyst.\n\nCompany: {{ticker}}\n\nTECHNOLOGY & IP ANALYSIS:\n\n1. TECHNOLOGY STACK\n   - Core technologies\n   - Proprietary systems\n   - Technical capabilities\n   - R&D focus areas\n\n2. INTELLECTUAL PROPERTY\n   - Patent portfolio\n   - Key patents and expiration\n   - Trade secrets\n   - Trademarks/brands\n\n3. COMPETITIVE ADVANTAGE\n   - Technology moat\n   - Barriers to replication\n   - First-mover advantages\n   - Network effects\n\n4. R&D EFFECTIVENESS\n   - R&D spending trends\n   - Innovation output\n   - Time to market\n   - Success rate\n\n5. TECHNOLOGY RISKS\n   - Obsolescence risk\n   - Disruption threats\n   - Technical debt\n   - Talent retention\n\nAssess technology competitive advantage sustainability.",
+      "variables": [
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "business_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Valuation Analysis",
+      "name": "valuation_analysis",
+      "subcategory": "valuation",
+      "description": "Comprehensive valuation analysis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 5000,
+      "template": "You are a valuation specialist performing intrinsic value analysis.\n\nCompany: {{ticker}}\nFinancial Data: {{financial_data}}\n\nVALUATION ANALYSIS:\n\n1. DCF VALUATION\n   - Revenue projections (5-year)\n   - Margin assumptions\n   - CapEx and working capital\n   - Terminal value assumptions\n   - WACC calculation\n   - Sensitivity analysis\n\n2. COMPARABLE COMPANY ANALYSIS\n   - Peer group selection\n   - Trading multiples (EV/EBITDA, P/E, EV/Revenue)\n   - Premium/discount justification\n   - Implied valuation range\n\n3. PRECEDENT TRANSACTIONS\n   - Relevant M&A transactions\n   - Transaction multiples\n   - Control premium analysis\n\n4. SUM-OF-THE-PARTS\n   - Segment valuation\n   - Hidden assets\n   - Conglomerate discount/premium\n\n5. VALUATION SUMMARY\n   - Triangulated fair value\n   - Upside/downside scenarios\n   - Key value drivers\n   - Margin of safety\n\nProvide specific price targets with probability weighting.",
+      "variables": [
+        "ticker",
+        "financial_data"
+      ],
+      "lane": "lane_b",
+      "stage": "financial_analysis"
+    },
+    {
+      "category": "Due Diligence",
+      "title": "Working Capital Analysis",
+      "name": "working_capital_analysis",
+      "subcategory": "financial",
+      "description": "Analyzes working capital management and efficiency",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "You are a treasury analyst evaluating working capital.\n\nCompany: {{ticker}}\nFinancial Data: {{financial_data}}\n\nWORKING CAPITAL ANALYSIS:\n\n1. COMPONENTS\n   - Accounts receivable (DSO)\n   - Inventory (DIO)\n   - Accounts payable (DPO)\n   - Cash conversion cycle\n\n2. TRENDS\n   - Historical trends\n   - Seasonal patterns\n   - Peer comparison\n   - Industry benchmarks\n\n3. QUALITY ASSESSMENT\n   - Receivables aging\n   - Inventory obsolescence\n   - Payables sustainability\n\n4. CASH FLOW IMPACT\n   - Working capital investment\n   - Cash generation potential\n   - Optimization opportunities\n\n5. MANAGEMENT\n   - Working capital policies\n   - Supply chain financing\n   - Factoring arrangements\n\nIdentify working capital optimization opportunities.",
+      "variables": [
+        "ticker",
+        "financial_data"
+      ],
+      "lane": "lane_b",
+      "stage": "financial_analysis"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Competitive Landscape Mapping",
+      "name": "competitive_landscape_mapping",
+      "subcategory": "industry",
+      "description": "Maps competitive landscape and value chain for investment opportunities",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a strategy consultant analyzing competitive dynamics.\n\nFor the industry/sector: \"{{industry}}\"\n\nCreate a comprehensive value chain and competitive landscape map:\n\nVALUE CHAIN ANALYSIS:\n1. Upstream (raw materials, components, suppliers)\n2. Midstream (manufacturing, assembly, processing)\n3. Downstream (distribution, retail, end customers)\n4. Supporting activities (technology, logistics, services)\n\nCOMPETITIVE LANDSCAPE:\n1. Market structure (fragmented, oligopoly, monopoly)\n2. Key players and market shares\n3. Barriers to entry\n4. Competitive advantages by player\n5. Disruptive threats\n\nINVESTMENT OPPORTUNITIES:\nIdentify the most attractive positions in the value chain based on:\n- Margin profiles\n- Competitive moats\n- Growth potential\n- Capital intensity",
+      "variables": [
+        "industry"
+      ],
+      "lane": "lane_a",
+      "stage": "analysis"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Connecting Disparate Trends",
+      "name": "connecting_disparate_trends",
+      "subcategory": "thematic",
+      "description": "Identifies investment opportunities at the intersection of multiple trends",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.4,
+      "max_tokens": 4000,
+      "template": "You are a cross-sector strategist identifying convergent opportunities.\n\nAnalyze the following trends:\n{{trends}}\n\nIdentify investment opportunities at the intersection:\n\n1. TREND CONVERGENCE ANALYSIS\n   - How do these trends reinforce each other?\n   - What new markets are created at intersections?\n   - What existing markets are disrupted?\n\n2. INTERSECTION OPPORTUNITIES\n   - Companies positioned at multiple trend intersections\n   - New business models enabled by convergence\n   - Infrastructure plays benefiting from multiple trends\n\n3. TIMING ANALYSIS\n   - Which intersections are investable now?\n   - Which are 2-3 years out?\n   - Which are speculative (5+ years)?\n\nFor each opportunity:\n- Specific ticker and thesis\n- Trend exposure breakdown\n- Competitive advantage from convergence\n- Risk factors",
+      "variables": [
+        "trends"
+      ],
+      "lane": "lane_a",
+      "stage": "screening"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Deep Web Trend Scanner",
+      "name": "deep_web_trend_scanner",
+      "subcategory": "alternative_sources",
+      "description": "Scans alternative data sources for emerging investment trends",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.4,
+      "max_tokens": 4000,
+      "template": "You are an alternative data analyst specializing in trend identification.\n\nAnalyze the following data sources for emerging investment trends:\n{{data_sources}}\n\nYour analysis should:\n1. Identify emerging trends not yet mainstream\n2. Quantify trend strength and momentum\n3. Map trends to potential investment opportunities\n4. Assess time horizon for trend materialization\n5. Identify leading indicators to monitor\n\nData sources to consider:\n- Patent filings and R&D trends\n- Job postings and hiring patterns\n- Academic research publications\n- Startup funding patterns\n- Social media sentiment shifts\n- Search trend data\n- Industry conference topics\n\nProvide actionable investment ideas with specific tickers.",
+      "variables": [
+        "data_sources"
+      ],
+      "lane": "lane_a",
+      "stage": "signal_collection"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Historical Parallel Finder",
+      "name": "historical_parallel_finder",
+      "subcategory": "pattern_recognition",
+      "description": "Finds historical parallels to stress-test investment theses",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are a market historian analyzing historical parallels.\n\nCurrent Situation: {{situation}}\nInvestment Thesis: {{thesis}}\n\nYour task is to:\n1. Identify 3-5 historical situations with similar characteristics\n2. Analyze how those situations resolved\n3. Map outcomes to the current thesis\n4. Identify key differences that might change outcomes\n5. Calculate base rates for thesis success/failure\n6. Recommend adjustments to the thesis based on historical evidence\n\nProvide probability-weighted scenario analysis.",
+      "variables": [],
+      "lane": "lane_a",
+      "stage": "analysis"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Historical Parallel Stress Test",
+      "name": "historical_parallel_stress_test",
+      "subcategory": "risk",
+      "description": "Tests investment theses against historical analogues",
+      "llm_provider": "anthropic",
+      "llm_model": "claude-3-opus",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a market historian analyzing investment theses.\n\nGiven the investment thesis: \"{{thesis}}\"\nFor company/sector: {{target}}\n\nIdentify historical parallels and test the thesis:\n\n1. HISTORICAL ANALOGUES\n   - Similar market conditions in history\n   - Comparable company situations\n   - Relevant sector cycles\n\n2. PARALLEL ANALYSIS\n   - How did similar situations resolve?\n   - What were the key success/failure factors?\n   - What was the typical time horizon?\n\n3. THESIS IMPLICATIONS\n   - Does history support or refute the thesis?\n   - What adjustments should be made?\n   - What warning signs to monitor?\n\n4. PROBABILITY ASSESSMENT\n   - Base rate of success for similar theses\n   - Key differentiating factors for this case\n   - Confidence interval for outcomes\n\nProvide specific historical examples with dates and outcomes.",
+      "variables": [
+        "thesis",
+        "target"
+      ],
+      "lane": "lane_a",
+      "stage": "discovery"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Identify Pure Plays",
+      "name": "identify_pure_plays",
+      "subcategory": "screening",
+      "description": "Identifies publicly traded pure-play companies for specific themes",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "You are an equity research analyst identifying pure-play opportunities.\n\nFor the investment theme: \"{{theme}}\"\n\nIdentify all publicly traded companies with significant exposure:\n\nSCREENING CRITERIA:\n1. Direct revenue from theme >30%\n2. Listed on major exchanges (NYSE, NASDAQ, LSE, etc.)\n3. Market cap >$500M for liquidity\n4. Positive revenue growth in theme-related segments\n\nFor each company:\n- Ticker and exchange\n- Revenue breakdown by segment\n- Theme exposure percentage\n- Competitive position\n- Growth outlook\n- Key risks\n\nCategorize as:\n- TIER 1: Pure plays (>70% exposure)\n- TIER 2: Significant exposure (30-70%)\n- TIER 3: Diversified with exposure (<30%)\n\nInclude both US and international listings.",
+      "variables": [
+        "theme"
+      ],
+      "lane": "lane_a",
+      "stage": "screening"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Insider Trading Analysis",
+      "name": "insider_trading_analysis",
+      "subcategory": "sec_filings",
+      "description": "Analyzes SEC Form-4 filings for insider trading signals",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "You are a compliance and investment analyst specializing in insider transaction analysis.\n\nAnalyze the following Form-4 filing data for {{ticker}}:\n{{form4_data}}\n\nYour analysis should cover:\n1. Transaction type (purchase, sale, option exercise, gift)\n2. Transaction size relative to insider's total holdings\n3. Transaction timing (relative to earnings, announcements)\n4. Insider role and historical trading patterns\n5. Cluster buying/selling among multiple insiders\n6. Comparison to sector peer insider activity\n\nProvide a signal assessment:\n- BULLISH: Significant open-market purchases by multiple insiders\n- NEUTRAL: Routine transactions, option exercises, 10b5-1 plans\n- BEARISH: Large sales outside of planned programs\n\nInclude historical context and statistical significance.",
+      "variables": [
+        "ticker",
+        "form4_data"
+      ],
+      "lane": "lane_a",
+      "stage": "signal_collection"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Institutional Clustering 13F",
+      "name": "institutional_clustering_13f",
+      "subcategory": "sec_filings",
+      "description": "Analyzes SEC 13F filings to identify institutional investor clustering",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "You are a quantitative analyst specializing in institutional ownership analysis.\n\nAnalyze the following 13F filing data for {{fund_name}}:\n{{filing_data}}\n\nYour analysis should:\n1. Identify new positions initiated this quarter\n2. Identify positions with significant increases (>25%)\n3. Identify positions that were closed or significantly reduced\n4. Calculate portfolio concentration metrics\n5. Compare to previous quarters to identify trends\n6. Cross-reference with other notable investors' positions\n7. Identify potential \"crowded trades\" where multiple funds are clustering\n\nFocus on actionable insights that could inform investment decisions.",
+      "variables": [
+        "fund_name",
+        "filing_data"
+      ],
+      "lane": "lane_a",
+      "stage": "signal_collection"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Investment Presentation Creator",
+      "name": "investment_presentation_creator",
+      "subcategory": "output",
+      "description": "Creates investment presentation from research",
+      "llm_provider": "anthropic",
+      "llm_model": "claude-3-opus",
+      "temperature": 0.3,
+      "max_tokens": 5000,
+      "template": "You are an investment banking analyst creating a pitch.\n\nCreate an investment presentation for: {{ticker}}\nBased on the following research: {{research_summary}}\n\nPRESENTATION STRUCTURE:\n\nSLIDE 1: Executive Summary\n- Investment recommendation\n- Key thesis points\n- Target price and upside\n\nSLIDE 2: Company Overview\n- Business description\n- Key products/services\n- Geographic presence\n\nSLIDE 3: Investment Thesis\n- 3-4 key thesis points\n- Supporting evidence\n\nSLIDE 4: Industry Analysis\n- Market size and growth\n- Competitive positioning\n- Industry trends\n\nSLIDE 5: Financial Analysis\n- Revenue and earnings trends\n- Margin analysis\n- Balance sheet strength\n\nSLIDE 6: Valuation\n- Valuation methodology\n- Comparable analysis\n- DCF summary\n\nSLIDE 7: Risks\n- Key risk factors\n- Mitigants\n\nSLIDE 8: Catalysts & Timeline\n- Near-term catalysts\n- Investment timeline\n\nProvide content for each slide in presentation-ready format.",
+      "variables": [
+        "ticker",
+        "research_summary"
+      ],
+      "lane": "lane_a",
+      "stage": "discovery"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Newsletter Idea Scraping",
+      "name": "newsletter_idea_scraping",
+      "subcategory": "alternative_sources",
+      "description": "Extracts and analyzes investment ideas from financial newsletters",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "You are an investment analyst tasked with extracting actionable investment ideas from financial newsletters.\n\nAnalyze the following newsletter content: {{newsletter_content}}\n\nFor each investment idea mentioned:\n1. Identify the ticker symbol and company name\n2. Summarize the investment thesis in 2-3 sentences\n3. Extract key data points and metrics cited\n4. Identify the time horizon (short/medium/long term)\n5. Note any price targets or valuation metrics mentioned\n6. Assess the conviction level based on language used\n7. Identify potential conflicts of interest or biases\n\nProvide a structured summary suitable for further due diligence.",
+      "variables": [
+        "newsletter_content"
+      ],
+      "lane": "lane_a",
+      "stage": "signal_collection"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Niche Publication Scanner",
+      "name": "niche_publication_scanner",
+      "subcategory": "alternative_sources",
+      "description": "Scans niche industry publications for investment ideas",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "You are a research analyst mining niche publications for ideas.\n\nAnalyze content from the following niche publications:\n{{publication_content}}\n\nIndustry focus: {{industry}}\n\nExtract investment-relevant information:\n\n1. INDUSTRY DEVELOPMENTS\n   - New product launches\n   - Regulatory changes\n   - Technology shifts\n   - M&A activity\n\n2. COMPANY-SPECIFIC INSIGHTS\n   - Market share changes\n   - Operational developments\n   - Management changes\n   - Financial indicators\n\n3. COMPETITIVE DYNAMICS\n   - New entrants\n   - Exits or consolidation\n   - Pricing trends\n   - Capacity changes\n\n4. INVESTMENT IMPLICATIONS\n   - Potential winners and losers\n   - Timing considerations\n   - Risk factors\n\nProvide specific, actionable insights with ticker symbols.",
+      "variables": [
+        "publication_content",
+        "industry"
+      ],
+      "lane": "lane_a",
+      "stage": "signal_collection"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Pure Play Filter",
+      "name": "pure_play_filter",
+      "subcategory": "screening",
+      "description": "Filters companies to identify pure-play exposure to specific themes",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "You are an equity analyst specializing in identifying pure-play investment opportunities.\n\nGiven the theme: \"{{theme}}\" and the list of candidate companies: {{companies}}\n\nFor each company, analyze:\n1. Revenue breakdown by segment/product line\n2. Calculate percentage of revenue directly tied to the theme\n3. Assess strategic focus and management commentary on the theme\n4. Evaluate competitive moat within the theme\n5. Consider geographic exposure to theme adoption\n\nClassification criteria:\n- PURE PLAY: >70% revenue exposure, core strategic focus\n- SIGNIFICANT EXPOSURE: 30-70% revenue exposure\n- DIVERSIFIED: <30% revenue exposure\n\nRank companies by \"purity\" of exposure and investment attractiveness.",
+      "variables": [
+        "theme",
+        "companies"
+      ],
+      "lane": "lane_a",
+      "stage": "screening"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Reddit Memestock Scraper",
+      "name": "reddit_memestock_scraper",
+      "subcategory": "social_sentiment",
+      "description": "Analyzes Reddit for retail investor sentiment and memestock activity",
+      "llm_provider": "perplexity",
+      "llm_model": "sonar-pro",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "You are a social sentiment analyst monitoring retail investor communities.\n\nAnalyze the following Reddit data from r/wallstreetbets and related subreddits:\n{{reddit_data}}\n\nYour analysis should:\n1. Identify most mentioned tickers and sentiment\n2. Track momentum in mentions over time\n3. Identify emerging \"meme\" candidates\n4. Assess quality of DD (due diligence) posts\n5. Gauge overall market sentiment (bullish/bearish)\n6. Identify potential short squeeze candidates\n7. Flag pump-and-dump patterns\n\nProvide a ranked list of tickers with:\n- Mention frequency and trend\n- Sentiment score (-1 to +1)\n- Quality of underlying thesis\n- Risk assessment for institutional investors",
+      "variables": [
+        "reddit_data"
+      ],
+      "lane": "lane_a",
+      "stage": "signal_collection"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Sector Thesis Stress Test",
+      "name": "sector_thesis_stress_test",
+      "subcategory": "risk",
+      "description": "Stress tests investment theses against various scenarios",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a risk analyst specializing in scenario analysis.\n\nGiven the investment thesis: \"{{thesis}}\"\nFor the sector/company: {{target}}\n\nStress test this thesis against:\n\nMACRO SCENARIOS:\n1. Recession (GDP -2%, unemployment +3%)\n2. Inflation spike (CPI >5%)\n3. Interest rate shock (+200bps)\n4. Currency crisis (USD +/-20%)\n\nSECTOR-SPECIFIC SCENARIOS:\n1. Regulatory change (adverse)\n2. Technological disruption\n3. Competitive intensity increase\n4. Supply chain disruption\n\nFor each scenario:\n- Estimate revenue/earnings impact\n- Assess balance sheet resilience\n- Evaluate competitive position change\n- Determine thesis survival probability\n\nProvide an overall robustness score (1-10) with detailed justification.",
+      "variables": [
+        "thesis",
+        "target"
+      ],
+      "lane": "lane_a",
+      "stage": "discovery"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Social Sentiment Scanner",
+      "name": "social_sentiment_scanner",
+      "subcategory": "alternative_data",
+      "description": "Analyzes social media sentiment for investment signals",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are a quantitative analyst specializing in alternative data.\n\nAnalyze social media sentiment for {{ticker}} or {{topic}}:\n{{social_data}}\n\nYour analysis should:\n1. Calculate sentiment scores across platforms (Twitter, Reddit, StockTwits)\n2. Identify key opinion leaders and their positions\n3. Track sentiment momentum and inflection points\n4. Separate retail noise from informed commentary\n5. Cross-reference with price action and volume\n6. Flag potential manipulation or coordinated activity\n\nProvide a sentiment signal with confidence interval.",
+      "variables": [],
+      "lane": "lane_a",
+      "stage": "signal_collection"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Substack Idea Scraping",
+      "name": "substack_idea_scraping",
+      "subcategory": "alternative_sources",
+      "description": "Extracts investment ideas from Substack newsletters",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "You are an analyst curating ideas from investment Substacks.\n\nAnalyze the following Substack content:\n{{substack_content}}\n\nFor each investment idea:\n1. Extract the core thesis\n2. Identify supporting data and analysis\n3. Note the author's track record if known\n4. Assess the depth and quality of research\n5. Identify potential biases or conflicts\n6. Extract specific price targets or valuations\n7. Note the recommended position sizing\n\nQuality assessment criteria:\n- Depth of primary research\n- Quality of financial analysis\n- Consideration of risks\n- Clarity of thesis\n- Track record of author\n\nProvide a curated list ranked by quality and conviction.",
+      "variables": [
+        "substack_content"
+      ],
+      "lane": "lane_a",
+      "stage": "signal_collection"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Thematic Candidate Screen",
+      "name": "thematic_candidate_screen",
+      "subcategory": "thematic",
+      "description": "Identifies investment candidates based on a specific investment theme",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a senior equity research analyst specializing in thematic investing. Given the investment theme: \"{{theme}}\"\n\nYour task is to:\n1. Define the theme precisely and identify its key drivers\n2. Map the value chain and ecosystem participants\n3. Identify 10-15 publicly traded companies with significant exposure to this theme\n4. For each company, assess:\n   - Revenue exposure to the theme (% of total revenue)\n   - Competitive positioning within the theme\n   - Growth trajectory related to the theme\n   - Valuation relative to theme peers\n\nPrioritize \"pure play\" companies with >50% revenue exposure over diversified conglomerates.\n\nOutput a ranked list with investment rationale for each candidate.",
+      "variables": [
+        "theme"
+      ],
+      "lane": "lane_a",
+      "stage": "screening"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Thematic Idea Generator",
+      "name": "thematic_idea_generator",
+      "subcategory": "thematic",
+      "description": "Generates investment candidates based on thematic analysis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a thematic investment strategist.\n\nGenerate investment candidates for the theme: \"{{theme}}\"\n\nTHEME ANALYSIS:\n1. Define the theme and its investment relevance\n2. Identify key drivers and catalysts\n3. Estimate total addressable market\n4. Project growth trajectory (5-10 years)\n\nCANDIDATE GENERATION:\nFor each candidate, provide:\n- Company name and ticker\n- Business description\n- Theme exposure (% of revenue)\n- Competitive advantages\n- Growth potential from theme\n- Key risks\n- Valuation context\n\nGenerate candidates across:\n- Large cap leaders\n- Mid cap growth\n- Small cap emerging\n- International exposure\n\nRank by risk-adjusted return potential.",
+      "variables": [
+        "theme"
+      ],
+      "lane": "lane_a",
+      "stage": "screening"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Theme Order Effects",
+      "name": "theme_order_effects",
+      "subcategory": "thematic",
+      "description": "Analyzes cascading effects of investment themes across industries",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.4,
+      "max_tokens": 4000,
+      "template": "You are a strategic analyst specializing in second and third-order effects analysis.\n\nGiven the investment theme: \"{{theme}}\"\n\nMap the cascading effects across the economy:\n\nFIRST ORDER EFFECTS (Direct beneficiaries):\n- Companies directly providing products/services related to the theme\n- Immediate revenue impact\n\nSECOND ORDER EFFECTS (Indirect beneficiaries):\n- Suppliers and service providers to first-order companies\n- Adjacent industries that benefit from theme adoption\n- Infrastructure and enabling technology providers\n\nTHIRD ORDER EFFECTS (Downstream impacts):\n- Industries disrupted or displaced by the theme\n- New business models enabled\n- Societal and regulatory changes\n- Long-term structural shifts\n\nFor each order, identify 3-5 specific investment opportunities with tickers.",
+      "variables": [
+        "theme"
+      ],
+      "lane": "lane_a",
+      "stage": "screening"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Theme Subsector Expansion",
+      "name": "theme_subsector_expansion",
+      "subcategory": "thematic",
+      "description": "Expands investment themes into detailed subsector opportunities",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a sector specialist expanding investment themes.\n\nGiven the broad investment theme: \"{{theme}}\"\n\nDecompose into investable subsectors:\n\n1. CORE SUBSECTORS (directly tied to theme)\n   - Define each subsector\n   - Size the addressable market\n   - Identify growth drivers\n   - List key players (with tickers)\n\n2. ADJACENT SUBSECTORS (indirect beneficiaries)\n   - Connection to core theme\n   - Potential upside from theme adoption\n   - Key players\n\n3. ENABLING TECHNOLOGIES\n   - Infrastructure requirements\n   - Technology enablers\n   - Service providers\n\nFor each subsector, provide:\n- Market size and growth rate\n- Competitive dynamics\n- Top 3 investment candidates with brief thesis",
+      "variables": [
+        "theme"
+      ],
+      "lane": "lane_a",
+      "stage": "screening"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Trend To Equity Mapper",
+      "name": "trend_to_equity_mapper",
+      "subcategory": "trend_analysis",
+      "description": "Maps emerging trends to equity investment opportunities",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are a cross-disciplinary analyst connecting macro trends to equity opportunities.\n\nAnalyze the following trend: {{trend_description}}\n\nYour task is to:\n1. Validate the trend with supporting data points\n2. Estimate the trend duration and growth trajectory\n3. Map the trend to specific industries and sectors\n4. Identify 5-10 publicly traded beneficiaries\n5. Assess each company leverage to the trend\n6. Identify potential losers/disrupted companies\n\nProvide actionable investment recommendations with time horizons.",
+      "variables": [],
+      "lane": "lane_a",
+      "stage": "discovery"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Twitter Copytrading Scraper",
+      "name": "twitter_copytrading_scraper",
+      "subcategory": "social_sentiment",
+      "description": "Monitors financial Twitter for investment ideas from notable accounts",
+      "llm_provider": "perplexity",
+      "llm_model": "sonar-pro",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "You are a social media analyst tracking financial Twitter (FinTwit).\n\nAnalyze tweets from notable financial accounts:\n{{twitter_data}}\n\nYour analysis should:\n1. Extract specific stock mentions and sentiment\n2. Identify thesis summaries from threads\n3. Track position changes announced\n4. Assess credibility of sources\n5. Cross-reference multiple sources for consensus\n6. Identify contrarian views\n\nFor each idea extracted:\n- Source credibility score\n- Thesis summary\n- Time horizon mentioned\n- Price targets if any\n- Potential conflicts of interest\n\nProvide a curated list of high-conviction ideas from credible sources.",
+      "variables": [
+        "twitter_data"
+      ],
+      "lane": "lane_a",
+      "stage": "signal_collection"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Under Radar Discovery",
+      "name": "under_radar_discovery",
+      "subcategory": "screening",
+      "description": "Identifies overlooked investment opportunities",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a small-cap specialist identifying under-followed opportunities.\n\nScreen for under-the-radar investment opportunities with these criteria:\n- Market cap: {{market_cap_range}}\n- Analyst coverage: <3 analysts\n- Institutional ownership: <50%\n- Trading volume: Sufficient liquidity\n\nFor qualifying companies, analyze:\n1. Business quality and competitive position\n2. Financial health and profitability\n3. Growth trajectory\n4. Management quality\n5. Valuation relative to intrinsic value\n6. Catalysts for re-rating\n\nIdentify why the stock may be overlooked:\n- Size constraints for large funds\n- Lack of sell-side coverage\n- Complex business model\n- Recent IPO or spin-off\n- Temporary operational issues\n\nProvide a ranked list of opportunities with investment thesis.",
+      "variables": [
+        "market_cap_range"
+      ],
+      "lane": "lane_a",
+      "stage": "screening"
+    },
+    {
+      "category": "Idea Generation",
+      "title": "Value Chain Mapper",
+      "name": "value_chain_mapper",
+      "subcategory": "industry_analysis",
+      "description": "Maps industry value chains to find investment opportunities",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are an industry analyst mapping value chains for investment opportunities.\n\nIndustry: {{industry}}\nFocus Company (optional): {{focus_company}}\n\nYour task is to:\n1. Map the complete value chain from raw materials to end consumers\n2. Identify key players at each stage\n3. Analyze margin profiles and competitive dynamics at each level\n4. Identify bottlenecks and pricing power nodes\n5. Find undervalued or overlooked participants\n6. Assess vertical integration trends\n\nProvide investment recommendations across the value chain.",
+      "variables": [],
+      "lane": "lane_a",
+      "stage": "discovery"
+    },
+    {
+      "category": "Macro",
+      "title": "China Macro Analysis",
+      "name": "china_macro_analysis",
+      "subcategory": "china",
+      "description": "Deep dive China macro analysis",
+      "llm_provider": "perplexity",
+      "llm_model": "sonar-pro",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "Analyze China macro conditions:\n\nData: {{china_data}}\n\nEvaluate: Growth, policy, property, trade, investment implications for global markets.",
+      "variables": [
+        "china_data"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Commodity Analysis",
+      "name": "commodity_analysis",
+      "subcategory": "commodities",
+      "description": "Analyzes commodity markets and trends",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "Analyze commodity market: {{commodity}}\n\nEvaluate: Supply/demand, inventory, cost curve, price outlook, equity implications.",
+      "variables": [
+        "commodity"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Credit Cycle Analysis",
+      "name": "credit_cycle_analysis",
+      "subcategory": "credit",
+      "description": "Analyzes credit cycle position and implications",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "Analyze credit cycle conditions:\n\nData: {{credit_data}}\n\nEvaluate: Spreads, defaults, lending standards, cycle position, sector implications.",
+      "variables": [
+        "credit_data"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Currency Analysis",
+      "name": "currency_analysis",
+      "subcategory": "fx",
+      "description": "Analyzes currency trends and drivers",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "Analyze currency dynamics for: {{currency_pair}}\n\nEvaluate: Fundamentals, technicals, carry, positioning, outlook.",
+      "variables": [
+        "currency_pair"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Earnings Season Preview",
+      "name": "earnings_season_preview",
+      "subcategory": "earnings",
+      "description": "Previews upcoming earnings season",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "Preview earnings season:\n\nKey reporters: {{companies}}\nMacro context: {{macro_context}}\n\nEvaluate: Expectations, key themes, potential surprises, trading strategies.",
+      "variables": [
+        "companies",
+        "macro_context"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Economic Indicator Analysis",
+      "name": "economic_indicator_analysis",
+      "subcategory": "economic",
+      "description": "Analyzes key economic indicators",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Analyze economic indicators: {{indicators}}\n\nEvaluate: Trend, surprise vs consensus, leading indicator signals, recession probability.",
+      "variables": [
+        "indicators"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Election Impact Analysis",
+      "name": "election_impact_analysis",
+      "subcategory": "political",
+      "description": "Analyzes election impact on markets",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.4,
+      "max_tokens": 4000,
+      "template": "Analyze election impact:\n\nElection: {{election}}\nScenarios: {{scenarios}}\n\nEvaluate: Policy implications, sector winners/losers, positioning strategies.",
+      "variables": [
+        "election",
+        "scenarios"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Fed Policy Analysis",
+      "name": "fed_policy_analysis",
+      "subcategory": "monetary",
+      "description": "Federal Reserve policy analysis and implications",
+      "llm_provider": "perplexity",
+      "llm_model": "sonar-pro",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "Analyze Federal Reserve policy stance and outlook:\n\nRecent communications: {{fed_communications}}\n\nEvaluate: Rate path, QT, forward guidance, market implications.",
+      "variables": [
+        "fed_communications"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Geopolitical Risk Analysis",
+      "name": "geopolitical_risk_analysis",
+      "subcategory": "geopolitical",
+      "description": "Analyzes geopolitical risks and market implications",
+      "llm_provider": "perplexity",
+      "llm_model": "sonar-pro",
+      "temperature": 0.4,
+      "max_tokens": 3000,
+      "template": "Analyze geopolitical risks:\n\nCurrent events: {{events}}\n\nEvaluate: Risk scenarios, probability, market impact, hedging strategies.",
+      "variables": [
+        "events"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Global Macro Scan",
+      "name": "global_macro_scan",
+      "subcategory": "global",
+      "description": "Scans global macro conditions across regions",
+      "llm_provider": "perplexity",
+      "llm_model": "sonar-pro",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "Scan global macro conditions:\n\nRegions: US, Europe, China, Japan, Emerging Markets\n\nEvaluate: Growth, policy, risks, investment opportunities by region.",
+      "variables": [],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Inflation Analysis",
+      "name": "inflation_analysis",
+      "subcategory": "economic",
+      "description": "Deep dive inflation analysis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Analyze inflation dynamics:\n\nData: {{inflation_data}}\n\nEvaluate: Components, drivers, persistence, policy implications, investment hedges.",
+      "variables": [
+        "inflation_data"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Liquidity Conditions Analysis",
+      "name": "liquidity_conditions_analysis",
+      "subcategory": "liquidity",
+      "description": "Analyzes market liquidity conditions",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Analyze market liquidity conditions:\n\nEvaluate: Fed balance sheet, repo markets, money markets, equity market liquidity.",
+      "variables": [],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Macro Environment Analysis",
+      "name": "macro_environment_analysis",
+      "subcategory": "economic",
+      "description": "Comprehensive macroeconomic environment analysis",
+      "llm_provider": "perplexity",
+      "llm_model": "sonar-pro",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "Analyze the current macroeconomic environment:\n\nData: {{macro_data}}\n\nCover: GDP growth, inflation, employment, monetary policy, fiscal policy, global trade.\n\nProvide investment implications by asset class and sector.",
+      "variables": [
+        "macro_data"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Market Regime Analysis",
+      "name": "market_regime_analysis",
+      "subcategory": "regime",
+      "description": "Identifies current market regime",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "Analyze current market regime:\n\nData: {{market_data}}\n\nClassify regime: Risk-on/off, trending/ranging, vol regime. Provide strategy implications.",
+      "variables": [
+        "market_data"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Sector Sensitivity Analysis",
+      "name": "sector_sensitivity_analysis",
+      "subcategory": "sector",
+      "description": "Analyzes sector sensitivity to macro factors",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Analyze sector sensitivity to macro factors:\n\nSector: {{sector}}\nMacro factors: Interest rates, GDP, inflation, USD, oil\n\nProvide sensitivity coefficients and current positioning.",
+      "variables": [
+        "sector"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Macro",
+      "title": "Yield Curve Analysis",
+      "name": "yield_curve_analysis",
+      "subcategory": "rates",
+      "description": "Analyzes yield curve shape and implications",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Analyze yield curve:\n\nData: {{yield_data}}\n\nEvaluate: Shape, term premium, inversion signals, sector implications.",
+      "variables": [
+        "yield_data"
+      ],
+      "lane": "lane_a",
+      "stage": "macro_context"
+    },
+    {
+      "category": "Market Analysis",
+      "title": "Earnings Season Analyzer",
+      "name": "earnings_season_analyzer",
+      "subcategory": "earnings",
+      "description": "Analyzes earnings season trends and surprises",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are an earnings analyst tracking earnings season.\n\nEarnings Data: {{earnings_data}}\nSector: {{sector}}\n\nAnalyze:\n1. Beat/miss rates vs. historical\n2. Revision trends\n3. Guidance patterns\n4. Margin commentary themes\n5. Sector-specific trends\n6. Forward implications\n\nProvide earnings season summary with investment implications.",
+      "variables": [],
+      "lane": "lane_a",
+      "stage": "market_analysis"
+    },
+    {
+      "category": "Market Analysis",
+      "title": "Sector Momentum Ranker",
+      "name": "sector_momentum_ranker",
+      "subcategory": "technical",
+      "description": "Ranks sectors by momentum and relative strength",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are a technical analyst ranking sector momentum.\n\nSector Data: {{sector_data}}\nTime Period: {{period}}\n\nAnalyze:\n1. Absolute momentum (3m, 6m, 12m)\n2. Relative strength vs. SPY\n3. Breadth indicators\n4. Volume trends\n5. Technical patterns\n6. Rotation signals\n\nProvide sector rankings with rotation recommendations.",
+      "variables": [],
+      "lane": "lane_a",
+      "stage": "market_analysis"
+    },
+    {
+      "category": "Monitoring",
+      "title": "News Sentiment Monitor",
+      "name": "news_sentiment_monitor",
+      "subcategory": "news",
+      "description": "Monitors news flow and sentiment",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are monitoring news flow for a position.\n\nCompany: {{ticker}}\nNews Feed: {{news_data}}\nThesis: {{thesis}}\n\nMonitor:\n1. Material news events\n2. Sentiment shifts\n3. Competitor developments\n4. Regulatory updates\n5. Management changes\n6. Thesis-relevant signals\n\nProvide news digest with action alerts.",
+      "variables": [],
+      "lane": "monitoring",
+      "stage": "position_monitoring"
+    },
+    {
+      "category": "Monitoring",
+      "title": "Portfolio Performance Reporter",
+      "name": "portfolio_performance_reporter",
+      "subcategory": "performance",
+      "description": "Generates portfolio performance reports",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are generating a performance report.\n\nPortfolio: {{portfolio}}\nPeriod: {{period}}\nBenchmark: {{benchmark}}\n\nReport:\n1. Total return vs. benchmark\n2. Attribution analysis\n3. Best/worst performers\n4. Risk metrics\n5. Factor contributions\n6. Key decisions impact\n\nProvide comprehensive performance report.",
+      "variables": [],
+      "lane": "monitoring",
+      "stage": "position_monitoring"
+    },
+    {
+      "category": "Other",
+      "title": "Competitor Earnings Comparison",
+      "name": "competitor_earnings_comparison",
+      "subcategory": "earnings",
+      "description": "Compares earnings across competitors",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Compare earnings for competitors: {{tickers}}\n\nEarnings data: {{earnings_data}}\n\nAnalyze: Relative performance, market share trends, margin comparison, guidance comparison.",
+      "variables": [
+        "tickers",
+        "earnings_data"
+      ],
+      "lane": "utility",
+      "stage": "utility"
+    },
+    {
+      "category": "Other",
+      "title": "Daily Market Briefing",
+      "name": "daily_market_briefing",
+      "subcategory": "market",
+      "description": "Creates daily market briefing",
+      "llm_provider": "perplexity",
+      "llm_model": "sonar-pro",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "Create daily market briefing:\n\nMarket data: {{market_data}}\nNews: {{news}}\n\nInclude: Market summary, key movers, sector performance, economic calendar, key themes.",
+      "variables": [
+        "market_data",
+        "news"
+      ],
+      "lane": "utility",
+      "stage": "utility"
+    },
+    {
+      "category": "Other",
+      "title": "Earnings Call Analysis",
+      "name": "earnings_call_analysis",
+      "subcategory": "earnings",
+      "description": "Analyzes earnings call transcript",
+      "llm_provider": "anthropic",
+      "llm_model": "claude-3-opus",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "Analyze earnings call transcript for: {{ticker}}\n\nTranscript: {{transcript}}\n\nExtract:\n1. Key financial highlights\n2. Management tone and confidence\n3. Forward guidance changes\n4. Analyst concerns\n5. Strategic priorities\n6. Red flags or concerns",
+      "variables": [
+        "ticker",
+        "transcript"
+      ],
+      "lane": "utility",
+      "stage": "utility"
+    },
+    {
+      "category": "Other",
+      "title": "News Sentiment Analysis",
+      "name": "news_sentiment_analysis",
+      "subcategory": "sentiment",
+      "description": "Analyzes news sentiment for company",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "Analyze news sentiment for: {{ticker}}\n\nNews articles: {{news}}\n\nEvaluate: Overall sentiment, key themes, potential market impact, trading implications.",
+      "variables": [
+        "ticker",
+        "news"
+      ],
+      "lane": "utility",
+      "stage": "utility"
+    },
+    {
+      "category": "Other",
+      "title": "Research Report Summary",
+      "name": "research_report_summary",
+      "subcategory": "research",
+      "description": "Summarizes sell-side research report",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Summarize research report for: {{ticker}}\n\nReport: {{report}}\n\nExtract: Rating, price target, key thesis points, risks, catalysts.",
+      "variables": [
+        "ticker",
+        "report"
+      ],
+      "lane": "utility",
+      "stage": "utility"
+    },
+    {
+      "category": "Other",
+      "title": "Sec Filing Analysis",
+      "name": "sec_filing_analysis",
+      "subcategory": "filings",
+      "description": "Analyzes SEC filing for key information",
+      "llm_provider": "anthropic",
+      "llm_model": "claude-3-opus",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "Analyze SEC filing for: {{ticker}}\n\nFiling type: {{filing_type}}\nContent: {{filing_content}}\n\nExtract key information relevant to investment thesis.",
+      "variables": [
+        "ticker",
+        "filing_type",
+        "filing_content"
+      ],
+      "lane": "utility",
+      "stage": "utility"
+    },
+    {
+      "category": "Other",
+      "title": "Watchlist Screening",
+      "name": "watchlist_screening",
+      "subcategory": "screening",
+      "description": "Screens watchlist for actionable opportunities",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Screen watchlist for opportunities: {{watchlist}}\n\nCriteria: {{criteria}}\n\nIdentify stocks meeting criteria and rank by attractiveness.",
+      "variables": [
+        "watchlist",
+        "criteria"
+      ],
+      "lane": "utility",
+      "stage": "utility"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Benchmark Comparison",
+      "name": "benchmark_comparison",
+      "subcategory": "analytics",
+      "description": "Compares portfolio to benchmark",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Compare portfolio {{portfolio}} to benchmark {{benchmark}}.\n\nAnalyze: Active weights, tracking error, information ratio, sector/factor deviations.",
+      "variables": [
+        "portfolio",
+        "benchmark"
+      ],
+      "lane": "portfolio",
+      "stage": "risk_management"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Correlation Analysis",
+      "name": "correlation_analysis",
+      "subcategory": "analytics",
+      "description": "Analyzes portfolio correlations and diversification",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "You are a quantitative analyst evaluating correlations.\n\nPortfolio: {{portfolio}}\nTime Period: {{time_period}}\n\nCORRELATION ANALYSIS:\n\n1. CORRELATION MATRIX\n   - Pairwise correlations\n   - Rolling correlations\n   - Correlation stability\n\n2. CLUSTER ANALYSIS\n   - Correlated groups\n   - Hidden exposures\n   - Diversification gaps\n\n3. FACTOR CORRELATIONS\n   - Correlation to factors\n   - Factor crowding\n   - Unintended bets\n\n4. STRESS CORRELATIONS\n   - Correlation in drawdowns\n   - Tail dependence\n   - Diversification breakdown\n\n5. RECOMMENDATIONS\n   - Diversification improvements\n   - Correlation hedges\n   - Position adjustments\n\nProvide correlation insights and recommendations.",
+      "variables": [
+        "portfolio",
+        "time_period"
+      ],
+      "lane": "portfolio",
+      "stage": "risk_management"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Currency Hedging Analysis",
+      "name": "currency_hedging_analysis",
+      "subcategory": "hedging",
+      "description": "Analyzes currency exposure and hedging needs",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Analyze currency exposure for portfolio: {{portfolio}}\n\nEvaluate: FX exposure by currency, hedging costs, optimal hedge ratio.",
+      "variables": [
+        "portfolio"
+      ],
+      "lane": "portfolio",
+      "stage": "hedging"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Drawdown Analysis",
+      "name": "drawdown_analysis",
+      "subcategory": "risk",
+      "description": "Analyzes portfolio drawdown characteristics",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Analyze drawdown history for portfolio: {{portfolio}}\n\nEvaluate: Maximum drawdown, drawdown duration, recovery time, drawdown frequency.",
+      "variables": [
+        "portfolio"
+      ],
+      "lane": "portfolio",
+      "stage": "risk_management"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Esg Portfolio Analysis",
+      "name": "esg_portfolio_analysis",
+      "subcategory": "esg",
+      "description": "Analyzes portfolio ESG characteristics",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "Analyze ESG profile for portfolio: {{portfolio}}\n\nEvaluate: ESG scores, carbon footprint, controversies, alignment with objectives.",
+      "variables": [
+        "portfolio"
+      ],
+      "lane": "portfolio",
+      "stage": "portfolio_analytics"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Factor Exposure Analysis",
+      "name": "factor_exposure_analysis",
+      "subcategory": "analytics",
+      "description": "Analyzes portfolio factor exposures",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Analyze factor exposures for portfolio: {{portfolio}}\n\nEvaluate exposures to: Market, Size, Value, Momentum, Quality, Volatility, Dividend Yield.\n\nProvide factor loadings, risk contribution, and recommendations for factor tilts.",
+      "variables": [
+        "portfolio"
+      ],
+      "lane": "portfolio",
+      "stage": "risk_management"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Factor Exposure Analyzer",
+      "name": "factor_exposure_analyzer",
+      "subcategory": "factor_analysis",
+      "description": "Analyzes portfolio factor exposures",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are a quantitative analyst analyzing factor exposures.\n\nPortfolio: {{portfolio}}\nFactor Data: {{factor_data}}\n\nAnalyze exposures to:\n1. Value (P/E, P/B, FCF yield)\n2. Momentum (price, earnings)\n3. Quality (ROE, margins, stability)\n4. Size (market cap)\n5. Volatility (beta, vol)\n6. Growth (revenue, earnings growth)\n\nProvide factor attribution and recommendations.",
+      "variables": [],
+      "lane": "portfolio",
+      "stage": "portfolio_analytics"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Income Analysis",
+      "name": "income_analysis",
+      "subcategory": "analytics",
+      "description": "Analyzes portfolio income generation",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Analyze income characteristics for portfolio: {{portfolio}}\n\nEvaluate: Dividend yield, dividend growth, income stability, tax efficiency.",
+      "variables": [
+        "portfolio"
+      ],
+      "lane": "portfolio",
+      "stage": "risk_management"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Investment Policy Compliance",
+      "name": "investment_policy_compliance",
+      "subcategory": "compliance",
+      "description": "Checks portfolio compliance with investment policy",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Check compliance of {{portfolio}} against investment policy: {{policy}}\n\nIdentify violations and remediation actions.",
+      "variables": [
+        "portfolio",
+        "policy"
+      ],
+      "lane": "portfolio",
+      "stage": "compliance"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Liquidity Analysis",
+      "name": "liquidity_analysis",
+      "subcategory": "risk",
+      "description": "Analyzes portfolio liquidity and execution capacity",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "You are a liquidity analyst evaluating portfolio tradability.\n\nPortfolio: {{portfolio}}\n\nLIQUIDITY ANALYSIS:\n\n1. POSITION LIQUIDITY\n   - Average daily volume\n   - Days to liquidate\n   - Bid-ask spreads\n   - Market depth\n\n2. PORTFOLIO LIQUIDITY\n   - Aggregate liquidity score\n   - Liquidity distribution\n   - Concentration in illiquid names\n\n3. STRESS SCENARIOS\n   - Liquidity under stress\n   - Fire sale discounts\n   - Correlation of liquidity\n\n4. EXECUTION ANALYSIS\n   - Expected market impact\n   - Optimal execution strategy\n   - Time to execute\n\n5. RECOMMENDATIONS\n   - Liquidity improvements\n   - Position adjustments\n   - Execution guidelines\n\nProvide liquidity risk assessment.",
+      "variables": [
+        "portfolio"
+      ],
+      "lane": "portfolio",
+      "stage": "risk_management"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Options Overlay Strategy",
+      "name": "options_overlay_strategy",
+      "subcategory": "hedging",
+      "description": "Designs options overlay for portfolio hedging",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "Design options overlay strategy for portfolio: {{portfolio}}\n\nObjective: {{objective}} (income, protection, or both)",
+      "variables": [
+        "portfolio",
+        "objective"
+      ],
+      "lane": "portfolio",
+      "stage": "hedging"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Performance Attribution",
+      "name": "performance_attribution",
+      "subcategory": "analytics",
+      "description": "Analyzes sources of portfolio performance",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "You are a performance analyst conducting attribution analysis.\n\nPortfolio Returns: {{portfolio_returns}}\nBenchmark: {{benchmark}}\nHoldings: {{holdings}}\n\nPERFORMANCE ATTRIBUTION:\n\n1. TOTAL RETURN DECOMPOSITION\n   - Portfolio return\n   - Benchmark return\n   - Active return (alpha)\n\n2. BRINSON ATTRIBUTION\n   - Allocation effect\n   - Selection effect\n   - Interaction effect\n\n3. FACTOR ATTRIBUTION\n   - Market factor\n   - Size factor\n   - Value factor\n   - Momentum factor\n   - Quality factor\n\n4. POSITION ATTRIBUTION\n   - Top contributors\n   - Top detractors\n   - Unexpected outcomes\n\n5. RISK-ADJUSTED METRICS\n   - Sharpe ratio\n   - Information ratio\n   - Sortino ratio\n   - Maximum drawdown\n\nProvide detailed attribution breakdown.",
+      "variables": [
+        "portfolio_returns",
+        "benchmark",
+        "holdings"
+      ],
+      "lane": "portfolio",
+      "stage": "risk_management"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Portfolio Construction",
+      "name": "portfolio_construction",
+      "subcategory": "construction",
+      "description": "Constructs optimal portfolio based on investment objectives",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "You are a portfolio manager constructing an investment portfolio.\n\nInvestment Objectives:\n- Risk tolerance: {{risk_tolerance}}\n- Return target: {{return_target}}\n- Time horizon: {{time_horizon}}\n- Constraints: {{constraints}}\n\nAvailable positions: {{positions}}\n\nPORTFOLIO CONSTRUCTION:\n\n1. ASSET ALLOCATION\n   - Strategic allocation by asset class\n   - Sector allocation\n   - Geographic allocation\n   - Factor exposures\n\n2. POSITION SIZING\n   - Individual position weights\n   - Concentration limits\n   - Liquidity considerations\n   - Correlation analysis\n\n3. RISK BUDGETING\n   - Risk contribution by position\n   - Diversification benefit\n   - Tail risk assessment\n   - Drawdown expectations\n\n4. OPTIMIZATION\n   - Mean-variance optimization\n   - Risk parity considerations\n   - Constraints application\n   - Rebalancing triggers\n\nProvide specific position weights and rationale.",
+      "variables": [
+        "risk_tolerance",
+        "return_target",
+        "time_horizon",
+        "constraints",
+        "positions"
+      ],
+      "lane": "portfolio",
+      "stage": "construction"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Position Sizer",
+      "name": "position_sizer",
+      "subcategory": "sizing",
+      "description": "Determines optimal position sizes based on conviction and risk",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are a portfolio manager determining position sizes.\n\nInvestment Opportunity: {{opportunity}}\nPortfolio Context: {{portfolio}}\nRisk Parameters: {{risk_params}}\n\nDetermine:\n1. Conviction level (1-10)\n2. Risk/reward ratio\n3. Correlation with existing holdings\n4. Liquidity constraints\n5. Optimal position size\n6. Scaling strategy (entry/exit)\n\nProvide position sizing recommendation with rationale.",
+      "variables": [],
+      "lane": "portfolio",
+      "stage": "construction"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Position Sizing",
+      "name": "position_sizing",
+      "subcategory": "risk",
+      "description": "Determines optimal position size based on conviction and risk",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "You are a risk manager determining position sizes.\n\nPosition: {{ticker}}\nConviction level: {{conviction}}\nPortfolio context: {{portfolio}}\n\nPOSITION SIZING ANALYSIS:\n\n1. CONVICTION ASSESSMENT\n   - Thesis strength\n   - Information edge\n   - Catalyst clarity\n   - Risk/reward profile\n\n2. RISK METRICS\n   - Position volatility\n   - Beta to portfolio\n   - Correlation with holdings\n   - Tail risk\n\n3. SIZING FRAMEWORKS\n   - Kelly criterion\n   - Risk parity\n   - Equal weight baseline\n   - Conviction-weighted\n\n4. CONSTRAINTS\n   - Liquidity limits\n   - Concentration limits\n   - Sector limits\n   - Regulatory limits\n\n5. RECOMMENDATION\n   - Optimal position size\n   - Entry strategy\n   - Scaling approach\n\nProvide specific position size with justification.",
+      "variables": [
+        "ticker",
+        "conviction",
+        "portfolio"
+      ],
+      "lane": "portfolio",
+      "stage": "risk_management"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Rebalancing Analysis",
+      "name": "rebalancing_analysis",
+      "subcategory": "execution",
+      "description": "Analyzes portfolio for rebalancing needs",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "You are a portfolio manager analyzing rebalancing needs.\n\nCurrent Portfolio: {{current_portfolio}}\nTarget Allocation: {{target_allocation}}\n\nREBALANCING ANALYSIS:\n\n1. DRIFT ANALYSIS\n   - Current vs target weights\n   - Drift by position\n   - Drift by sector/factor\n   - Threshold breaches\n\n2. REBALANCING TRADES\n   - Required trades\n   - Trade sizes\n   - Priority ranking\n   - Execution timeline\n\n3. COST ANALYSIS\n   - Transaction costs\n   - Tax implications\n   - Market impact\n   - Opportunity cost of not rebalancing\n\n4. OPTIMIZATION\n   - Tax-loss harvesting opportunities\n   - Wash sale considerations\n   - Lot selection\n\n5. RECOMMENDATION\n   - Rebalance now vs wait\n   - Partial vs full rebalance\n   - Execution strategy\n\nProvide specific trade recommendations.",
+      "variables": [
+        "current_portfolio",
+        "target_allocation"
+      ],
+      "lane": "portfolio",
+      "stage": "execution"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Risk Monitoring",
+      "name": "risk_monitoring",
+      "subcategory": "risk",
+      "description": "Monitors portfolio risk metrics and alerts",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "You are a risk manager monitoring portfolio risk.\n\nPortfolio: {{portfolio}}\nRisk Limits: {{risk_limits}}\n\nRISK MONITORING:\n\n1. RISK METRICS\n   - Portfolio VaR (95%, 99%)\n   - Expected shortfall\n   - Beta to benchmark\n   - Tracking error\n\n2. CONCENTRATION RISK\n   - Position concentration\n   - Sector concentration\n   - Factor concentration\n   - Geographic concentration\n\n3. STRESS TESTING\n   - Historical scenarios\n   - Hypothetical scenarios\n   - Correlation stress\n   - Liquidity stress\n\n4. LIMIT MONITORING\n   - Current vs limits\n   - Breach alerts\n   - Trend analysis\n   - Early warning indicators\n\n5. RECOMMENDATIONS\n   - Risk reduction trades\n   - Hedging opportunities\n   - Limit adjustments\n\nProvide risk dashboard with alerts.",
+      "variables": [
+        "portfolio",
+        "risk_limits"
+      ],
+      "lane": "portfolio",
+      "stage": "risk_management"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Scenario Analysis",
+      "name": "scenario_analysis",
+      "subcategory": "risk",
+      "description": "Analyzes portfolio performance under various scenarios",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "You are a scenario analyst stress testing portfolios.\n\nPortfolio: {{portfolio}}\nScenarios: {{scenarios}}\n\nSCENARIO ANALYSIS:\n\n1. SCENARIO DEFINITIONS\n   - Macro scenarios\n   - Market scenarios\n   - Sector scenarios\n   - Idiosyncratic scenarios\n\n2. IMPACT ANALYSIS\n   - Portfolio P&L by scenario\n   - Position-level impacts\n   - Factor exposures under stress\n\n3. HISTORICAL SCENARIOS\n   - 2008 Financial Crisis\n   - 2020 COVID Crash\n   - 2022 Rate Shock\n   - Sector-specific events\n\n4. HYPOTHETICAL SCENARIOS\n   - Recession\n   - Inflation spike\n   - Geopolitical crisis\n   - Technology disruption\n\n5. RISK MITIGATION\n   - Hedging strategies\n   - Position adjustments\n   - Tail risk protection\n\nProvide scenario impact analysis.",
+      "variables": [
+        "portfolio",
+        "scenarios"
+      ],
+      "lane": "portfolio",
+      "stage": "risk_management"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Sector Rotation Analysis",
+      "name": "sector_rotation_analysis",
+      "subcategory": "strategy",
+      "description": "Analyzes sector rotation opportunities",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "Analyze sector rotation opportunities based on: {{market_conditions}}\n\nEvaluate sector momentum, valuations, and economic sensitivity.",
+      "variables": [
+        "market_conditions"
+      ],
+      "lane": "portfolio",
+      "stage": "strategy"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Tax Loss Harvesting",
+      "name": "tax_loss_harvesting",
+      "subcategory": "tax",
+      "description": "Identifies tax-loss harvesting opportunities",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "You are a tax-aware portfolio manager.\n\nPortfolio: {{portfolio}}\nTax Situation: {{tax_situation}}\n\nTAX-LOSS HARVESTING ANALYSIS:\n\n1. LOSS IDENTIFICATION\n   - Positions with unrealized losses\n   - Short-term vs long-term\n   - Loss amounts\n   - Cost basis by lot\n\n2. HARVESTING OPPORTUNITIES\n   - Harvestable losses\n   - Tax benefit calculation\n   - Wash sale considerations\n   - Replacement securities\n\n3. STRATEGY\n   - Prioritization of harvests\n   - Timing considerations\n   - Year-end planning\n   - Carry-forward analysis\n\n4. IMPLEMENTATION\n   - Specific trades\n   - Replacement positions\n   - Holding period management\n\n5. PROJECTED BENEFIT\n   - Tax savings\n   - After-tax return impact\n   - Multi-year planning\n\nProvide specific harvesting recommendations.",
+      "variables": [
+        "portfolio",
+        "tax_situation"
+      ],
+      "lane": "portfolio",
+      "stage": "tax_management"
+    },
+    {
+      "category": "Portfolio Management",
+      "title": "Transition Management",
+      "name": "transition_management",
+      "subcategory": "execution",
+      "description": "Plans portfolio transition strategy",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "template": "Plan transition from {{current_portfolio}} to {{target_portfolio}}\n\nOptimize for: Minimizing costs, tax efficiency, market impact.",
+      "variables": [
+        "current_portfolio",
+        "target_portfolio"
+      ],
+      "lane": "portfolio",
+      "stage": "execution"
+    },
+    {
+      "category": "Research Synthesis",
+      "title": "Bull Bear Case Generator",
+      "name": "bull_bear_case_generator",
+      "subcategory": "scenario",
+      "description": "Generates bull and bear cases for investment",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are an analyst generating bull/bear scenarios.\n\nCompany: {{ticker}}\nBase Case: {{base_case}}\n\nGenerate:\n1. Bull case scenario\n   - Key assumptions\n   - Probability\n   - Price target\n2. Bear case scenario\n   - Key assumptions\n   - Probability\n   - Price target\n3. Key swing factors\n4. Monitoring triggers\n\nProvide probability-weighted expected value.",
+      "variables": [],
+      "lane": "lane_b",
+      "stage": "synthesis"
+    },
+    {
+      "category": "Research Synthesis",
+      "title": "Earnings Preview Generator",
+      "name": "earnings_preview_generator",
+      "subcategory": "earnings",
+      "description": "Generates earnings preview reports",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are an analyst preparing an earnings preview.\n\nCompany: {{ticker}}\nConsensus Estimates: {{estimates}}\nHistorical Data: {{historical}}\n\nGenerate preview covering:\n1. Key metrics to watch\n2. Consensus expectations\n3. Whisper numbers\n4. Key questions for management\n5. Potential surprises\n6. Stock reaction scenarios\n\nProvide actionable trading guidance.",
+      "variables": [],
+      "lane": "lane_b",
+      "stage": "synthesis"
+    },
+    {
+      "category": "Special Situations",
+      "title": "Activist Situation Analyzer",
+      "name": "activist_situation_analyzer",
+      "subcategory": "activism",
+      "description": "Analyzes activist investor situations",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are analyzing an activist situation.\n\nTarget: {{ticker}}\nActivist: {{activist}}\n13D Filing: {{filing_data}}\n\nAnalyze:\n1. Activist track record\n2. Campaign objectives\n3. Board/management response\n4. Likely outcomes\n5. Timeline expectations\n6. Value creation potential\n\nProvide investment recommendation.",
+      "variables": [],
+      "lane": "lane_b",
+      "stage": "special_situations"
+    },
+    {
+      "category": "Special Situations",
+      "title": "Ipo Analysis",
+      "name": "ipo_analysis",
+      "subcategory": "ipo",
+      "description": "Analyzes IPO investment opportunities",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are an IPO analyst evaluating a new issue.\n\nCompany: {{company}}\nS-1 Data: {{s1_data}}\nComparables: {{comps}}\n\nAnalyze:\n1. Business model and moat\n2. Growth trajectory\n3. Profitability path\n4. Valuation vs. comps\n5. Use of proceeds\n6. Lock-up dynamics\n\nProvide IPO investment recommendation.",
+      "variables": [],
+      "lane": "lane_b",
+      "stage": "special_situations"
+    },
+    {
+      "category": "Special Situations",
+      "title": "Spinoff Opportunity Analyzer",
+      "name": "spinoff_opportunity_analyzer",
+      "subcategory": "corporate_actions",
+      "description": "Analyzes spinoff investment opportunities",
+      "llm_provider": "A",
+      "llm_model": null,
+      "temperature": null,
+      "max_tokens": null,
+      "template": "You are a special situations analyst evaluating spinoffs.\n\nParent Company: {{parent_ticker}}\nSpinoff Details: {{spinoff_details}}\n\nAnalyze:\n1. Strategic rationale for separation\n2. Standalone valuation of spinoff\n3. Forced selling dynamics\n4. Index inclusion/exclusion impact\n5. Management incentive alignment\n6. Hidden value unlocking potential\n\nProvide investment recommendation for both parent and spinoff.",
+      "variables": [],
+      "lane": "lane_b",
+      "stage": "special_situations"
+    },
+    {
+      "category": "Thesis",
+      "title": "Contrarian Thesis Development",
+      "name": "contrarian_thesis_development",
+      "subcategory": "strategy",
+      "description": "Develops contrarian investment thesis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.4,
+      "max_tokens": 4000,
+      "template": "Develop contrarian thesis for: {{ticker}}\n\nCurrent sentiment: {{sentiment}}\n\nAnalyze:\n1. Why is sentiment so negative/positive?\n2. What is the market missing?\n3. What would change sentiment?\n4. Historical precedents\n5. Risk/reward of contrarian bet",
+      "variables": [
+        "ticker",
+        "sentiment"
+      ],
+      "lane": "lane_b",
+      "stage": "thesis_development"
+    },
+    {
+      "category": "Thesis",
+      "title": "Exit Strategy",
+      "name": "exit_strategy",
+      "subcategory": "execution",
+      "description": "Develops exit strategy for position",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Develop exit strategy for: {{ticker}}\n\nCurrent position: {{position}}\nThesis: {{thesis}}\n\nDefine:\n1. Target price exit\n2. Stop-loss levels\n3. Time-based exit\n4. Thesis invalidation exit\n5. Scaling strategy",
+      "variables": [
+        "ticker",
+        "position",
+        "thesis"
+      ],
+      "lane": "lane_b",
+      "stage": "execution"
+    },
+    {
+      "category": "Thesis",
+      "title": "Investment Memo",
+      "name": "investment_memo",
+      "subcategory": "output",
+      "description": "Creates formal investment memorandum",
+      "llm_provider": "anthropic",
+      "llm_model": "claude-3-opus",
+      "temperature": 0.3,
+      "max_tokens": 6000,
+      "template": "Create an investment memorandum for: {{ticker}}\n\nResearch: {{research}}\n\nInclude: Executive summary, business overview, investment thesis, financial analysis, valuation, risks, recommendation.\n\nFormat for investment committee presentation.",
+      "variables": [
+        "ticker",
+        "research"
+      ],
+      "lane": "lane_b",
+      "stage": "output"
+    },
+    {
+      "category": "Thesis",
+      "title": "Investment Thesis Synthesis",
+      "name": "investment_thesis_synthesis",
+      "subcategory": "synthesis",
+      "description": "Synthesizes research into coherent investment thesis",
+      "llm_provider": "anthropic",
+      "llm_model": "claude-3-opus",
+      "temperature": 0.3,
+      "max_tokens": 5000,
+      "template": "Synthesize an investment thesis for: {{ticker}}\n\nBased on research: {{research_summary}}\n\nStructure:\n1. One-sentence thesis\n2. Key thesis points (3-5)\n3. Supporting evidence\n4. Key assumptions\n5. What could go wrong\n6. Catalysts and timeline\n7. Valuation and target price\n\nWrite in assertive, sell-side style.",
+      "variables": [
+        "ticker",
+        "research_summary"
+      ],
+      "lane": "lane_b",
+      "stage": "thesis_development"
+    },
+    {
+      "category": "Thesis",
+      "title": "Peer Thesis Comparison",
+      "name": "peer_thesis_comparison",
+      "subcategory": "analysis",
+      "description": "Compares investment thesis across peer group",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "template": "Compare investment thesis for peer group: {{peers}}\n\nFor each company:\n1. Investment thesis summary\n2. Key differentiators\n3. Relative valuation\n4. Risk/reward ranking\n\nRecommend best idea in the group.",
+      "variables": [
+        "peers"
+      ],
+      "lane": "lane_b",
+      "stage": "thesis_development"
+    },
+    {
+      "category": "Thesis",
+      "title": "Pre Mortem Analysis",
+      "name": "pre_mortem_analysis",
+      "subcategory": "risk",
+      "description": "Conducts pre-mortem on investment thesis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.4,
+      "max_tokens": 4000,
+      "template": "Conduct pre-mortem analysis for investment in: {{ticker}}\n\nThesis: {{thesis}}\n\nImagine the investment failed. Analyze:\n1. What went wrong?\n2. What did we miss?\n3. What assumptions were wrong?\n4. What external factors hurt us?\n5. How could we have known?\n\nProvide probability-weighted risk assessment.",
+      "variables": [
+        "ticker",
+        "thesis"
+      ],
+      "lane": "lane_b",
+      "stage": "risk_assessment"
+    },
+    {
+      "category": "Thesis",
+      "title": "Thesis Monitoring Framework",
+      "name": "thesis_monitoring_framework",
+      "subcategory": "monitoring",
+      "description": "Creates framework for monitoring investment thesis",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Create monitoring framework for thesis: {{thesis}}\n\nCompany: {{ticker}}\n\nDefine:\n1. Key performance indicators to track\n2. Thesis confirmation signals\n3. Thesis invalidation triggers\n4. Data sources and frequency\n5. Review schedule",
+      "variables": [
+        "thesis",
+        "ticker"
+      ],
+      "lane": "lane_b",
+      "stage": "thesis_monitoring"
+    },
+    {
+      "category": "Thesis",
+      "title": "Thesis Presentation",
+      "name": "thesis_presentation",
+      "subcategory": "output",
+      "description": "Creates thesis presentation for stakeholders",
+      "llm_provider": "anthropic",
+      "llm_model": "claude-3-opus",
+      "temperature": 0.3,
+      "max_tokens": 5000,
+      "template": "Create thesis presentation for: {{ticker}}\n\nAudience: {{audience}}\nResearch: {{research}}\n\nStructure for 10-minute pitch:\n1. Hook/headline\n2. Company overview\n3. Investment thesis\n4. Key evidence\n5. Valuation\n6. Risks and mitigants\n7. Recommendation",
+      "variables": [
+        "ticker",
+        "audience",
+        "research"
+      ],
+      "lane": "lane_b",
+      "stage": "output"
+    },
+    {
+      "category": "Thesis",
+      "title": "Thesis Update",
+      "name": "thesis_update",
+      "subcategory": "monitoring",
+      "description": "Updates investment thesis based on new information",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "template": "Update investment thesis for: {{ticker}}\n\nOriginal thesis: {{original_thesis}}\nNew information: {{new_info}}\n\nEvaluate:\n1. Does new info confirm or challenge thesis?\n2. What assumptions need updating?\n3. How does fair value change?\n4. Should position size change?\n5. Updated conviction level",
+      "variables": [
+        "ticker",
+        "original_thesis",
+        "new_info"
+      ],
+      "lane": "lane_b",
+      "stage": "thesis_monitoring"
+    },
+    {
+      "category": "Thesis",
+      "title": "Variant Perception",
+      "name": "variant_perception",
+      "subcategory": "edge",
+      "description": "Identifies variant perception vs consensus",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4",
+      "temperature": 0.3,
+      "max_tokens": 3000,
+      "template": "Identify variant perception for: {{ticker}}\n\nConsensus view: {{consensus}}\n\nAnalyze:\n1. Where does our view differ from consensus?\n2. Why might we be right?\n3. What does the market not understand?\n4. What would prove us right/wrong?\n5. Time horizon for thesis to play out",
+      "variables": [
+        "ticker",
+        "consensus"
+      ],
+      "lane": "lane_b",
+      "stage": "thesis_development"
+    }
+  ]
+}
