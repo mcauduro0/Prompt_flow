@@ -1,0 +1,194 @@
+# =============================================================================
+# ARC Investment Factory - Docker Compose (Development)
+# =============================================================================
+# Local development environment with all services
+#
+# Usage:
+#   docker-compose up -d              # Start all services
+#   docker-compose up -d api web      # Start specific services
+#   docker-compose logs -f worker     # Follow worker logs
+#   docker-compose down               # Stop all services
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: arc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-arc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arc_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-arc_investment}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./packages/database/src/migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-arc} -d ${POSTGRES_DB:-arc_investment}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - arc-network
+
+  # ---------------------------------------------------------------------------
+  # Redis (for caching and job queues)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: arc-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - arc-network
+
+  # ---------------------------------------------------------------------------
+  # API Service (Express)
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: arc-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-arc}:${POSTGRES_PASSWORD:-arc_dev_password}@postgres:5432/${POSTGRES_DB:-arc_investment}
+      REDIS_URL: redis://redis:6379
+      # API Keys (from .env)
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      FMP_API_KEY: ${FMP_API_KEY}
+      POLYGON_API_KEY: ${POLYGON_API_KEY}
+      # CORS
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - arc-network
+
+  # ---------------------------------------------------------------------------
+  # Web Service (Next.js)
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: arc-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - arc-network
+
+  # ---------------------------------------------------------------------------
+  # Worker Service (Scheduler + Jobs)
+  # ---------------------------------------------------------------------------
+  worker:
+    build:
+      context: .
+      dockerfile: packages/worker/Dockerfile
+    container_name: arc-worker
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      TZ: America/Sao_Paulo
+      DATABASE_URL: postgresql://${POSTGRES_USER:-arc}:${POSTGRES_PASSWORD:-arc_dev_password}@postgres:5432/${POSTGRES_DB:-arc_investment}
+      REDIS_URL: redis://redis:6379
+      # API Keys (from .env)
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      FMP_API_KEY: ${FMP_API_KEY}
+      POLYGON_API_KEY: ${POLYGON_API_KEY}
+      # Worker Config
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
+      LANE_A_ENABLED: ${LANE_A_ENABLED:-true}
+      LANE_B_ENABLED: ${LANE_B_ENABLED:-true}
+    volumes:
+      - worker_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - arc-network
+
+  # ---------------------------------------------------------------------------
+  # Nginx Reverse Proxy (Production-like)
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:alpine
+    container_name: arc-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - api
+      - web
+    networks:
+      - arc-network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  worker_data:
+    driver: local
+  nginx_logs:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  arc-network:
+    driver: bridge

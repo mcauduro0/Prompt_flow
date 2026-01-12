@@ -1,0 +1,191 @@
+# =============================================================================
+# ARC Investment Factory - Prometheus Alert Rules
+# =============================================================================
+
+groups:
+  # ---------------------------------------------------------------------------
+  # System Alerts
+  # ---------------------------------------------------------------------------
+  - name: system
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for more than 5 minutes on {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 85% for more than 5 minutes on {{ $labels.instance }}"
+
+      - alert: DiskSpaceLow
+        expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is above 85% on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+
+      - alert: DiskSpaceCritical
+        expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100 > 95
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical disk space"
+          description: "Disk usage is above 95% on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+
+  # ---------------------------------------------------------------------------
+  # Container Alerts
+  # ---------------------------------------------------------------------------
+  - name: containers
+    rules:
+      - alert: ContainerDown
+        expr: absent(container_last_seen{name=~"arc-.*"})
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container is down"
+          description: "Container {{ $labels.name }} is not running"
+
+      - alert: ContainerHighCPU
+        expr: sum(rate(container_cpu_usage_seconds_total{name=~"arc-.*"}[5m])) by (name) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is above 80%"
+
+      - alert: ContainerHighMemory
+        expr: (container_memory_usage_bytes{name=~"arc-.*"} / container_spec_memory_limit_bytes{name=~"arc-.*"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high memory usage"
+          description: "Container {{ $labels.name }} memory usage is above 85%"
+
+      - alert: ContainerRestarting
+        expr: increase(container_restart_count{name=~"arc-.*"}[1h]) > 3
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container restarting frequently"
+          description: "Container {{ $labels.name }} has restarted more than 3 times in the last hour"
+
+  # ---------------------------------------------------------------------------
+  # Application Alerts
+  # ---------------------------------------------------------------------------
+  - name: application
+    rules:
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="arc-api"}[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API high latency"
+          description: "95th percentile API latency is above 2 seconds"
+
+      - alert: APIHighErrorRate
+        expr: sum(rate(http_requests_total{job="arc-api",status=~"5.."}[5m])) / sum(rate(http_requests_total{job="arc-api"}[5m])) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API high error rate"
+          description: "API error rate is above 5%"
+
+      - alert: WorkerJobFailed
+        expr: increase(arc_worker_job_failures_total[1h]) > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Worker job failures"
+          description: "More than 5 worker job failures in the last hour"
+
+      - alert: DailyDiscoveryNotRun
+        expr: time() - arc_last_daily_discovery_run_timestamp > 86400 + 3600
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Daily discovery not run"
+          description: "Daily discovery has not run in over 25 hours"
+
+      - alert: LaneBNotRun
+        expr: time() - arc_last_lane_b_run_timestamp > 86400 + 3600
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Lane B not run"
+          description: "Lane B has not run in over 25 hours"
+
+  # ---------------------------------------------------------------------------
+  # Database Alerts
+  # ---------------------------------------------------------------------------
+  - name: database
+    rules:
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database is not responding"
+
+      - alert: PostgresHighConnections
+        expr: sum(pg_stat_activity_count) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL high connections"
+          description: "PostgreSQL has more than 80 active connections"
+
+      - alert: PostgresSlowQueries
+        expr: rate(pg_stat_statements_seconds_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL slow queries"
+          description: "PostgreSQL is experiencing slow queries"
+
+  # ---------------------------------------------------------------------------
+  # Redis Alerts
+  # ---------------------------------------------------------------------------
+  - name: redis
+    rules:
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis is not responding"
+
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is above 85%"

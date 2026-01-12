@@ -1,0 +1,39 @@
+# =============================================================================
+# ARC Investment Factory - Terraform Variables
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values
+# =============================================================================
+
+# Digital Ocean API Token (required)
+# Get from: https://cloud.digitalocean.com/account/api/tokens
+do_token = "dop_v1_your_token_here"
+
+# Region (default: nyc3)
+# Options: nyc1, nyc3, sfo2, sfo3, ams3, sgp1, lon1, fra1, tor1, blr1
+region = "nyc3"
+
+# Domain name for the application
+domain_name = "arc-investment.com"
+
+# Droplet size (default: s-4vcpu-8gb = $48/month)
+# Options:
+#   s-1vcpu-1gb    = $6/month   (1 vCPU, 1GB RAM)
+#   s-1vcpu-2gb    = $12/month  (1 vCPU, 2GB RAM)
+#   s-2vcpu-2gb    = $18/month  (2 vCPU, 2GB RAM)
+#   s-2vcpu-4gb    = $24/month  (2 vCPU, 4GB RAM)
+#   s-4vcpu-8gb    = $48/month  (4 vCPU, 8GB RAM) - RECOMMENDED
+#   s-8vcpu-16gb   = $96/month  (8 vCPU, 16GB RAM)
+droplet_size = "s-4vcpu-8gb"
+
+# Database size (default: db-s-1vcpu-1gb = $15/month)
+# Options:
+#   db-s-1vcpu-1gb   = $15/month  (1 vCPU, 1GB RAM)
+#   db-s-1vcpu-2gb   = $30/month  (1 vCPU, 2GB RAM)
+#   db-s-2vcpu-4gb   = $60/month  (2 vCPU, 4GB RAM)
+db_size = "db-s-1vcpu-1gb"
+
+# Environment name
+environment = "production"
+
+# SSH key fingerprints (optional - will create new key if empty)
+ssh_keys = []
