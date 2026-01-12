@@ -104,6 +104,47 @@ runsRouter.post('/trigger/:jobName', async (req: Request, res: Response) => {
   }
 });
 
+// Get system warm-up status
+runsRouter.get('/warmup-status', async (req: Request, res: Response) => {
+  try {
+    // Get last Lane A run
+    const lastLaneA = await runsRepository.getLatestByType('daily_discovery');
+    
+    // Get last Lane B run (successful)
+    const laneBRuns = await runsRepository.getRecentByType('lane_b_research', 10);
+    const lastLaneB = laneBRuns.find((r: any) => r.status === 'completed');
+    
+    // Get last QA run
+    const lastQA = await runsRepository.getLatestByType('weekly_qa');
+    
+    res.json({
+      laneA: lastLaneA ? {
+        runId: lastLaneA.runId,
+        status: lastLaneA.status,
+        runDate: lastLaneA.runDate,
+        completedAt: lastLaneA.completedAt,
+        summary: lastLaneA.payload,
+      } : null,
+      laneB: lastLaneB ? {
+        runId: lastLaneB.runId,
+        status: lastLaneB.status,
+        runDate: lastLaneB.runDate,
+        completedAt: lastLaneB.completedAt,
+        summary: lastLaneB.payload,
+      } : null,
+      qa: lastQA ? {
+        runId: lastQA.runId,
+        status: lastQA.status,
+        runDate: lastQA.runDate,
+        completedAt: lastQA.completedAt,
+        summary: lastQA.payload,
+      } : null,
+    });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
 // Get scheduled jobs info
 runsRouter.get('/scheduled/list', async (req: Request, res: Response) => {
   try {
