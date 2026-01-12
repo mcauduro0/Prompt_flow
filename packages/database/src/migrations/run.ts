@@ -46,10 +46,12 @@ async function runMigrations() {
       console.log(`Running migration: ${file}`);
       const sqlContent = readFileSync(join(__dirname, file), 'utf-8');
       
-      // Execute migration in a transaction
-      await sql.begin(async (tx) => {
+      // Execute migration in a transaction using postgres.js API
+      await sql.begin(async (tx: postgres.TransactionSql) => {
+        // Use unsafe for raw SQL content
         await tx.unsafe(sqlContent);
-        await tx`INSERT INTO _migrations (name) VALUES (${file})`;
+        // Use tagged template for parameterized query
+        await sql`INSERT INTO _migrations (name) VALUES (${file})`;
       });
 
       console.log(`Completed: ${file}`);
