@@ -25,6 +25,29 @@ export const runsRepository = {
   },
 
   /**
+   * Get all runs (for UI)
+   */
+  async getAll(limit = 100): Promise<Run[]> {
+    return db
+      .select()
+      .from(runs)
+      .orderBy(desc(runs.runDate))
+      .limit(limit);
+  },
+
+  /**
+   * Get runs by type (alias for getRecentByType for UI compatibility)
+   */
+  async getByType(runType: string, limit = 10): Promise<Run[]> {
+    return db
+      .select()
+      .from(runs)
+      .where(eq(runs.runType, runType))
+      .orderBy(desc(runs.runDate))
+      .limit(limit);
+  },
+
+  /**
    * Update run status
    */
   async updateStatus(
@@ -45,12 +68,24 @@ export const runsRepository = {
   },
 
   /**
-   * Update run payload
+   * Update run payload/summary
    */
   async updatePayload(runId: string, payload: unknown): Promise<Run | undefined> {
     const [result] = await db
       .update(runs)
       .set({ payload })
+      .where(eq(runs.runId, runId))
+      .returning();
+    return result;
+  },
+
+  /**
+   * Update run summary (for QA reports)
+   */
+  async updateSummary(runId: string, summary: unknown): Promise<Run | undefined> {
+    const [result] = await db
+      .update(runs)
+      .set({ payload: summary })
       .where(eq(runs.runId, runId))
       .returning();
     return result;
