@@ -14,7 +14,18 @@ export default function ResearchDetailPage() {
   const [packet, setPacket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { const fetchPacket = async () => { try { const res = await fetch(`/api/research/${params.id}`); if (res.ok) { const data = await res.json(); setPacket(data); } } catch (err) { console.error(err); } finally { setLoading(false); } }; if (params.id) fetchPacket(); }, [params.id]);
+  const packetId = params?.id as string | undefined;
+
+  useEffect(() => { 
+    const fetchPacket = async () => { 
+      if (!packetId) return;
+      try { 
+        const res = await fetch(`/api/research/${packetId}`); 
+        if (res.ok) { const data = await res.json(); setPacket(data); } 
+      } catch (err) { console.error(err); } finally { setLoading(false); } 
+    }; 
+    if (packetId) fetchPacket(); 
+  }, [packetId]);
 
   if (loading) return <AppLayout><div className="flex items-center justify-center min-h-screen"><div className="animate-pulse text-muted-foreground">Loading...</div></div></AppLayout>;
   if (!packet) return <AppLayout><div className="flex items-center justify-center min-h-screen text-muted-foreground">Packet not found</div></AppLayout>;

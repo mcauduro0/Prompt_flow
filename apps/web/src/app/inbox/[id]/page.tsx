@@ -13,18 +13,27 @@ export default function IdeaDetailPage() {
   const [idea, setIdea] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const ideaId = params?.id as string | undefined;
+
   useEffect(() => {
     const fetchIdea = async () => {
+      if (!ideaId) return;
       try {
-        const res = await fetch(`/api/ideas/${params.id}`);
+        const res = await fetch(`/api/ideas/${ideaId}`);
         if (res.ok) { const data = await res.json(); setIdea(data); }
       } catch (err) { console.error(err); } finally { setLoading(false); }
     };
-    if (params.id) fetchIdea();
-  }, [params.id]);
+    if (ideaId) fetchIdea();
+  }, [ideaId]);
 
-  const handlePromote = async () => { try { await fetch(`/api/ideas/${params.id}/promote`, { method: "POST" }); router.push("/inbox"); } catch (err) { console.error(err); } };
-  const handleReject = async () => { try { await fetch(`/api/ideas/${params.id}/reject`, { method: "POST" }); router.push("/inbox"); } catch (err) { console.error(err); } };
+  const handlePromote = async () => { 
+    if (!ideaId) return;
+    try { await fetch(`/api/ideas/${ideaId}/promote`, { method: "POST" }); router.push("/inbox"); } catch (err) { console.error(err); } 
+  };
+  const handleReject = async () => { 
+    if (!ideaId) return;
+    try { await fetch(`/api/ideas/${ideaId}/reject`, { method: "POST" }); router.push("/inbox"); } catch (err) { console.error(err); } 
+  };
 
   if (loading) return <AppLayout><div className="flex items-center justify-center min-h-screen"><div className="animate-pulse text-muted-foreground">Loading...</div></div></AppLayout>;
   if (!idea) return <AppLayout><div className="flex items-center justify-center min-h-screen text-muted-foreground">Idea not found</div></AppLayout>;

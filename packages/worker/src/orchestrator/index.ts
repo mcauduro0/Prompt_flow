@@ -1,10 +1,4 @@
-/**
- * ARC Investment Factory - Orchestrator
- * DAG execution engine for Lane A and Lane B workflows
- */
-
-export * from './dag-runner.js';
-export * from './daily-discovery.js';
-export * from './daily-discovery-v2.js';
-export * from './lane-b-runner.js';
-export * from './ic-bundle.js';
+export { runDailyDiscovery, type DiscoveryConfig, type DiscoveryResult } from './daily-discovery.js';
+export { runLaneB, type LaneBConfig, type LaneBResult } from './lane-b-runner.js';
+export { generateICBundle, type ICBundleConfig, type ICBundleResult } from './ic-bundle.js';
+export { createDAGRunner, type DAGContext, type DAGNode, type DAGRunner } from './dag-runner.js';
