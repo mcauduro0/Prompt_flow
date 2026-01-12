@@ -3,11 +3,41 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { researchPacketsRepository, evidenceRepository } from '@arc/database';
+import { researchPacketsRepository, evidenceRepository, runsRepository } from '@arc/database';
+import { randomUUID } from 'crypto';
 
 export const researchRouter: Router = Router();
 
 // IMPORTANT: Specific routes MUST come before parameterized routes
+
+// Trigger Lane A discovery manually
+researchRouter.post('/trigger-lane-a', async (req: Request, res: Response) => {
+  try {
+    const dryRun = req.query.dryRun === 'true';
+    const maxIdeas = parseInt(req.query.maxIdeas as string) || 10;
+    
+    // Create a run record to track this manual trigger
+    const runId = randomUUID();
+    await runsRepository.create({
+      runId,
+      runType: 'manual_lane_a_trigger',
+      runDate: new Date(),
+      status: 'running',
+      payload: { dryRun, maxIdeas, triggeredAt: new Date().toISOString() },
+    });
+    
+    res.json({ 
+      message: 'Lane A discovery trigger recorded',
+      runId,
+      dryRun,
+      maxIdeas,
+      status: 'pending',
+      note: 'The worker will pick this up on next scheduled run, or you can restart the worker to process immediately'
+    });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
 
 // Get recent packets for IC bundle
 researchRouter.get('/packets/recent', async (req: Request, res: Response) => {
