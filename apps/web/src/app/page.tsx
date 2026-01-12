@@ -1,74 +1,97 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Activity, Brain, Shield, Search, FileText, BarChart3 } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
-
-const features = [
-  { icon: Brain, title: "Discovery", description: "Systematic idea generation with novelty scoring and style classification." },
-  { icon: Shield, title: "Governance", description: "Five-gate quality control before ideas advance to research." },
-  { icon: FileText, title: "Research", description: "Seven specialized agents producing IC-grade research packets." },
-  { icon: BarChart3, title: "QA Reports", description: "Weekly governance reporting with evidence coverage metrics." },
-  { icon: Search, title: "Memory", description: "Rejection shadows and idea reappearance tracking." },
-  { icon: Activity, title: "Status", description: "Pipeline state and scheduled job monitoring." }
-];
+import { ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Subtle grid background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 flex justify-between px-8 lg:px-16">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="w-px h-full bg-border/30" style={{ opacity: i === 0 || i === 5 ? 0.5 : 0.2 }} />
+            <div 
+              key={i} 
+              className="w-px h-full bg-border/20" 
+              style={{ opacity: i === 0 || i === 5 ? 0.4 : 0.15 }} 
+            />
           ))}
         </div>
       </div>
 
-      <header className="relative z-10 flex items-center justify-between px-8 py-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-accent/20 flex items-center justify-center">
-            <span className="text-accent font-semibold text-sm">A</span>
+      {/* Main content - centered vertically */}
+      <main className="relative z-10 min-h-screen flex flex-col items-center justify-center px-8">
+        <div className="max-w-lg w-full text-center animate-fade-in">
+          {/* Logo mark */}
+          <div className="mb-8">
+            <div 
+              className={cn(
+                "inline-flex items-center justify-center",
+                "w-12 h-12 rounded-md",
+                "bg-accent/10 border border-accent/20"
+              )}
+            >
+              <span className="text-xl font-medium text-accent tracking-tight">A</span>
+            </div>
           </div>
-          <span className="text-lg font-medium tracking-tight">ARC Investment Factory</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <ThemeToggle />
-          <Link href="/status" className="flex items-center gap-2 px-4 py-2 bg-secondary text-foreground border border-border rounded-md hover:bg-secondary/80 transition-colors">
-            Enter <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </header>
 
-      <main className="relative z-10 px-8 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-medium tracking-tight mb-6">
+          {/* Title */}
+          <h1 className="text-3xl font-medium text-foreground tracking-tight mb-4">
             ARC Investment Factory
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12">
-            Idea discovery, governance gates, and research automation for investment committee workflows.
+
+          {/* Subtitle - neutral, no marketing */}
+          <p className="text-muted-foreground mb-10 leading-relaxed">
+            Idea discovery, governance gates, and research automation.
           </p>
 
-          <div className="grid grid-cols-3 gap-8 max-w-xl mx-auto mb-20">
-            <div className="text-center"><div className="text-3xl font-medium">120</div><div className="text-sm text-muted-foreground">Ideas/Day</div></div>
-            <div className="text-center"><div className="text-3xl font-medium">5</div><div className="text-sm text-muted-foreground">Gates</div></div>
-            <div className="text-center"><div className="text-3xl font-medium">7</div><div className="text-sm text-muted-foreground">Agents</div></div>
-          </div>
+          {/* Enter button */}
+          <Link 
+            href="/status"
+            className={cn(
+              "inline-flex items-center gap-2",
+              "px-6 py-3 rounded-md",
+              "bg-accent text-accent-foreground",
+              "hover:bg-accent/90 transition-calm",
+              "text-sm font-medium"
+            )}
+          >
+            Enter
+            <ArrowRight className="w-4 h-4" />
+          </Link>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
-            {features.map((feature, i) => (
-              <div key={i} className="p-6 rounded-lg bg-card border border-border/50 hover:border-border transition-colors">
-                <feature.icon className="w-8 h-8 text-muted-foreground mb-4" />
-                <h3 className="font-medium mb-2">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">{feature.description}</p>
+          {/* Stats - subtle, not prominent */}
+          <div 
+            className="mt-16 pt-8 border-t border-border/30 animate-fade-in"
+            style={{ animationDelay: '150ms' }}
+          >
+            <div className="flex items-center justify-center gap-10 text-sm text-muted-foreground/60">
+              <div className="text-center">
+                <span className="block text-foreground/70 font-medium">120</span>
+                <span className="text-annotation">ideas/day</span>
               </div>
-            ))}
+              <div className="w-px h-8 bg-border/30" />
+              <div className="text-center">
+                <span className="block text-foreground/70 font-medium">5</span>
+                <span className="text-annotation">gates</span>
+              </div>
+              <div className="w-px h-8 bg-border/30" />
+              <div className="text-center">
+                <span className="block text-foreground/70 font-medium">7</span>
+                <span className="text-annotation">agents</span>
+              </div>
+            </div>
           </div>
         </div>
       </main>
 
-      <footer className="relative z-10 px-8 py-6 border-t border-border/50">
-        <div className="max-w-4xl mx-auto flex items-center justify-between text-sm text-muted-foreground">
-          <span>ARC Investment Factory v1.0</span>
+      {/* Footer - minimal */}
+      <footer className="absolute bottom-0 left-0 right-0 z-10 px-8 py-6">
+        <div className="max-w-lg mx-auto text-center">
+          <p className="text-annotation text-muted-foreground/40">
+            Disciplined process.
+          </p>
         </div>
       </footer>
     </div>

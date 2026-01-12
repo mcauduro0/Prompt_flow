@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { CheckCircle, AlertCircle, XCircle, Download, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sectionLabels: Record<string, string> = {
@@ -37,175 +37,178 @@ export default function QAPage() {
     fetchReports();
   }, []);
 
-  const StatusIcon = ({ status }: { status: string }) => {
-    if (status === "pass") return <CheckCircle className="w-4 h-4 text-success" />;
-    if (status === "warn") return <AlertCircle className="w-4 h-4 text-warning" />;
-    return <XCircle className="w-4 h-4 text-fail" />;
-  };
-
   const latestReport = reports[0];
 
   return (
     <AppLayout>
       <div className="min-h-screen flex flex-col">
-        <header className="page-header">
-          <h1 className="page-header-title">QA Report</h1>
-          <p className="page-header-subtitle">Weekly governance and compliance review</p>
+        {/* Header */}
+        <header className="border-b border-border">
+          <div className="px-8 py-6">
+            <div className="flex items-baseline gap-3">
+              <h1 className="text-2xl font-medium text-foreground tracking-tight">
+                QA Report
+              </h1>
+              {latestReport && (
+                <span className={cn(
+                  "text-sm font-medium",
+                  latestReport.status === "pass" && "text-success",
+                  latestReport.status === "warn" && "text-warning",
+                  latestReport.status === "fail" && "text-fail"
+                )}>
+                  {latestReport.status === "pass" ? "Pass" : 
+                   latestReport.status === "warn" ? "Warn" : "Fail"}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Weekly governance and compliance review
+            </p>
+          </div>
         </header>
-        <main className="flex-1 p-8">
-          <div className="content-area">
+
+        {/* Main content */}
+        <main className="flex-1 py-10">
+          <div className="max-w-2xl mx-auto px-8">
             {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-muted-foreground">Loading reports...</div>
+              <div className="text-center py-16">
+                <p className="text-muted-foreground animate-pulse-calm">Loading reports...</p>
               </div>
             ) : !latestReport ? (
-              <div className="text-center py-20 text-muted-foreground">
-                <p>No QA reports recorded.</p>
-                <p className="text-sm mt-2">Reports are generated every Friday at 18:00.</p>
+              <div className="text-center py-16 animate-fade-in">
+                <p className="text-muted-foreground">No QA reports recorded.</p>
+                <p className="text-sm text-muted-foreground/60 mt-2">
+                  Reports are generated every Friday at 18:00.
+                </p>
               </div>
             ) : (
               <div className="space-y-8">
-                {/* Current Report Summary */}
-                <section className="governance-card">
-                  <div className="flex items-center justify-between mb-4">
+                {/* Overall Status Card */}
+                <div 
+                  className={cn(
+                    "p-6 rounded-md bg-card border animate-fade-in",
+                    latestReport.status === "pass" && "border-success/30",
+                    latestReport.status === "warn" && "border-warning/30",
+                    latestReport.status === "fail" && "border-fail/30"
+                  )}
+                >
+                  <div className="flex items-start justify-between">
                     <div>
-                      <h2 className="text-section-title">Current Report</h2>
-                      <p className="text-sm text-muted-foreground">
-                        Week of {new Date(latestReport.week_start).toLocaleDateString()}
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Week of {new Date(latestReport.week_start).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric"
+                        })}
                       </p>
-                    </div>
-                    <div className="text-right">
-                      <div className={cn(
-                        "text-3xl font-medium",
-                        latestReport.overall_score >= 80 ? "text-success" :
-                        latestReport.overall_score >= 60 ? "text-warning" : "text-fail"
-                      )}>
-                        {latestReport.overall_score}/100
-                      </div>
-                      <div className={cn(
-                        "text-sm uppercase",
-                        latestReport.status === "pass" ? "text-success" :
-                        latestReport.status === "warn" ? "text-warning" : "text-fail"
-                      )}>
-                        {latestReport.status}
+                      <div className="flex items-baseline gap-3">
+                        <span className={cn(
+                          "text-4xl font-medium tracking-tight",
+                          latestReport.overall_score >= 80 ? "text-foreground" :
+                          latestReport.overall_score >= 60 ? "text-warning" : "text-fail"
+                        )}>
+                          {latestReport.overall_score}
+                        </span>
+                        <span className="text-muted-foreground/50">/100</span>
                       </div>
                     </div>
-                  </div>
-                  <button
-                    onClick={() => window.open(`/api/qa/${latestReport.id}/json`, "_blank")}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-secondary transition-colors"
-                  >
-                    <Download className="w-4 h-4" /> Download JSON
-                  </button>
-                </section>
-
-                {/* Section Breakdown */}
-                <section className="space-y-4">
-                  <h2 className="text-section-title">Section Breakdown</h2>
-                  {latestReport.sections?.map((section: any) => (
-                    <div
-                      key={section.id}
+                    <button
+                      onClick={() => window.open(`/api/qa/${latestReport.id}/json`, "_blank")}
                       className={cn(
-                        "governance-card",
-                        section.status === "fail" && "governance-card-fail",
-                        section.status === "warn" && "governance-card-warn"
+                        "flex items-center gap-2 px-3 py-1.5 text-sm rounded-md",
+                        "text-muted-foreground hover:text-foreground",
+                        "hover:bg-secondary/50 transition-calm"
                       )}
                     >
-                      <button
-                        onClick={() => setExpanded(expanded === section.id ? null : section.id)}
-                        className="w-full flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-3">
-                          <StatusIcon status={section.status} />
-                          <span className="font-medium">
-                            Section {section.id}: {sectionLabels[section.id] || section.title}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm text-muted-foreground">{section.score}/100</span>
-                          {expanded === section.id ? (
-                            <ChevronUp className="w-4 h-4" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4" />
-                          )}
-                        </div>
-                      </button>
-                      {expanded === section.id && (
-                        <div className="mt-4 pt-4 border-t border-border space-y-3">
-                          {section.checks?.map((check: any, i: number) => (
-                            <div key={i} className="flex items-start gap-3">
-                              <StatusIcon status={check.status} />
-                              <div className="flex-1">
-                                <div className="text-sm font-medium">{check.id}: {check.name}</div>
-                                <div className="text-xs text-muted-foreground">{check.detail}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                      <Download className="w-3.5 h-3.5" />
+                      Export
+                    </button>
+                  </div>
+                </div>
+
+                {/* Section Breakdown */}
+                <div className="space-y-3">
+                  <h2 className="text-sm font-medium text-muted-foreground mb-4">
+                    Section Breakdown
+                  </h2>
+                  
+                  {latestReport.sections?.map((section: any, index: number) => (
+                    <SectionCard
+                      key={section.id}
+                      section={section}
+                      index={index}
+                      expanded={expanded === section.id}
+                      onToggle={() => setExpanded(expanded === section.id ? null : section.id)}
+                    />
                   ))}
-                </section>
+                </div>
 
                 {/* Drift Alarms */}
                 {latestReport.drift_alarms?.length > 0 && (
-                  <section className="governance-card governance-card-fail">
-                    <h2 className="text-section-title mb-4">Drift Alarms</h2>
-                    <div className="space-y-3">
+                  <div 
+                    className="p-6 rounded-md bg-card border-l-2 border-fail animate-fade-in"
+                    style={{ animationDelay: '300ms' }}
+                  >
+                    <h2 className="text-sm font-medium text-foreground mb-4">Drift Alarms</h2>
+                    <div className="space-y-4">
                       {latestReport.drift_alarms.map((alarm: any, i: number) => (
                         <div key={i} className="flex items-start gap-3">
-                          <XCircle className="w-4 h-4 text-fail mt-0.5" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-fail mt-2 flex-shrink-0" />
                           <div>
-                            <div className="font-medium text-sm">{alarm.name}</div>
-                            <div className="text-xs text-muted-foreground">{alarm.detail}</div>
+                            <p className="text-sm text-foreground">{alarm.name}</p>
+                            <p className="text-annotation text-muted-foreground mt-0.5">{alarm.detail}</p>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </section>
+                  </div>
                 )}
 
                 {/* Previous Reports */}
                 {reports.length > 1 && (
-                  <section>
-                    <h2 className="text-section-title mb-4">Previous Reports</h2>
-                    <div className="governance-card">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="text-left text-muted-foreground border-b border-border">
-                            <th className="pb-3 font-medium">Week</th>
-                            <th className="pb-3 font-medium">Score</th>
-                            <th className="pb-3 font-medium">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {reports.slice(1, 8).map((report, idx) => (
-                            <tr key={report.id} className={idx < reports.slice(1, 8).length - 1 ? "border-b border-border/50" : ""}>
-                              <td className="py-3">{new Date(report.week_start).toLocaleDateString()}</td>
-                              <td className={cn(
-                                "py-3 font-medium",
-                                report.overall_score >= 80 ? "text-success" :
+                  <div className="animate-fade-in" style={{ animationDelay: '375ms' }}>
+                    <h2 className="text-sm font-medium text-muted-foreground mb-4">
+                      Previous Reports
+                    </h2>
+                    <div className="p-6 rounded-md bg-card border border-border/60">
+                      <div className="space-y-3">
+                        {reports.slice(1, 6).map((report, idx) => (
+                          <div 
+                            key={report.id}
+                            className={cn(
+                              "flex items-center justify-between py-2",
+                              idx < Math.min(reports.length - 2, 4) && "border-b border-border/30"
+                            )}
+                          >
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(report.week_start).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric"
+                              })}
+                            </span>
+                            <div className="flex items-center gap-4">
+                              <span className={cn(
+                                "text-sm font-medium",
+                                report.overall_score >= 80 ? "text-foreground" :
                                 report.overall_score >= 60 ? "text-warning" : "text-fail"
                               )}>
-                                {report.overall_score}/100
-                              </td>
-                              <td className="py-3">
-                                <div className="flex items-center gap-2">
-                                  <StatusIcon status={report.status} />
-                                  <span className={cn(
-                                    report.status === "pass" ? "text-success" :
-                                    report.status === "warn" ? "text-warning" : "text-fail"
-                                  )}>
-                                    {report.status}
-                                  </span>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                                {report.overall_score}
+                              </span>
+                              <span className={cn(
+                                "text-sm",
+                                report.status === "pass" && "text-success",
+                                report.status === "warn" && "text-warning",
+                                report.status === "fail" && "text-fail"
+                              )}>
+                                {report.status === "pass" ? "Pass" : 
+                                 report.status === "warn" ? "Warn" : "Fail"}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </section>
+                  </div>
                 )}
               </div>
             )}
@@ -213,5 +216,77 @@ export default function QAPage() {
         </main>
       </div>
     </AppLayout>
+  );
+}
+
+interface SectionCardProps {
+  section: any;
+  index: number;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+function SectionCard({ section, index, expanded, onToggle }: SectionCardProps) {
+  return (
+    <div
+      className={cn(
+        "rounded-md bg-card border border-border/60 overflow-hidden animate-fade-in transition-calm",
+        section.status === "fail" && "border-l-2 border-l-fail",
+        section.status === "warn" && "border-l-2 border-l-warning/50"
+      )}
+      style={{ animationDelay: `${(index + 1) * 75}ms` }}
+    >
+      <button
+        onClick={onToggle}
+        className="w-full p-5 flex items-center justify-between hover:bg-secondary/20 transition-calm"
+      >
+        <div className="flex items-center gap-3">
+          <span className={cn(
+            "w-2 h-2 rounded-full",
+            section.status === "pass" && "bg-success",
+            section.status === "warn" && "bg-warning",
+            section.status === "fail" && "bg-fail"
+          )} />
+          <span className="text-sm font-medium text-foreground">
+            {sectionLabels[section.id] || section.title}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">
+            {section.score}
+          </span>
+          {expanded ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          )}
+        </div>
+      </button>
+
+      {expanded && section.checks && (
+        <div className="px-5 pb-5 pt-2 border-t border-border/30 animate-fade-in">
+          <div className="space-y-3">
+            {section.checks.map((check: any, i: number) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className={cn(
+                  "w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0",
+                  check.status === "pass" && "bg-success",
+                  check.status === "warn" && "bg-warning",
+                  check.status === "fail" && "bg-fail"
+                )} />
+                <div>
+                  <p className="text-sm text-foreground/90">
+                    {check.id}: {check.name}
+                  </p>
+                  <p className="text-annotation text-muted-foreground/70 mt-0.5">
+                    {check.detail}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

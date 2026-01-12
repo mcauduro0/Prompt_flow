@@ -2,119 +2,509 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ARC Investment Factory — Institutional Design System */
+/* ARC Investment Factory — Institutional Design System
+   Typography-First, Premium Reading Environment
+   For 30-60 minute focused reading sessions
+   All colors in HSL format */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,350;14..32,400;14..32,450;14..32,500&display=swap');
 
 @layer base {
   :root {
+    /* Core surfaces - Soft, warm off-white for light mode */
     --background: 40 20% 98%;
     --foreground: 220 20% 14%;
+    
+    /* Card surfaces - Subtle warmth */
     --card: 40 25% 99%;
     --card-foreground: 220 20% 14%;
+    
+    /* Popover */
     --popover: 40 25% 99%;
     --popover-foreground: 220 20% 14%;
+    
+    /* Primary - Deep, confident charcoal */
     --primary: 220 20% 14%;
     --primary-foreground: 40 20% 98%;
+    
+    /* Secondary surfaces - Warm neutral */
     --secondary: 40 15% 94%;
     --secondary-foreground: 220 15% 25%;
+    
+    /* Muted elements - Receding, quiet */
     --muted: 40 10% 91%;
     --muted-foreground: 220 8% 46%;
+    
+    /* Accent - Restrained teal, used sparingly */
     --accent: 175 30% 42%;
     --accent-foreground: 0 0% 100%;
+    
+    /* Semantic states - Serious, not alarming */
     --destructive: 0 40% 42%;
     --destructive-foreground: 0 0% 100%;
+    
+    /* System states */
     --success: 158 30% 38%;
     --success-foreground: 0 0% 100%;
     --warning: 38 55% 48%;
     --warning-foreground: 38 80% 12%;
     --fail: 0 40% 42%;
     --fail-foreground: 0 0% 100%;
+    
+    /* Borders - Almost invisible structure */
     --border: 40 15% 88%;
     --input: 40 15% 88%;
     --ring: 175 30% 42%;
+    
+    /* Radius - Subtle, institutional */
     --radius: 0.375rem;
+    
+    /* Sidebar */
     --sidebar-background: 40 20% 97%;
     --sidebar-foreground: 220 10% 45%;
+    --sidebar-primary: 220 20% 14%;
+    --sidebar-primary-foreground: 40 20% 98%;
+    --sidebar-accent: 175 30% 42%;
+    --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 40 15% 90%;
-    --space-1: 0.25rem;
-    --space-2: 0.5rem;
-    --space-3: 0.75rem;
-    --space-4: 1rem;
-    --space-5: 1.5rem;
-    --space-6: 2rem;
-    --space-7: 2.5rem;
-    --space-8: 3rem;
-    --space-10: 4rem;
-    --space-12: 5rem;
+    --sidebar-ring: 175 30% 42%;
+    
+    /* Typography tokens - Humanist, readable */
+    --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+    
+    /* Spacing scale - Mathematical rhythm (based on 4px) */
+    --space-1: 0.25rem;   /* 4px - Micro */
+    --space-2: 0.5rem;    /* 8px - Tight */
+    --space-3: 0.75rem;   /* 12px - Compact */
+    --space-4: 1rem;      /* 16px - Base */
+    --space-5: 1.5rem;    /* 24px - Comfortable */
+    --space-6: 2rem;      /* 32px - Generous */
+    --space-7: 2.5rem;    /* 40px - Spacious */
+    --space-8: 3rem;      /* 48px - Open */
+    --space-10: 4rem;     /* 64px - Section */
+    --space-12: 5rem;     /* 80px - Major */
+    
+    /* Transitions - Deliberate, calm */
     --transition-deliberate: 600ms cubic-bezier(0.25, 0.1, 0.25, 1);
     --transition-calm: 400ms cubic-bezier(0.25, 0.1, 0.25, 1);
     --transition-base: 250ms cubic-bezier(0.25, 0.1, 0.25, 1);
   }
 
   .dark {
+    /* Core surfaces - Deep, premium charcoal */
     --background: 225 18% 7%;
     --foreground: 40 10% 88%;
+    
+    /* Card surfaces - Slightly elevated, quiet */
     --card: 225 16% 10%;
     --card-foreground: 40 10% 88%;
+    
+    /* Popover */
     --popover: 225 16% 11%;
     --popover-foreground: 40 10% 88%;
+    
+    /* Primary - Light for contrast */
     --primary: 40 10% 88%;
     --primary-foreground: 225 18% 8%;
+    
+    /* Secondary surfaces */
     --secondary: 225 14% 14%;
     --secondary-foreground: 40 8% 72%;
+    
+    /* Muted elements */
     --muted: 225 12% 12%;
     --muted-foreground: 220 8% 52%;
+    
+    /* Accent - Muted teal, restrained */
     --accent: 175 35% 48%;
     --accent-foreground: 225 18% 7%;
+    
+    /* Semantic states */
     --destructive: 0 45% 50%;
     --destructive-foreground: 0 0% 100%;
+    
+    /* System states */
     --success: 158 35% 42%;
     --success-foreground: 0 0% 100%;
     --warning: 40 55% 52%;
     --warning-foreground: 40 90% 10%;
     --fail: 0 45% 48%;
     --fail-foreground: 0 0% 100%;
+    
+    /* Borders */
     --border: 225 12% 16%;
     --input: 225 12% 16%;
     --ring: 175 35% 48%;
+    
+    /* Sidebar */
     --sidebar-background: 225 16% 8%;
     --sidebar-foreground: 220 8% 55%;
+    --sidebar-primary: 40 10% 88%;
+    --sidebar-primary-foreground: 225 18% 8%;
+    --sidebar-accent: 175 35% 48%;
+    --sidebar-accent-foreground: 225 18% 7%;
     --sidebar-border: 225 12% 14%;
+    --sidebar-ring: 175 35% 48%;
   }
 }
 
 @layer base {
-  * { @apply border-border; }
+  * {
+    @apply border-border;
+  }
+
   html {
     font-feature-settings: "cv11", "ss01", "ss03";
+    font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
+
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 0.9375rem; /* 15px - Optimal for extended reading */
+    line-height: 1.7;
+    letter-spacing: -0.01em;
   }
-  h1 { font-weight: 500; font-size: 1.625rem; letter-spacing: -0.025em; }
-  h2 { font-weight: 500; font-size: 1.1875rem; letter-spacing: -0.02em; }
-  h3 { font-weight: 450; font-size: 1rem; letter-spacing: -0.015em; }
-  .text-body { font-size: 0.9375rem; line-height: 1.7; }
-  .text-supporting { font-size: 0.875rem; line-height: 1.6; }
-  .text-annotation { font-size: 0.8125rem; line-height: 1.5; }
-  .text-label { font-size: 0.6875rem; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  /* ===== TYPOGRAPHY HIERARCHY =====
+     6 distinct levels, readable even when blurred
+     Level 1: Page headline - Orienting
+     Level 2: Section headline - Thinking
+     Level 3: Sub-section headline - Reasoning
+     Level 4: Body text - Deliberate reading
+     Level 5: Supporting text - Context
+     Level 6: Quiet annotations - Metadata
+  */
+  
+  /* Level 1: Page headline */
+  h1, .text-page-title {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    font-size: 1.625rem; /* 26px */
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+  
+  /* Level 2: Section headline */
+  h2, .text-section-title {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    font-size: 1.1875rem; /* 19px */
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+  }
+  
+  /* Level 3: Sub-section headline */
+  h3, .text-subsection {
+    font-family: var(--font-heading);
+    font-weight: 450;
+    font-size: 1rem; /* 16px */
+    letter-spacing: -0.015em;
+    line-height: 1.4;
+  }
+  
+  /* Level 4: Body text (default) */
+  .text-body {
+    font-weight: 400;
+    font-size: 0.9375rem; /* 15px */
+    line-height: 1.7;
+    letter-spacing: -0.008em;
+  }
+  
+  /* Level 5: Supporting text */
+  .text-supporting, h4, h5 {
+    font-weight: 400;
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.6;
+    letter-spacing: -0.005em;
+  }
+  
+  /* Level 6: Quiet annotations */
+  .text-annotation, h6 {
+    font-weight: 400;
+    font-size: 0.8125rem; /* 13px */
+    line-height: 1.5;
+    letter-spacing: 0;
+  }
+  
+  /* Label text - All caps, tracking */
+  .text-label {
+    font-weight: 450;
+    font-size: 0.6875rem; /* 11px */
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+
+  /* Monospace for data - Clear, precise */
+  code, .font-mono {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    letter-spacing: 0;
+  }
+  
+  /* Optimal reading width - 60-75 characters */
+  .reading-width {
+    max-width: 68ch;
+  }
+  
+  /* Narrower for decision-critical sections */
+  .reading-width-narrow {
+    max-width: 58ch;
+  }
+  
+  /* Long-form reading environment */
+  .reading-environment {
+    max-width: 68ch;
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    letter-spacing: -0.008em;
+  }
+  
+  /* Paragraph rhythm */
+  .prose p + p {
+    margin-top: var(--space-5);
+  }
+  
+  .prose-tight p + p {
+    margin-top: var(--space-4);
+  }
 }
 
 @layer components {
-  .transition-calm { transition: all var(--transition-calm); }
-  .page-header { padding: var(--space-6) var(--space-8); border-bottom: 1px solid hsl(var(--border)); }
-  .page-header-title { font-weight: 500; font-size: 1.625rem; letter-spacing: -0.025em; }
-  .page-header-subtitle { margin-top: var(--space-2); font-size: 0.875rem; color: hsl(var(--muted-foreground)); }
-  .content-area { max-width: 52rem; margin: 0 auto; padding: 0 var(--space-8); }
-  .governance-card { @apply bg-card rounded-md; padding: var(--space-6); border: 1px solid hsl(var(--border)); }
-  .governance-card-fail { border-left: 2px solid hsl(var(--fail)); }
-  .governance-card-warn { border-left: 2px solid hsl(var(--warning) / 0.5); }
+  /* Deliberate transitions for all interactive elements */
+  .transition-deliberate {
+    transition: all var(--transition-deliberate);
+  }
+  
+  .transition-calm {
+    transition: all var(--transition-calm);
+  }
+  
+  .transition-base {
+    transition: all var(--transition-base);
+  }
+
+  /* Status indicators - Serious, typography-driven */
+  .status-healthy {
+    @apply text-success;
+  }
+  
+  .status-warning {
+    @apply text-warning;
+  }
+  
+  .status-fail {
+    @apply text-fail;
+    font-weight: 450;
+  }
+
+  /* Progressive disclosure - Actions appear with intent */
+  .reveal-on-intent {
+    @apply relative;
+  }
+  
+  .reveal-on-intent .reveal-actions {
+    @apply opacity-0 transition-calm pointer-events-none;
+  }
+  
+  .reveal-on-intent:hover .reveal-actions,
+  .reveal-on-intent:focus-within .reveal-actions {
+    @apply opacity-100 pointer-events-auto;
+  }
+
+  /* Idea card - Premium, quiet, expandable */
+  .idea-card {
+    @apply bg-card rounded-md transition-calm cursor-pointer;
+    padding: var(--space-6);
+  }
+  
+  .idea-card:hover {
+    @apply bg-secondary/30;
+  }
+
+  /* Style tags - Understated */
+  .tag-quality {
+    @apply text-accent/80;
+  }
+  
+  .tag-garp {
+    @apply text-foreground/60;
+  }
+  
+  .tag-cigarbutt {
+    @apply text-warning/70;
+  }
+
+  /* Novelty indicators - Legible but receding */
+  .novelty-new {
+    @apply text-accent;
+    font-weight: 450;
+  }
+  
+  .novelty-reappearance {
+    @apply text-muted-foreground;
+  }
+  
+  .novelty-repeat {
+    @apply text-muted-foreground/50;
+  }
+  
+  /* Section divider - Editorial, generous */
+  .section-divider {
+    @apply border-t border-border/50;
+    margin-top: var(--space-8);
+    margin-bottom: var(--space-8);
+  }
+  
+  /* Governance card - Formal, serious */
+  .governance-card {
+    @apply bg-card rounded-md;
+    padding: var(--space-6);
+    border: 1px solid hsl(var(--border));
+  }
+  
+  .governance-card-fail {
+    border-left: 2px solid hsl(var(--fail));
+    padding-left: calc(var(--space-6) - 1px);
+  }
+  
+  .governance-card-warn {
+    border-left: 2px solid hsl(var(--warning) / 0.5);
+    padding-left: calc(var(--space-6) - 1px);
+  }
+  
+  /* Page header - Consistent vertical rhythm */
+  .page-header {
+    padding: var(--space-6) var(--space-8);
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  
+  .page-header-title {
+    font-weight: 500;
+    font-size: 1.625rem;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    color: hsl(var(--foreground));
+  }
+  
+  .page-header-subtitle {
+    margin-top: var(--space-2);
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.5;
+  }
+  
+  /* Content area - Optimal reading width */
+  .content-area {
+    max-width: 52rem; /* ~832px - accommodates 68ch body + margins */
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
+  }
+  
+  /* Vertical spacing between major sections */
+  .section-gap {
+    margin-top: var(--space-10);
+  }
+  
+  .section-gap-sm {
+    margin-top: var(--space-7);
+  }
 }
 
 @layer utilities {
-  @keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-  .animate-fade-in { animation: fade-in 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; opacity: 0; }
+  /* Calm, deliberate animations */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse-calm {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+  
+  @keyframes breathe {
+    0%, 100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    opacity: 0;
+  }
+
+  .animate-pulse-calm {
+    animation: pulse-calm 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-breathe {
+    animation: breathe 5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-slide-in {
+    animation: slide-in 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    opacity: 0;
+  }
+
+  /* Staggered animation delays - Slower, more deliberate */
+  .delay-75 { animation-delay: 75ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-225 { animation-delay: 225ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-375 { animation-delay: 375ms; }
+  .delay-450 { animation-delay: 450ms; }
+  
+  /* Text utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }

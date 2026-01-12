@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Activity, CheckCircle, AlertCircle, Database, Cpu } from "lucide-react";
+import { Home, Inbox, FileText, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface WarmUpStatus {
@@ -29,8 +29,14 @@ interface WarmUpStatus {
   } | null;
 }
 
-const formatDateTime = (dateStr: string | null): string => {
-  if (!dateStr) return "—";
+interface ServiceStatus {
+  api: string;
+  database: string;
+  worker: string;
+}
+
+const formatDate = (dateStr: string | null): string => {
+  if (!dateStr) return "No runs yet";
   const date = new Date(dateStr);
   return date.toLocaleString("en-US", {
     month: "short",
@@ -40,8 +46,17 @@ const formatDateTime = (dateStr: string | null): string => {
   });
 };
 
+const formatCurrentDate = (): string => {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
 export default function StatusPage() {
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<ServiceStatus | null>(null);
   const [warmUp, setWarmUp] = useState<WarmUpStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -59,7 +74,6 @@ export default function StatusPage() {
             api: "operational",
             database: data.services?.database === "connected" ? "operational" : "unavailable",
             worker: "operational",
-            ...data,
           });
         } else {
           setStatus({ api: "degraded", database: "unavailable", worker: "unavailable" });
@@ -80,188 +94,193 @@ export default function StatusPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const StatusIndicator = ({ s }: { s: string }) => {
-    if (s === "operational") return <CheckCircle className="w-4 h-4 text-success" />;
-    if (s === "degraded") return <AlertCircle className="w-4 h-4 text-warning" />;
-    return <AlertCircle className="w-4 h-4 text-fail" />;
-  };
+  const isSystemHealthy = status?.api === "operational" && 
+                          status?.database === "operational" && 
+                          status?.worker === "operational";
 
   return (
     <AppLayout>
       <div className="min-h-screen flex flex-col">
-        <header className="page-header">
-          <h1 className="page-header-title">System Status</h1>
-          <p className="page-header-subtitle">Operational state and scheduled runs</p>
-        </header>
-        <main className="flex-1 p-8">
-          <div className="content-area">
+        {/* Centered hero content */}
+        <main className="flex-1 flex flex-col items-center justify-center px-8 py-16">
+          <div className="max-w-lg w-full text-center">
             {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-muted-foreground">Loading status...</div>
+              <div className="animate-fade-in">
+                <p className="text-muted-foreground">Checking system status...</p>
               </div>
             ) : (
-              <div className="space-y-8">
-                {/* Last Run Summary */}
-                <section>
-                  <h2 className="text-section-title mb-4">Last Completed Runs</h2>
-                  <div className="governance-card">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-left text-muted-foreground border-b border-border">
-                          <th className="pb-3 font-medium">Pipeline</th>
-                          <th className="pb-3 font-medium">Last Run</th>
-                          <th className="pb-3 font-medium">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b border-border/50">
-                          <td className="py-3">Lane A</td>
-                          <td className="py-3 text-muted-foreground">
-                            {warmUp?.laneA 
-                              ? formatDateTime(warmUp.laneA.completedAt || warmUp.laneA.runDate)
-                              : "No runs recorded"}
-                          </td>
-                          <td className="py-3">
-                            {warmUp?.laneA ? (
-                              <span className={cn(
-                                warmUp.laneA.status === "completed" ? "text-success" : "text-warning"
-                              )}>
-                                {warmUp.laneA.status}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </td>
-                        </tr>
-                        <tr className="border-b border-border/50">
-                          <td className="py-3">Lane B</td>
-                          <td className="py-3 text-muted-foreground">
-                            {warmUp?.laneB 
-                              ? formatDateTime(warmUp.laneB.completedAt || warmUp.laneB.runDate)
-                              : "No runs recorded"}
-                          </td>
-                          <td className="py-3">
-                            {warmUp?.laneB ? (
-                              <span className={cn(
-                                warmUp.laneB.status === "completed" ? "text-success" : "text-warning"
-                              )}>
-                                {warmUp.laneB.status}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="py-3">QA Report</td>
-                          <td className="py-3 text-muted-foreground">
-                            {warmUp?.qa 
-                              ? formatDateTime(warmUp.qa.completedAt || warmUp.qa.runDate)
-                              : "No runs recorded"}
-                          </td>
-                          <td className="py-3">
-                            {warmUp?.qa ? (
-                              <span className={cn(
-                                warmUp.qa.status === "completed" ? "text-success" : "text-warning"
-                              )}>
-                                {warmUp.qa.status}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
+              <>
+                {/* Main status headline */}
+                <div className="animate-fade-in">
+                  <h1 className="text-2xl font-medium text-foreground tracking-tight mb-3">
+                    {isSystemHealthy 
+                      ? "System status: operating normally."
+                      : "System status: attention required."
+                    }
+                  </h1>
+                  <p className="text-muted-foreground">
+                    {isSystemHealthy 
+                      ? "No action required."
+                      : "Review service status below."
+                    }
+                  </p>
+                </div>
 
-                {/* Service Status */}
-                <section>
-                  <h2 className="text-section-title mb-4">Service Status</h2>
-                  <div className="governance-card">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-left text-muted-foreground border-b border-border">
-                          <th className="pb-3 font-medium">Service</th>
-                          <th className="pb-3 font-medium">State</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[
-                          { name: "API Server", s: status?.api, icon: Activity },
-                          { name: "Database", s: status?.database, icon: Database },
-                          { name: "Worker", s: status?.worker, icon: Cpu },
-                        ].map((svc, idx) => (
-                          <tr key={svc.name} className={idx < 2 ? "border-b border-border/50" : ""}>
-                            <td className="py-3">
-                              <div className="flex items-center gap-2">
-                                <svc.icon className="w-4 h-4 text-muted-foreground" />
-                                {svc.name}
-                              </div>
-                            </td>
-                            <td className="py-3">
-                              <div className="flex items-center gap-2">
-                                <StatusIndicator s={svc.s || "unavailable"} />
-                                <span className={cn(
-                                  "capitalize",
-                                  svc.s === "operational" && "text-success",
-                                  svc.s === "degraded" && "text-warning",
-                                  (!svc.s || svc.s === "unavailable") && "text-fail"
-                                )}>
-                                  {svc.s || "unavailable"}
-                                </span>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
+                {/* Status cards grid */}
+                <div 
+                  className="grid grid-cols-2 gap-4 animate-fade-in"
+                  style={{ marginTop: 'var(--space-10)', animationDelay: '150ms' }}
+                >
+                  <StatusCard
+                    icon={Inbox}
+                    label="Lane A"
+                    value={warmUp?.laneA 
+                      ? formatDate(warmUp.laneA.completedAt || warmUp.laneA.runDate)
+                      : "No runs yet"
+                    }
+                    status={warmUp?.laneA?.status === "completed" ? "healthy" : "neutral"}
+                    delay={0}
+                  />
+                  <StatusCard
+                    icon={FileText}
+                    label="Lane B"
+                    value={warmUp?.laneB 
+                      ? formatDate(warmUp.laneB.completedAt || warmUp.laneB.runDate)
+                      : "No runs yet"
+                    }
+                    status={warmUp?.laneB?.status === "completed" ? "healthy" : "neutral"}
+                    delay={75}
+                  />
+                  <StatusCard
+                    icon={Shield}
+                    label="QA Report"
+                    value={warmUp?.qa 
+                      ? formatDate(warmUp.qa.completedAt || warmUp.qa.runDate)
+                      : "No runs yet"
+                    }
+                    status={warmUp?.qa?.status === "completed" ? "healthy" : "neutral"}
+                    delay={150}
+                  />
+                  <StatusCard
+                    icon={Home}
+                    label="Services"
+                    value={isSystemHealthy ? "All operational" : "Check required"}
+                    status={isSystemHealthy ? "healthy" : "warning"}
+                    delay={225}
+                  />
+                </div>
 
-                {/* Scheduled Runs */}
-                <section>
-                  <h2 className="text-section-title mb-4">Scheduled Runs</h2>
-                  <div className="governance-card">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-left text-muted-foreground border-b border-border">
-                          <th className="pb-3 font-medium">Job</th>
-                          <th className="pb-3 font-medium">Schedule</th>
-                          <th className="pb-3 font-medium">Timezone</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b border-border/50">
-                          <td className="py-3">Lane A Discovery</td>
-                          <td className="py-3 font-mono text-muted-foreground">06:00 Mon–Fri</td>
-                          <td className="py-3 text-muted-foreground">America/Sao_Paulo</td>
-                        </tr>
-                        <tr className="border-b border-border/50">
-                          <td className="py-3">Lane B Research</td>
-                          <td className="py-3 font-mono text-muted-foreground">08:00 Mon–Fri</td>
-                          <td className="py-3 text-muted-foreground">America/Sao_Paulo</td>
-                        </tr>
-                        <tr className="border-b border-border/50">
-                          <td className="py-3">Weekly QA Report</td>
-                          <td className="py-3 font-mono text-muted-foreground">18:00 Friday</td>
-                          <td className="py-3 text-muted-foreground">America/Sao_Paulo</td>
-                        </tr>
-                        <tr>
-                          <td className="py-3">IC Bundle</td>
-                          <td className="py-3 font-mono text-muted-foreground">19:00 Friday</td>
-                          <td className="py-3 text-muted-foreground">America/Sao_Paulo</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                {/* Service details - only show if there's an issue */}
+                {!isSystemHealthy && (
+                  <div 
+                    className="mt-8 p-6 bg-card rounded-md border border-border animate-fade-in"
+                    style={{ animationDelay: '300ms' }}
+                  >
+                    <h2 className="text-sm font-medium text-foreground mb-4 text-left">Service Status</h2>
+                    <div className="space-y-3">
+                      <ServiceRow name="API Server" status={status?.api || "unavailable"} />
+                      <ServiceRow name="Database" status={status?.database || "unavailable"} />
+                      <ServiceRow name="Worker" status={status?.worker || "unavailable"} />
+                    </div>
                   </div>
-                </section>
-              </div>
+                )}
+
+                {/* Footer with current date */}
+                <div 
+                  className="animate-fade-in"
+                  style={{ marginTop: 'var(--space-12)', animationDelay: '375ms' }}
+                >
+                  <p className="text-annotation text-muted-foreground/50">
+                    {formatCurrentDate()}
+                  </p>
+                </div>
+              </>
             )}
           </div>
         </main>
       </div>
     </AppLayout>
+  );
+}
+
+interface StatusCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  status: "healthy" | "warning" | "neutral";
+  delay: number;
+}
+
+function StatusCard({ icon: Icon, label, value, status, delay }: StatusCardProps) {
+  return (
+    <div 
+      className={cn(
+        "p-5 bg-card rounded-md border border-border/60 text-left animate-fade-in transition-calm",
+        "hover:border-border"
+      )}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <Icon className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">{label}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        {status !== "neutral" && (
+          <span className={cn(
+            "relative flex h-2 w-2",
+          )}>
+            {status === "healthy" && (
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-40" />
+            )}
+            <span className={cn(
+              "relative inline-flex rounded-full h-2 w-2",
+              status === "healthy" && "bg-success",
+              status === "warning" && "bg-warning"
+            )} />
+          </span>
+        )}
+        <span className={cn(
+          "text-sm font-medium",
+          status === "healthy" && "text-foreground",
+          status === "warning" && "text-warning",
+          status === "neutral" && "text-muted-foreground"
+        )}>
+          {value}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+interface ServiceRowProps {
+  name: string;
+  status: string;
+}
+
+function ServiceRow({ name, status }: ServiceRowProps) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-muted-foreground">{name}</span>
+      <div className="flex items-center gap-2">
+        <span className={cn(
+          "relative flex h-2 w-2",
+        )}>
+          <span className={cn(
+            "relative inline-flex rounded-full h-2 w-2",
+            status === "operational" && "bg-success",
+            status === "degraded" && "bg-warning",
+            status === "unavailable" && "bg-fail"
+          )} />
+        </span>
+        <span className={cn(
+          "capitalize",
+          status === "operational" && "text-success",
+          status === "degraded" && "text-warning",
+          status === "unavailable" && "text-fail"
+        )}>
+          {status}
+        </span>
+      </div>
+    </div>
   );
 }
