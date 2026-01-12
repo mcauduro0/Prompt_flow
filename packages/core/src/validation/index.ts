@@ -12,14 +12,52 @@ import {
   DecisionBriefSchema,
 } from '../schemas/index.js';
 
-// Re-export research packet completion
-export * from './research-packet-completion.js';
+// Re-export research packet completion (no conflicts)
+export {
+  checkResearchPacketCompletion,
+  getCompletionReport,
+  MANDATORY_SECTIONS,
+  MANDATORY_EXECUTIVE_VIEW_FIELDS,
+  MANDATORY_MODULE_FIELDS,
+  type CompletionCheckResult,
+  type SectionCompletionStatus,
+  type CompletionReport,
+} from './research-packet-completion.js';
 
-// Re-export evidence traceability
-export * from './evidence-traceability.js';
+// Re-export evidence traceability (with renamed exports to avoid conflicts)
+export {
+  SourceLocatorSchema,
+  EvidenceRefSchema,
+  NumericClaimSchema as EvidenceNumericClaimSchema,
+  validateSourceLocator,
+  validateEvidenceRef,
+  validateNumericClaim as validateEvidenceNumericClaim,
+  validateAllNumericClaims,
+  extractNumericClaims,
+  type EvidenceRef,
+  type NumericClaim as EvidenceNumericClaim,
+} from './evidence-traceability.js';
 
-// Re-export evidence locator
-export * from './evidence-locator.js';
+// Re-export evidence locator (with renamed exports to avoid conflicts)
+export {
+  SourceTypeSchema,
+  EvidenceLocatorSchema,
+  NumericClaimSchema as LocatorNumericClaimSchema,
+  resolveEvidenceLocator,
+  validateNumericClaimEvidence,
+  validateAllClaimsInPacket,
+  createMockDocumentRegistry,
+  type SourceType,
+  type EvidenceLocator,
+  type NumericClaim as LocatorNumericClaim,
+  type DocumentRegistry,
+  type DocumentMetadata,
+  type ChunkMetadata,
+  type DocumentFilters,
+  type EvidenceResolutionResult,
+  type ClaimValidationResult,
+  type PacketValidationResult,
+} from './evidence-locator.js';
 
 // ============================================================================
 // TYPES
