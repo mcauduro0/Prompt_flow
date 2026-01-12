@@ -30,10 +30,10 @@ export class PolygonClient {
           retrievedAt: new Date().toISOString(),
         };
       }
-      const data = await response.json();
+      const data = await response.json() as T;
       return {
         success: true,
-        data,
+        data: data as T,
         source: 'polygon',
         retrievedAt: new Date().toISOString(),
       };

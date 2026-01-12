@@ -34,10 +34,10 @@ export class SECEdgarClient {
         };
       }
 
-      const data = await response.json();
+      const data = await response.json() as T;
       return {
         success: true,
-        data,
+        data: data as T,
         source: 'sec-edgar',
         retrievedAt: new Date().toISOString(),
       };
