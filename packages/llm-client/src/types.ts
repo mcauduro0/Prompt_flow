@@ -2,7 +2,7 @@
  * ARC Investment Factory - LLM Client Types
  */
 
-export type LLMProvider = 'openai' | 'anthropic';
+export type LLMProvider = 'openai' | 'anthropic' | 'google';
 
 export interface LLMConfig {
   provider: LLMProvider;
@@ -54,10 +54,13 @@ export interface PromptTemplate {
 export const DEFAULT_MODELS = {
   openai: 'gpt-4o',
   anthropic: 'claude-sonnet-4-20250514',
+  google: 'gemini-2.5-flash',
 } as const;
 
 // Token limits
 export const TOKEN_LIMITS = {
   'gpt-4o': 128000,
   'claude-sonnet-4-20250514': 200000,
+  'gemini-2.5-flash': 1000000,
+  'gemini-2.5-pro': 2000000,
 } as const;

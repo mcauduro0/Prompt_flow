@@ -6,6 +6,7 @@
 import type { LLMClient, LLMConfig, LLMProvider, LLMRequest, LLMResponse } from './types.js';
 import { OpenAIClient } from './providers/openai.js';
 import { AnthropicClient } from './providers/anthropic.js';
+import { GeminiClient } from './providers/gemini.js';
 
 /**
  * Create an LLM client based on configuration
@@ -16,6 +17,8 @@ export function createLLMClient(config: LLMConfig): LLMClient {
       return new OpenAIClient(config);
     case 'anthropic':
       return new AnthropicClient(config);
+    case 'google':
+      return new GeminiClient(config);
     default:
       throw new Error(`Unknown LLM provider: ${config.provider}`);
   }

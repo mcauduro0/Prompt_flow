@@ -339,10 +339,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-4-turbo-preview",
-        "temperature": 0.5,
-        "max_tokens": 4000
+        "provider": "anthropic",
+        "model": "claude-3-opus-20240229",
+        "temperature": 0.2,
+        "max_tokens": 5000
       },
       "system_prompt": "You are a financial analyst specializing in synthesis.",
       "user_prompt_template": "Analyze {{ticker}} for investment thesis synthesis.",
@@ -392,7 +392,34 @@
       "expected_value_score": 10,
       "expected_cost_score": 5,
       "min_signal_dependency": [],
-      "value_cost_ratio": 2
+      "value_cost_ratio": 2,
+      "template": "[SYSTEM]\nYou are the Chief Investment Officer synthesizing research from your team into a final investment recommendation. Be decisive but acknowledge uncertainty. Your recommendation will be presented to the Investment Committee.\n[/SYSTEM]\n\n## Research Summary for {{ticker}}\n\n### Business Model Analysis\n{{businessModelAnalysis}}\n\n### Valuation Analysis\n{{valuationAnalysis}}\n\n### Risk Assessment\n{{riskAssessment}}\n\n### Industry & Moat Analysis\n{{industryMoatAnalysis}}\n\n### Management Quality\n{{managementQualityAnalysis}}\n\n---\n\n## Synthesis Required\n\nAs CIO, synthesize all research into a final recommendation:\n\n1. **Recommendation**: PROCEED (add to portfolio), WATCH (monitor for better entry), or PASS (not suitable)\n\n2. **Conviction**: 1-10 scale based on quality of opportunity and confidence in analysis\n\n3. **Investment Thesis**: A clear, falsifiable thesis that can be monitored over time\n\n4. **Scenario Analysis**:\n   - Bull Case: What goes right? Target price and probability.\n   - Base Case: Expected outcome. Target price and probability.\n   - Bear Case: What goes wrong? Target price and probability.\n\n5. **Position Sizing**: Full (2-4%), Half (1-2%), or Starter (0.5-1%)\n\n6. **Time Horizon**: Expected holding period\n\n7. **Key Monitoring Points**: What should we watch to validate/invalidate the thesis?\n\n8. **Dissent**: What's the strongest argument against this investment?\n\nRespond in JSON format with your synthesis.",
+      "inputs_schema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string"
+          },
+          "businessModelAnalysis": {
+            "type": "object"
+          },
+          "valuationAnalysis": {
+            "type": "object"
+          },
+          "riskAssessment": {
+            "type": "object"
+          },
+          "industryMoatAnalysis": {
+            "type": "object"
+          },
+          "managementQualityAnalysis": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "ticker"
+        ]
+      }
     },
     {
       "prompt_id": "peer_thesis_comparison",
@@ -1511,10 +1538,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-4-turbo-preview",
+        "provider": "anthropic",
+        "model": "claude-3-sonnet-20240229",
         "temperature": 0.3,
-        "max_tokens": 4000
+        "max_tokens": 3000
       },
       "system_prompt": "You are a financial analyst specializing in risk.",
       "user_prompt_template": "Analyze {{ticker}} for risk assessment.",
@@ -1567,7 +1594,32 @@
         "financial_statement_analysis",
         "regulatory_risk_analysis"
       ],
-      "value_cost_ratio": 1.8
+      "value_cost_ratio": 1.8,
+      "template": "[SYSTEM]\nYou are a risk analyst with a focus on identifying what could go wrong with an investment. Your job is to stress-test the thesis and identify potential kill switches.\n[/SYSTEM]\n\n## Company: {{profile.companyName}} ({{ticker}})\n\n### Financial Health\n- Net Debt/EBITDA: {{metrics.netDebtToEbitda}}\n- Current Ratio: {{metrics.currentRatio}}\n- Interest Coverage: {{metrics.interestCoverage}}\n\n### Balance Sheet Data\n{{balanceAnnual}}\n\n### Recent News\n{{news}}\n\n---\n\n## Risk Assessment Required\n\n1. **Key Risks**: Identify and rank the top 5 risks to the investment thesis.\n\n2. **Financial Risks**:\n   - Leverage Risk: Could debt become problematic?\n   - Liquidity Risk: Any near-term funding concerns?\n\n3. **Business Risks**:\n   - Regulatory Risk: Any regulatory threats?\n   - Competitive Risk: Threat of disruption or market share loss?\n   - Execution Risk: Management's ability to execute?\n\n4. **Stress Scenarios**: Model 2-3 adverse scenarios with probability and impact.\n\n5. **Kill Switches**: What would cause us to immediately exit the position?\n\n6. **Overall Risk Score**: 1 (very risky) to 10 (very safe).\n\nRespond in JSON format with your analysis.",
+      "inputs_schema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "object"
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "balanceAnnual": {
+            "type": "array"
+          },
+          "news": {
+            "type": "array"
+          }
+        },
+        "required": [
+          "ticker",
+          "profile"
+        ]
+      }
     },
     {
       "prompt_id": "risk_factor_identifier",
@@ -1905,8 +1957,8 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4-turbo-preview",
-        "temperature": 0.3,
+        "model": "gpt-4o",
+        "temperature": 0.2,
         "max_tokens": 4000
       },
       "system_prompt": "You are a financial analyst specializing in valuation.",
@@ -1959,7 +2011,36 @@
       "min_signal_dependency": [
         "financial_statement_analysis"
       ],
-      "value_cost_ratio": 1.8
+      "value_cost_ratio": 1.8,
+      "template": "[SYSTEM]\nYou are a senior equity analyst specializing in valuation. Your analysis should be rigorous, use multiple methodologies, and clearly articulate the assumptions and sensitivities.\n[/SYSTEM]\n\n## Company: {{profile.companyName}} ({{ticker}})\n\n### Current Valuation Metrics\n- Market Cap: ${{profile.marketCap}}B\n- EV/EBITDA: {{metrics.evToEbitda}}\n- P/E: {{metrics.pe}}\n- P/FCF: {{metrics.priceToFreeCashFlow}}\n- P/B: {{metrics.priceToBook}}\n\n### Historical Financials\n{{incomeAnnual}}\n\n### Cash Flow Data\n{{cashFlowAnnual}}\n\n### Price History\n{{priceHistory}}\n\n---\n\n## Valuation Analysis Required\n\n1. **DCF Analysis**: Build a simplified DCF with explicit assumptions for growth, margins, and discount rate.\n\n2. **Comparable Analysis**: Compare to relevant peers on key multiples.\n\n3. **Historical Analysis**: How does current valuation compare to historical ranges?\n\n4. **Sum-of-Parts**: If applicable, value different segments separately.\n\n5. **Price Targets**: Provide bull, base, and bear case price targets with probabilities.\n\n6. **Margin of Safety**: What discount to intrinsic value does the current price offer?\n\nRespond in JSON format with your analysis.",
+      "inputs_schema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "object"
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "incomeAnnual": {
+            "type": "array"
+          },
+          "cashFlowAnnual": {
+            "type": "array"
+          },
+          "priceHistory": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "ticker",
+          "profile",
+          "metrics"
+        ]
+      }
     },
     {
       "prompt_id": "working_capital_analysis",
