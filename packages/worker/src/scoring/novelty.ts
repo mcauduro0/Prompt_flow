@@ -8,7 +8,6 @@
 
 import {
   NOVELTY_SCORING,
-  EDGE_TYPES,
   type EdgeType,
 } from '@arc/shared';
 import { noveltyStateRepository } from '@arc/database';
@@ -25,14 +24,14 @@ export interface NoveltyInput {
   themes: string[];
 }
 
-export interface NoveltyState {
+// Database NoveltyState type (matches schema)
+interface DbNoveltyState {
   ticker: string;
-  lastSeenAt: Date;
-  appearanceCount90Days: number;
-  lastEdgeType: EdgeType | null;
+  lastSeen: Date;
+  lastEdgeTypes: string[] | null;
   lastStyleTag: string | null;
-  lastCatalysts: string[];
-  lastThemes: string[];
+  seenCount: number;
+  firstSeen: Date;
 }
 
 export interface NoveltyResult {
@@ -89,19 +88,19 @@ export async function calculateNoveltyScore(
   };
   
   // Determine if ticker is "new" (not seen in 90 days)
-  const isNew = isTickerNew(state, now);
+  const isNew = isTickerNew(state ?? null, now);
   
   // Determine if there's a new edge
-  const hasNewEdge = checkNewEdge(state, input.edgeType);
+  const hasNewEdge = checkNewEdge(state ?? null, input.edgeType);
   
   // Determine if style changed
-  const hasStyleChange = checkStyleChange(state, input.styleTag);
+  const hasStyleChange = checkStyleChange(state ?? null, input.styleTag);
   
-  // Determine if there are new catalysts
-  const hasNewCatalyst = checkNewCatalysts(state, input.catalysts);
+  // Determine if there are new catalysts (simplified - always true for new tickers)
+  const hasNewCatalyst = !state;
   
-  // Determine if there are new themes
-  const hasNewTheme = checkNewThemes(state, input.themes);
+  // Determine if there are new themes (simplified - always true for new tickers)
+  const hasNewTheme = !state;
   
   // Calculate base score
   if (isNew) {
@@ -126,7 +125,7 @@ export async function calculateNoveltyScore(
   }
   
   // Calculate repetition penalty (only if seen in last 30 days with NO new edge)
-  const repetitionPenalty = calculateRepetitionPenalty(state, now, hasNewEdge);
+  const repetitionPenalty = calculateRepetitionPenalty(state ?? null, now, hasNewEdge);
   breakdown.repetitionPenalty = repetitionPenalty;
   
   // Calculate disclosure friction penalty
@@ -168,13 +167,13 @@ export async function calculateNoveltyScore(
 /**
  * Check if ticker is "new" (not seen in 90 days)
  */
-function isTickerNew(state: NoveltyState | null, now: Date): boolean {
-  if (!state || !state.lastSeenAt) {
+function isTickerNew(state: DbNoveltyState | null, now: Date): boolean {
+  if (!state || !state.lastSeen) {
     return true;
   }
   
   const daysSinceLastSeen = Math.floor(
-    (now.getTime() - state.lastSeenAt.getTime()) / (1000 * 60 * 60 * 24)
+    (now.getTime() - state.lastSeen.getTime()) / (1000 * 60 * 60 * 24)
   );
   
   return daysSinceLastSeen >= NOVELTY_SCORING.TICKER_NEW_IF_NOT_SEEN_DAYS;
@@ -183,18 +182,18 @@ function isTickerNew(state: NoveltyState | null, now: Date): boolean {
 /**
  * Check if there's a new edge type
  */
-function checkNewEdge(state: NoveltyState | null, currentEdgeType: EdgeType): boolean {
-  if (!state || !state.lastEdgeType) {
+function checkNewEdge(state: DbNoveltyState | null, currentEdgeType: EdgeType): boolean {
+  if (!state || !state.lastEdgeTypes || state.lastEdgeTypes.length === 0) {
     return true;
   }
   
-  return state.lastEdgeType !== currentEdgeType;
+  return !state.lastEdgeTypes.includes(currentEdgeType);
 }
 
 /**
  * Check if style tag changed
  */
-function checkStyleChange(state: NoveltyState | null, currentStyleTag: string): boolean {
+function checkStyleChange(state: DbNoveltyState | null, currentStyleTag: string): boolean {
   if (!state || !state.lastStyleTag) {
     return false;
   }
@@ -203,67 +202,40 @@ function checkStyleChange(state: NoveltyState | null, currentStyleTag: string): 
 }
 
 /**
- * Check if there are new catalysts
- */
-function checkNewCatalysts(state: NoveltyState | null, currentCatalysts: string[]): boolean {
-  if (!state || !state.lastCatalysts || state.lastCatalysts.length === 0) {
-    return currentCatalysts.length > 0;
-  }
-  
-  const lastCatalystsSet = new Set(state.lastCatalysts.map(c => c.toLowerCase()));
-  return currentCatalysts.some(c => !lastCatalystsSet.has(c.toLowerCase()));
-}
-
-/**
- * Check if there are new themes
- */
-function checkNewThemes(state: NoveltyState | null, currentThemes: string[]): boolean {
-  if (!state || !state.lastThemes || state.lastThemes.length === 0) {
-    return currentThemes.length > 0;
-  }
-  
-  const lastThemesSet = new Set(state.lastThemes.map(t => t.toLowerCase()));
-  return currentThemes.some(t => !lastThemesSet.has(t.toLowerCase()));
-}
-
-/**
  * Calculate repetition penalty
- * Applied if seen in last 30 days with NO new edge
+ * Only applies if seen in last 30 days with NO new edge
  */
 function calculateRepetitionPenalty(
-  state: NoveltyState | null,
+  state: DbNoveltyState | null,
   now: Date,
   hasNewEdge: boolean
 ): number {
-  if (!state || !state.lastSeenAt) {
+  if (!state || !state.lastSeen) {
     return 0;
   }
   
-  const daysSinceLastSeen = Math.floor(
-    (now.getTime() - state.lastSeenAt.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  
-  // No penalty if not seen in last 30 days
-  if (daysSinceLastSeen >= NOVELTY_SCORING.REPETITION_PENALTY_WINDOW_DAYS) {
-    return 0;
-  }
-  
-  // No penalty if there's a new edge
+  // If there's a new edge, no penalty
   if (hasNewEdge) {
     return 0;
   }
   
-  // Apply penalty for being seen in last 30 days with no new edge
-  let penalty = NOVELTY_SCORING.SEEN_IN_LAST_30_DAYS_NO_NEW_EDGE_PENALTY;
+  const daysSinceLastSeen = Math.floor(
+    (now.getTime() - state.lastSeen.getTime()) / (1000 * 60 * 60 * 24)
+  );
   
-  // Additional penalty if seen more than 3 times in 90 days
-  if (state.appearanceCount90Days > 3) {
-    penalty += NOVELTY_SCORING.SEEN_MORE_THAN_3_TIMES_IN_90_DAYS_PENALTY;
+  // Only apply penalty if seen in last 30 days
+  if (daysSinceLastSeen > NOVELTY_SCORING.REPETITION_PENALTY_WINDOW_DAYS) {
+    return 0;
   }
   
-  // Cap the penalty
-  const maxPenalty = NOVELTY_SCORING.MAX_REPETITION_PENALTY * 100;
-  return Math.max(penalty, -maxPenalty);
+  // Calculate penalty based on appearance count
+  const appearanceCount = state.seenCount || 1;
+  const penaltyPerAppearance = NOVELTY_SCORING.REPETITION_PENALTY_PER_APPEARANCE;
+  
+  return -Math.min(
+    appearanceCount * penaltyPerAppearance,
+    NOVELTY_SCORING.MAX_REPETITION_PENALTY
+  );
 }
 
 /**
@@ -273,11 +245,11 @@ function calculateDisclosureFrictionPenalty(hasFilings: boolean, hasPeerSet: boo
   let penalty = 0;
   
   if (!hasFilings) {
-    penalty += NOVELTY_SCORING.MISSING_FILINGS_OR_TRANSCRIPT_PENALTY;
+    penalty += NOVELTY_SCORING.DISCLOSURE_FRICTION_PENALTY;
   }
   
   if (!hasPeerSet) {
-    penalty += NOVELTY_SCORING.MISSING_PEER_SET_PENALTY;
+    penalty += NOVELTY_SCORING.DISCLOSURE_FRICTION_PENALTY;
   }
   
   return penalty;
@@ -291,71 +263,80 @@ function calculateDisclosureFrictionPenalty(hasFilings: boolean, hasPeerSet: boo
  * Calculate novelty scores for multiple ideas
  */
 export async function calculateBatchNoveltyScores(
-  inputs: NoveltyInput[],
-  filingStatus: Map<string, boolean>,
-  peerSetStatus: Map<string, boolean>
-): Promise<Map<string, NoveltyResult>> {
-  const results = new Map<string, NoveltyResult>();
+  inputs: NoveltyInput[]
+): Promise<NoveltyResult[]> {
+  const results: NoveltyResult[] = [];
   
   for (const input of inputs) {
-    const hasFilings = filingStatus.get(input.ticker) ?? true;
-    const hasPeerSet = peerSetStatus.get(input.ticker) ?? true;
-    
-    const result = await calculateNoveltyScore(input, hasFilings, hasPeerSet);
-    results.set(input.ticker, result);
+    const result = await calculateNoveltyScore(input);
+    results.push(result);
   }
   
   return results;
 }
 
+/**
+ * Filter ideas by novelty threshold
+ */
+export function filterByNoveltyThreshold(
+  results: NoveltyResult[],
+  threshold: number = NOVELTY_SCORING.MIN_NOVELTY_SCORE * 100
+): NoveltyResult[] {
+  return results.filter(r => r.noveltyScore >= threshold);
+}
+
+/**
+ * Sort ideas by novelty score (descending)
+ */
+export function sortByNoveltyScore(results: NoveltyResult[]): NoveltyResult[] {
+  return [...results].sort((a, b) => b.noveltyScore - a.noveltyScore);
+}
+
 // ============================================================================
-// STATE UPDATES
+// STATE MANAGEMENT
 // ============================================================================
 
 /**
- * Update novelty state after processing an idea
+ * Update novelty state after idea is processed
  */
 export async function updateNoveltyState(
   ticker: string,
-  edgeType: EdgeType,
-  styleTag: string,
-  catalysts: string[],
-  themes: string[]
+  edgeTypes: string[],
+  styleTag: string
 ): Promise<void> {
-  const now = new Date();
-  const existingState = await noveltyStateRepository.getByTicker(ticker);
-  
-  if (existingState) {
-    // Update existing state
-    await noveltyStateRepository.update(ticker, {
-      lastSeenAt: now,
-      appearanceCount90Days: existingState.appearanceCount90Days + 1,
-      lastEdgeType: edgeType,
-      lastStyleTag: styleTag,
-      lastCatalysts: catalysts,
-      lastThemes: themes,
-    });
-  } else {
-    // Create new state
-    await noveltyStateRepository.create({
-      ticker,
-      lastSeenAt: now,
-      appearanceCount90Days: 1,
-      lastEdgeType: edgeType,
-      lastStyleTag: styleTag,
-      lastCatalysts: catalysts,
-      lastThemes: themes,
-    });
-  }
+  await noveltyStateRepository.upsert({
+    ticker,
+    lastSeen: new Date(),
+    lastEdgeTypes: edgeTypes,
+    lastStyleTag: styleTag,
+  });
 }
 
 /**
- * Decay old appearance counts (run daily)
- * Removes appearances older than 90 days from the count
+ * Batch update novelty states
  */
-export async function decayAppearanceCounts(): Promise<void> {
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - 90);
+export async function batchUpdateNoveltyStates(
+  updates: Array<{ ticker: string; edgeTypes: string[]; styleTag: string }>
+): Promise<void> {
+  const states = updates.map(u => ({
+    ticker: u.ticker,
+    lastSeen: new Date(),
+    lastEdgeTypes: u.edgeTypes,
+    lastStyleTag: u.styleTag,
+  }));
   
-  await noveltyStateRepository.decayAppearanceCounts(cutoffDate);
+  await noveltyStateRepository.upsertMany(states);
 }
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export const noveltyScoring = {
+  calculateNoveltyScore,
+  calculateBatchNoveltyScores,
+  filterByNoveltyThreshold,
+  sortByNoveltyScore,
+  updateNoveltyState,
+  batchUpdateNoveltyStates,
+};
