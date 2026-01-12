@@ -9,7 +9,21 @@ import {
   STYLE_MIX_TARGETS,
   OPERATING_PARAMETERS,
 } from '@arc/shared';
-import { styleMixStateRepository, ideasRepository } from '@arc/database';
+import { styleMixStateRepository } from '@arc/database';
+
+// ============================================================================
+// LOCAL CONSTANTS (not in shared)
+// ============================================================================
+
+const LOCAL_THRESHOLDS = {
+  QUALITY_COMPOUNDER_QUALITY_OVERRIDE_MIN: 14,
+  QUALITY_COMPOUNDER_QUALITY_OVERRIDE_REDUCTION: 2,
+  GARP_GROWTH_OVERRIDE_MIN: 14,
+  GARP_GROWTH_OVERRIDE_REDUCTION: 2,
+  CIGAR_BUTT_VALUATION_OVERRIDE_MIN: 14,
+  CIGAR_BUTT_VALUATION_OVERRIDE_REDUCTION: 2,
+  CIGAR_BUTT_DOWNSIDE_PROTECTION_OVERRIDE_REDUCTION: 2,
+};
 
 // ============================================================================
 // TYPES
@@ -149,8 +163,8 @@ function getStyleSpecificOverride(
  */
 function getQualityCompounderOverride(candidate: PromotionCandidate): number {
   // If quality score is exceptional, reduce threshold
-  if (candidate.qualityScore >= PROMOTION_THRESHOLDS.QUALITY_COMPOUNDER_QUALITY_OVERRIDE_MIN) {
-    return -PROMOTION_THRESHOLDS.QUALITY_COMPOUNDER_QUALITY_OVERRIDE_REDUCTION;
+  if (candidate.qualityScore >= LOCAL_THRESHOLDS.QUALITY_COMPOUNDER_QUALITY_OVERRIDE_MIN) {
+    return -LOCAL_THRESHOLDS.QUALITY_COMPOUNDER_QUALITY_OVERRIDE_REDUCTION;
   }
   return 0;
 }
@@ -160,8 +174,8 @@ function getQualityCompounderOverride(candidate: PromotionCandidate): number {
  */
 function getGarpOverride(candidate: PromotionCandidate): number {
   // If growth score is exceptional, reduce threshold
-  if (candidate.growthScore >= PROMOTION_THRESHOLDS.GARP_GROWTH_OVERRIDE_MIN) {
-    return -PROMOTION_THRESHOLDS.GARP_GROWTH_OVERRIDE_REDUCTION;
+  if (candidate.growthScore >= LOCAL_THRESHOLDS.GARP_GROWTH_OVERRIDE_MIN) {
+    return -LOCAL_THRESHOLDS.GARP_GROWTH_OVERRIDE_REDUCTION;
   }
   return 0;
 }
@@ -173,13 +187,13 @@ function getCigarButtOverride(candidate: PromotionCandidate): number {
   let override = 0;
   
   // Valuation override - if extremely cheap
-  if (candidate.valuationScore >= PROMOTION_THRESHOLDS.CIGAR_BUTT_VALUATION_OVERRIDE_MIN) {
-    override -= PROMOTION_THRESHOLDS.CIGAR_BUTT_VALUATION_OVERRIDE_REDUCTION;
+  if (candidate.valuationScore >= LOCAL_THRESHOLDS.CIGAR_BUTT_VALUATION_OVERRIDE_MIN) {
+    override -= LOCAL_THRESHOLDS.CIGAR_BUTT_VALUATION_OVERRIDE_REDUCTION;
   }
   
   // Downside protection override - if well protected
   if (candidate.downsideProtection >= PROMOTION_THRESHOLDS.CIGAR_BUTT_DOWNSIDE_PROTECTION_OVERRIDE_MIN) {
-    override -= PROMOTION_THRESHOLDS.CIGAR_BUTT_DOWNSIDE_PROTECTION_OVERRIDE_REDUCTION;
+    override -= LOCAL_THRESHOLDS.CIGAR_BUTT_DOWNSIDE_PROTECTION_OVERRIDE_REDUCTION;
   }
   
   return override;

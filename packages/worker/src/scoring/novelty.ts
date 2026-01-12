@@ -13,6 +13,12 @@ import {
 import { noveltyStateRepository } from '@arc/database';
 
 // ============================================================================
+// LOCAL CONSTANTS (derived from NOVELTY_SCORING)
+// ============================================================================
+
+const DISCLOSURE_FRICTION_PENALTY = -5; // Missing filings or peer set penalty
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -233,8 +239,8 @@ function calculateRepetitionPenalty(
   const penaltyPerAppearance = NOVELTY_SCORING.REPETITION_PENALTY_PER_APPEARANCE;
   
   return -Math.min(
-    appearanceCount * penaltyPerAppearance,
-    NOVELTY_SCORING.MAX_REPETITION_PENALTY
+    appearanceCount * penaltyPerAppearance * 100,
+    NOVELTY_SCORING.MAX_REPETITION_PENALTY * 100
   );
 }
 
@@ -245,11 +251,11 @@ function calculateDisclosureFrictionPenalty(hasFilings: boolean, hasPeerSet: boo
   let penalty = 0;
   
   if (!hasFilings) {
-    penalty += NOVELTY_SCORING.DISCLOSURE_FRICTION_PENALTY;
+    penalty += DISCLOSURE_FRICTION_PENALTY;
   }
   
   if (!hasPeerSet) {
-    penalty += NOVELTY_SCORING.DISCLOSURE_FRICTION_PENALTY;
+    penalty += DISCLOSURE_FRICTION_PENALTY;
   }
   
   return penalty;

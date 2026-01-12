@@ -1020,7 +1020,7 @@ function generateDecisionBrief(
   return {
     packet_id: packet.packet_id,
     ticker: packet.ticker,
-    company_name: packet.company_name,
+    // company_name not in ResearchPacket schema
     verdict,
     conviction: Math.round(synthesisResult.keyAttributes ? 4 : 3),
     thesis_summary: synthesisResult.oneSentenceThesis,
