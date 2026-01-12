@@ -68,6 +68,18 @@ export const runsRepository = {
   },
 
   /**
+   * Update run with partial data
+   */
+  async update(runId: string, data: Partial<NewRun>): Promise<Run | undefined> {
+    const [result] = await db
+      .update(runs)
+      .set(data)
+      .where(eq(runs.runId, runId))
+      .returning();
+    return result;
+  },
+
+  /**
    * Update run payload/summary
    */
   async updatePayload(runId: string, payload: unknown): Promise<Run | undefined> {
