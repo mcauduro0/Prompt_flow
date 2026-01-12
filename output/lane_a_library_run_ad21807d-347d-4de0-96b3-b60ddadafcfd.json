@@ -1,0 +1,23 @@
+{
+  "runId": "ad21807d-347d-4de0-96b3-b60ddadafcfd",
+  "timestamp": "2026-01-12T23:11:43.323Z",
+  "config": {
+    "promptsVersion": "2.0.0",
+    "promptsUsed": [
+      "bull_bear_case_generator"
+    ],
+    "llmProvider": "openai"
+  },
+  "results": {
+    "stocksScreened": 20,
+    "stocksAnalyzed": 10,
+    "ideasGenerated": 10,
+    "highConvictionIdeas": 0
+  },
+  "telemetry": {
+    "durationSeconds": 138.401,
+    "totalTokens": 4065,
+    "estimatedCost": 0.00101625
+  },
+  "ideas": []
+}

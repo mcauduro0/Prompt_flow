@@ -1,0 +1,53 @@
+{
+  "summary": {
+    "total_planned": 116,
+    "total_current": 116,
+    "missing_prompts": 0,
+    "extra_prompts": 0,
+    "lane_mismatches": 0,
+    "placeholder_templates": 0,
+    "real_templates": 116,
+    "v2_templates": 116
+  },
+  "gaps": {
+    "missing_prompts": [],
+    "extra_prompts": []
+  },
+  "misalignments": {
+    "lane_mismatches": []
+  },
+  "template_status": {
+    "placeholder": [],
+    "placeholder_count": 0,
+    "real_count": 116
+  },
+  "lane_distribution": {
+    "expected": {
+      "lane_a": 42,
+      "lane_b": 44,
+      "portfolio": 21,
+      "monitoring": 2,
+      "utility": 7
+    },
+    "actual": {
+      "lane_b": 44,
+      "lane_a": 42,
+      "utility": 7,
+      "monitoring": 2,
+      "portfolio": 21
+    }
+  },
+  "llm_distribution": {
+    "expected": {
+      "gpt-4": 83,
+      "code": 18,
+      "sonar-pro": 8,
+      "claude-3-opus": 7
+    },
+    "actual": {
+      "gpt-4": 101,
+      "claude-3-opus": 7,
+      "sonar-pro": 8
+    }
+  }
+}

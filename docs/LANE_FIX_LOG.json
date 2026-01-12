@@ -1,0 +1,1653 @@
+{
+  "timestamp": "2026-01-12",
+  "total_changes": 274,
+  "lane_changes": 45,
+  "stage_changes": 113,
+  "category_changes": 116,
+  "changes": [
+    {
+      "prompt_id": "bull_bear_analysis",
+      "field": "stage",
+      "old": "synthesis",
+      "new": "thesis_development"
+    },
+    {
+      "prompt_id": "bull_bear_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "investment_presentation_creator",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "investment_presentation_creator",
+      "field": "stage",
+      "old": "synthesis",
+      "new": "discovery"
+    },
+    {
+      "prompt_id": "investment_presentation_creator",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "research_report_summary",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "research_report_summary",
+      "field": "stage",
+      "old": "synthesis",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "research_report_summary",
+      "field": "category",
+      "old": null,
+      "new": "Other"
+    },
+    {
+      "prompt_id": "contrarian_thesis_development",
+      "field": "stage",
+      "old": "synthesis",
+      "new": "thesis_development"
+    },
+    {
+      "prompt_id": "contrarian_thesis_development",
+      "field": "category",
+      "old": null,
+      "new": "Thesis"
+    },
+    {
+      "prompt_id": "investment_memo",
+      "field": "stage",
+      "old": "synthesis",
+      "new": "output"
+    },
+    {
+      "prompt_id": "investment_memo",
+      "field": "category",
+      "old": null,
+      "new": "Thesis"
+    },
+    {
+      "prompt_id": "investment_thesis_synthesis",
+      "field": "stage",
+      "old": "synthesis",
+      "new": "thesis_development"
+    },
+    {
+      "prompt_id": "investment_thesis_synthesis",
+      "field": "category",
+      "old": null,
+      "new": "Thesis"
+    },
+    {
+      "prompt_id": "peer_thesis_comparison",
+      "field": "stage",
+      "old": "synthesis",
+      "new": "thesis_development"
+    },
+    {
+      "prompt_id": "peer_thesis_comparison",
+      "field": "category",
+      "old": null,
+      "new": "Thesis"
+    },
+    {
+      "prompt_id": "thesis_monitoring_framework",
+      "field": "stage",
+      "old": "synthesis",
+      "new": "thesis_monitoring"
+    },
+    {
+      "prompt_id": "thesis_monitoring_framework",
+      "field": "category",
+      "old": null,
+      "new": "Thesis"
+    },
+    {
+      "prompt_id": "thesis_presentation",
+      "field": "stage",
+      "old": "synthesis",
+      "new": "output"
+    },
+    {
+      "prompt_id": "thesis_presentation",
+      "field": "category",
+      "old": null,
+      "new": "Thesis"
+    },
+    {
+      "prompt_id": "variant_perception",
+      "field": "stage",
+      "old": "synthesis",
+      "new": "thesis_development"
+    },
+    {
+      "prompt_id": "variant_perception",
+      "field": "category",
+      "old": null,
+      "new": "Thesis"
+    },
+    {
+      "prompt_id": "business_overview_report",
+      "field": "stage",
+      "old": "research",
+      "new": "business_analysis"
+    },
+    {
+      "prompt_id": "business_overview_report",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "capital_allocation_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "financial_analysis"
+    },
+    {
+      "prompt_id": "capital_allocation_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "capital_structure_optimizer",
+      "field": "stage",
+      "old": "research",
+      "new": "financial_analysis"
+    },
+    {
+      "prompt_id": "capital_structure_optimizer",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "ceo_track_record",
+      "field": "stage",
+      "old": "research",
+      "new": "management_analysis"
+    },
+    {
+      "prompt_id": "ceo_track_record",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "competitive_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "industry_analysis"
+    },
+    {
+      "prompt_id": "competitive_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "customer_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "business_analysis"
+    },
+    {
+      "prompt_id": "customer_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "debt_structure_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "financial_analysis"
+    },
+    {
+      "prompt_id": "debt_structure_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "esg_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "esg_analysis"
+    },
+    {
+      "prompt_id": "esg_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "financial_statement_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "financial_analysis"
+    },
+    {
+      "prompt_id": "financial_statement_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "geographic_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "business_analysis"
+    },
+    {
+      "prompt_id": "geographic_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "ma_history_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "financial_analysis"
+    },
+    {
+      "prompt_id": "ma_history_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "management_quality_assessment",
+      "field": "stage",
+      "old": "research",
+      "new": "management_analysis"
+    },
+    {
+      "prompt_id": "management_quality_assessment",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "regulatory_risk_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "risk_analysis"
+    },
+    {
+      "prompt_id": "regulatory_risk_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "risk_assessment",
+      "field": "stage",
+      "old": "research",
+      "new": "risk_analysis"
+    },
+    {
+      "prompt_id": "risk_assessment",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "risk_factor_identifier",
+      "field": "lane",
+      "old": "portfolio",
+      "new": "lane_b"
+    },
+    {
+      "prompt_id": "risk_factor_identifier",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "risk_analysis"
+    },
+    {
+      "prompt_id": "risk_factor_identifier",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "segment_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "financial_analysis"
+    },
+    {
+      "prompt_id": "segment_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "short_interest_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "technical_analysis"
+    },
+    {
+      "prompt_id": "short_interest_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "supply_chain_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "business_analysis"
+    },
+    {
+      "prompt_id": "supply_chain_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "technology_ip_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "business_analysis"
+    },
+    {
+      "prompt_id": "technology_ip_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "valuation_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "financial_analysis"
+    },
+    {
+      "prompt_id": "valuation_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "working_capital_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "financial_analysis"
+    },
+    {
+      "prompt_id": "working_capital_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "pure_play_filter",
+      "field": "stage",
+      "old": "gate",
+      "new": "screening"
+    },
+    {
+      "prompt_id": "pure_play_filter",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "thematic_candidate_screen",
+      "field": "stage",
+      "old": "gate",
+      "new": "screening"
+    },
+    {
+      "prompt_id": "thematic_candidate_screen",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "commodity_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "commodity_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "commodity_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "credit_cycle_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "credit_cycle_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "credit_cycle_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "currency_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "currency_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "currency_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "election_impact_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "election_impact_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "election_impact_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "geopolitical_risk_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "geopolitical_risk_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "geopolitical_risk_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "liquidity_conditions_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "liquidity_conditions_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "liquidity_conditions_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "market_regime_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "market_regime_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "market_regime_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "yield_curve_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "yield_curve_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "yield_curve_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "portfolio_performance_reporter",
+      "field": "lane",
+      "old": "portfolio",
+      "new": "monitoring"
+    },
+    {
+      "prompt_id": "portfolio_performance_reporter",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "position_monitoring"
+    },
+    {
+      "prompt_id": "portfolio_performance_reporter",
+      "field": "category",
+      "old": null,
+      "new": "Monitoring"
+    },
+    {
+      "prompt_id": "watchlist_screening",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "watchlist_screening",
+      "field": "stage",
+      "old": "gate",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "watchlist_screening",
+      "field": "category",
+      "old": null,
+      "new": "Other"
+    },
+    {
+      "prompt_id": "benchmark_comparison",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "risk_management"
+    },
+    {
+      "prompt_id": "benchmark_comparison",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "correlation_analysis",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "risk_management"
+    },
+    {
+      "prompt_id": "correlation_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "currency_hedging_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "portfolio"
+    },
+    {
+      "prompt_id": "currency_hedging_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "hedging"
+    },
+    {
+      "prompt_id": "currency_hedging_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "drawdown_analysis",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "risk_management"
+    },
+    {
+      "prompt_id": "drawdown_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "esg_portfolio_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "portfolio"
+    },
+    {
+      "prompt_id": "esg_portfolio_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "portfolio_analytics"
+    },
+    {
+      "prompt_id": "esg_portfolio_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "factor_exposure_analysis",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "risk_management"
+    },
+    {
+      "prompt_id": "factor_exposure_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "factor_exposure_analyzer",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "portfolio_analytics"
+    },
+    {
+      "prompt_id": "factor_exposure_analyzer",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "income_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "portfolio"
+    },
+    {
+      "prompt_id": "income_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "risk_management"
+    },
+    {
+      "prompt_id": "income_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "liquidity_analysis",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "risk_management"
+    },
+    {
+      "prompt_id": "liquidity_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "portfolio_construction",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "construction"
+    },
+    {
+      "prompt_id": "portfolio_construction",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "position_sizer",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "construction"
+    },
+    {
+      "prompt_id": "position_sizer",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "position_sizing",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "risk_management"
+    },
+    {
+      "prompt_id": "position_sizing",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "rebalancing_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "portfolio"
+    },
+    {
+      "prompt_id": "rebalancing_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "execution"
+    },
+    {
+      "prompt_id": "rebalancing_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "risk_monitoring",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "risk_management"
+    },
+    {
+      "prompt_id": "risk_monitoring",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "scenario_analysis",
+      "field": "stage",
+      "old": "portfolio",
+      "new": "risk_management"
+    },
+    {
+      "prompt_id": "scenario_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "ipo_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "special_situations"
+    },
+    {
+      "prompt_id": "ipo_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Special Situations"
+    },
+    {
+      "prompt_id": "pre_mortem_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "risk_assessment"
+    },
+    {
+      "prompt_id": "pre_mortem_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Thesis"
+    },
+    {
+      "prompt_id": "business_economics",
+      "field": "stage",
+      "old": "research",
+      "new": "business_analysis"
+    },
+    {
+      "prompt_id": "business_economics",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "china_macro_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "china_macro_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "china_macro_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "economic_indicator_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "economic_indicator_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "economic_indicator_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "fed_policy_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "fed_policy_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "fed_policy_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "inflation_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "inflation_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "inflation_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "catalyst_identification",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "lane_b"
+    },
+    {
+      "prompt_id": "catalyst_identification",
+      "field": "stage",
+      "old": "discovery",
+      "new": "catalyst_analysis"
+    },
+    {
+      "prompt_id": "catalyst_identification",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "growth_margin_drivers",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "lane_b"
+    },
+    {
+      "prompt_id": "growth_margin_drivers",
+      "field": "stage",
+      "old": "discovery",
+      "new": "financial_analysis"
+    },
+    {
+      "prompt_id": "growth_margin_drivers",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "industry_overview",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "lane_b"
+    },
+    {
+      "prompt_id": "industry_overview",
+      "field": "stage",
+      "old": "discovery",
+      "new": "industry_analysis"
+    },
+    {
+      "prompt_id": "industry_overview",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "tam_sam_som_analyzer",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "lane_b"
+    },
+    {
+      "prompt_id": "tam_sam_som_analyzer",
+      "field": "stage",
+      "old": "discovery",
+      "new": "industry_analysis"
+    },
+    {
+      "prompt_id": "tam_sam_som_analyzer",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "competitive_landscape_mapping",
+      "field": "stage",
+      "old": "discovery",
+      "new": "analysis"
+    },
+    {
+      "prompt_id": "competitive_landscape_mapping",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "connecting_disparate_trends",
+      "field": "stage",
+      "old": "discovery",
+      "new": "screening"
+    },
+    {
+      "prompt_id": "connecting_disparate_trends",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "deep_web_trend_scanner",
+      "field": "stage",
+      "old": "discovery",
+      "new": "signal_collection"
+    },
+    {
+      "prompt_id": "deep_web_trend_scanner",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "historical_parallel_finder",
+      "field": "stage",
+      "old": "discovery",
+      "new": "analysis"
+    },
+    {
+      "prompt_id": "historical_parallel_finder",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "historical_parallel_stress_test",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "identify_pure_plays",
+      "field": "stage",
+      "old": "discovery",
+      "new": "screening"
+    },
+    {
+      "prompt_id": "identify_pure_plays",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "niche_publication_scanner",
+      "field": "stage",
+      "old": "discovery",
+      "new": "signal_collection"
+    },
+    {
+      "prompt_id": "niche_publication_scanner",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "substack_idea_scraping",
+      "field": "stage",
+      "old": "discovery",
+      "new": "signal_collection"
+    },
+    {
+      "prompt_id": "substack_idea_scraping",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "thematic_idea_generator",
+      "field": "stage",
+      "old": "discovery",
+      "new": "screening"
+    },
+    {
+      "prompt_id": "thematic_idea_generator",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "theme_order_effects",
+      "field": "stage",
+      "old": "discovery",
+      "new": "screening"
+    },
+    {
+      "prompt_id": "theme_order_effects",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "trend_to_equity_mapper",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "under_radar_discovery",
+      "field": "stage",
+      "old": "discovery",
+      "new": "screening"
+    },
+    {
+      "prompt_id": "under_radar_discovery",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "value_chain_mapper",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "daily_market_briefing",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "daily_market_briefing",
+      "field": "stage",
+      "old": "discovery",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "daily_market_briefing",
+      "field": "category",
+      "old": null,
+      "new": "Other"
+    },
+    {
+      "prompt_id": "investment_policy_compliance",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "portfolio"
+    },
+    {
+      "prompt_id": "investment_policy_compliance",
+      "field": "stage",
+      "old": "discovery",
+      "new": "compliance"
+    },
+    {
+      "prompt_id": "investment_policy_compliance",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "options_overlay_strategy",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "portfolio"
+    },
+    {
+      "prompt_id": "options_overlay_strategy",
+      "field": "stage",
+      "old": "discovery",
+      "new": "hedging"
+    },
+    {
+      "prompt_id": "options_overlay_strategy",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "performance_attribution",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "portfolio"
+    },
+    {
+      "prompt_id": "performance_attribution",
+      "field": "stage",
+      "old": "discovery",
+      "new": "risk_management"
+    },
+    {
+      "prompt_id": "performance_attribution",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "tax_loss_harvesting",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "portfolio"
+    },
+    {
+      "prompt_id": "tax_loss_harvesting",
+      "field": "stage",
+      "old": "discovery",
+      "new": "tax_management"
+    },
+    {
+      "prompt_id": "tax_loss_harvesting",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "transition_management",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "portfolio"
+    },
+    {
+      "prompt_id": "transition_management",
+      "field": "stage",
+      "old": "discovery",
+      "new": "execution"
+    },
+    {
+      "prompt_id": "transition_management",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "bull_bear_case_generator",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "lane_b"
+    },
+    {
+      "prompt_id": "bull_bear_case_generator",
+      "field": "stage",
+      "old": "discovery",
+      "new": "synthesis"
+    },
+    {
+      "prompt_id": "bull_bear_case_generator",
+      "field": "category",
+      "old": null,
+      "new": "Research Synthesis"
+    },
+    {
+      "prompt_id": "activist_situation_analyzer",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "lane_b"
+    },
+    {
+      "prompt_id": "activist_situation_analyzer",
+      "field": "stage",
+      "old": "discovery",
+      "new": "special_situations"
+    },
+    {
+      "prompt_id": "activist_situation_analyzer",
+      "field": "category",
+      "old": null,
+      "new": "Special Situations"
+    },
+    {
+      "prompt_id": "spinoff_opportunity_analyzer",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "lane_b"
+    },
+    {
+      "prompt_id": "spinoff_opportunity_analyzer",
+      "field": "stage",
+      "old": "discovery",
+      "new": "special_situations"
+    },
+    {
+      "prompt_id": "spinoff_opportunity_analyzer",
+      "field": "category",
+      "old": null,
+      "new": "Special Situations"
+    },
+    {
+      "prompt_id": "exit_strategy",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "lane_b"
+    },
+    {
+      "prompt_id": "exit_strategy",
+      "field": "stage",
+      "old": "discovery",
+      "new": "execution"
+    },
+    {
+      "prompt_id": "exit_strategy",
+      "field": "category",
+      "old": null,
+      "new": "Thesis"
+    },
+    {
+      "prompt_id": "thesis_update",
+      "field": "lane",
+      "old": "monitoring",
+      "new": "lane_b"
+    },
+    {
+      "prompt_id": "thesis_update",
+      "field": "stage",
+      "old": "monitoring",
+      "new": "thesis_monitoring"
+    },
+    {
+      "prompt_id": "thesis_update",
+      "field": "category",
+      "old": null,
+      "new": "Thesis"
+    },
+    {
+      "prompt_id": "earnings_quality_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "financial_analysis"
+    },
+    {
+      "prompt_id": "earnings_quality_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "sector_thesis_stress_test",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "sector_thesis_stress_test",
+      "field": "stage",
+      "old": "synthesis",
+      "new": "discovery"
+    },
+    {
+      "prompt_id": "sector_thesis_stress_test",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "twitter_copytrading_scraper",
+      "field": "stage",
+      "old": "discovery",
+      "new": "signal_collection"
+    },
+    {
+      "prompt_id": "twitter_copytrading_scraper",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "global_macro_scan",
+      "field": "stage",
+      "old": "discovery",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "global_macro_scan",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "macro_environment_analysis",
+      "field": "lane",
+      "old": "monitoring",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "macro_environment_analysis",
+      "field": "stage",
+      "old": "monitoring",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "macro_environment_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "insider_activity_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "technical_analysis"
+    },
+    {
+      "prompt_id": "insider_activity_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Due Diligence"
+    },
+    {
+      "prompt_id": "sector_sensitivity_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "lane_a"
+    },
+    {
+      "prompt_id": "sector_sensitivity_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "sector_sensitivity_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "news_sentiment_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "news_sentiment_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "news_sentiment_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Other"
+    },
+    {
+      "prompt_id": "sec_filing_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "sec_filing_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "sec_filing_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Other"
+    },
+    {
+      "prompt_id": "sector_rotation_analysis",
+      "field": "lane",
+      "old": "lane_b",
+      "new": "portfolio"
+    },
+    {
+      "prompt_id": "sector_rotation_analysis",
+      "field": "stage",
+      "old": "research",
+      "new": "strategy"
+    },
+    {
+      "prompt_id": "sector_rotation_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Portfolio Management"
+    },
+    {
+      "prompt_id": "newsletter_idea_scraping",
+      "field": "stage",
+      "old": "discovery",
+      "new": "signal_collection"
+    },
+    {
+      "prompt_id": "newsletter_idea_scraping",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "reddit_memestock_scraper",
+      "field": "stage",
+      "old": "discovery",
+      "new": "signal_collection"
+    },
+    {
+      "prompt_id": "reddit_memestock_scraper",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "earnings_season_preview",
+      "field": "stage",
+      "old": "discovery",
+      "new": "macro_context"
+    },
+    {
+      "prompt_id": "earnings_season_preview",
+      "field": "category",
+      "old": null,
+      "new": "Macro"
+    },
+    {
+      "prompt_id": "earnings_season_analyzer",
+      "field": "stage",
+      "old": "discovery",
+      "new": "market_analysis"
+    },
+    {
+      "prompt_id": "earnings_season_analyzer",
+      "field": "category",
+      "old": null,
+      "new": "Market Analysis"
+    },
+    {
+      "prompt_id": "competitor_earnings_comparison",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "competitor_earnings_comparison",
+      "field": "stage",
+      "old": "discovery",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "competitor_earnings_comparison",
+      "field": "category",
+      "old": null,
+      "new": "Other"
+    },
+    {
+      "prompt_id": "earnings_call_analysis",
+      "field": "lane",
+      "old": "monitoring",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "earnings_call_analysis",
+      "field": "stage",
+      "old": "monitoring",
+      "new": "utility"
+    },
+    {
+      "prompt_id": "earnings_call_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Other"
+    },
+    {
+      "prompt_id": "earnings_preview_generator",
+      "field": "lane",
+      "old": "lane_a",
+      "new": "lane_b"
+    },
+    {
+      "prompt_id": "earnings_preview_generator",
+      "field": "stage",
+      "old": "discovery",
+      "new": "synthesis"
+    },
+    {
+      "prompt_id": "earnings_preview_generator",
+      "field": "category",
+      "old": null,
+      "new": "Research Synthesis"
+    },
+    {
+      "prompt_id": "insider_trading_analysis",
+      "field": "stage",
+      "old": "discovery",
+      "new": "signal_collection"
+    },
+    {
+      "prompt_id": "insider_trading_analysis",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "institutional_clustering_13f",
+      "field": "stage",
+      "old": "discovery",
+      "new": "signal_collection"
+    },
+    {
+      "prompt_id": "institutional_clustering_13f",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "social_sentiment_scanner",
+      "field": "stage",
+      "old": "discovery",
+      "new": "signal_collection"
+    },
+    {
+      "prompt_id": "social_sentiment_scanner",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "theme_subsector_expansion",
+      "field": "stage",
+      "old": "discovery",
+      "new": "screening"
+    },
+    {
+      "prompt_id": "theme_subsector_expansion",
+      "field": "category",
+      "old": null,
+      "new": "Idea Generation"
+    },
+    {
+      "prompt_id": "news_sentiment_monitor",
+      "field": "stage",
+      "old": "monitoring",
+      "new": "position_monitoring"
+    },
+    {
+      "prompt_id": "news_sentiment_monitor",
+      "field": "category",
+      "old": null,
+      "new": "Monitoring"
+    },
+    {
+      "prompt_id": "sector_momentum_ranker",
+      "field": "stage",
+      "old": "discovery",
+      "new": "market_analysis"
+    },
+    {
+      "prompt_id": "sector_momentum_ranker",
+      "field": "category",
+      "old": null,
+      "new": "Market Analysis"
+    }
+  ]
+}
