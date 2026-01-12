@@ -12,52 +12,10 @@ import {
   DecisionBriefSchema,
 } from '../schemas/index.js';
 
-// Re-export research packet completion (no conflicts)
-export {
-  checkResearchPacketCompletion,
-  getCompletionReport,
-  MANDATORY_SECTIONS,
-  MANDATORY_EXECUTIVE_VIEW_FIELDS,
-  MANDATORY_MODULE_FIELDS,
-  type CompletionCheckResult,
-  type SectionCompletionStatus,
-  type CompletionReport,
-} from './research-packet-completion.js';
-
-// Re-export evidence traceability (with renamed exports to avoid conflicts)
-export {
-  SourceLocatorSchema,
-  EvidenceRefSchema,
-  NumericClaimSchema as EvidenceNumericClaimSchema,
-  validateSourceLocator,
-  validateEvidenceRef,
-  validateNumericClaim as validateEvidenceNumericClaim,
-  validateAllNumericClaims,
-  extractNumericClaims,
-  type EvidenceRef,
-  type NumericClaim as EvidenceNumericClaim,
-} from './evidence-traceability.js';
-
-// Re-export evidence locator (with renamed exports to avoid conflicts)
-export {
-  SourceTypeSchema,
-  EvidenceLocatorSchema,
-  NumericClaimSchema as LocatorNumericClaimSchema,
-  resolveEvidenceLocator,
-  validateNumericClaimEvidence,
-  validateAllClaimsInPacket,
-  createMockDocumentRegistry,
-  type SourceType,
-  type EvidenceLocator,
-  type NumericClaim as LocatorNumericClaim,
-  type DocumentRegistry,
-  type DocumentMetadata,
-  type ChunkMetadata,
-  type DocumentFilters,
-  type EvidenceResolutionResult,
-  type ClaimValidationResult,
-  type PacketValidationResult,
-} from './evidence-locator.js';
+// Re-export all from submodules (they have unique exports)
+export * from './research-packet-completion.js';
+export * from './evidence-traceability.js';
+export * from './evidence-locator.js';
 
 // ============================================================================
 // TYPES
@@ -124,12 +82,12 @@ export function validate<T>(
 /**
  * Validate data against a named schema from registry
  */
-export function validateByName<T extends SchemaName>(
-  schemaName: T,
+export function validateByName(
+  schemaName: SchemaName,
   data: unknown
-): ValidationResult<z.infer<(typeof schemaRegistry)[T]>> {
+): ValidationResult<unknown> {
   const schema = schemaRegistry[schemaName];
-  return validate(schema, data);
+  return validate(schema as ZodSchema<unknown>, data);
 }
 
 /**

@@ -79,7 +79,7 @@ export type EvidenceLocator = z.infer<typeof EvidenceLocatorSchema>;
 /**
  * Numeric Claim with Evidence Locator
  */
-export const NumericClaimSchema = z.object({
+export const LocatorNumericClaimSchema = z.object({
   // The claim itself
   claim_text: z.string().min(10).describe('The numeric claim being made'),
   
@@ -102,7 +102,7 @@ export const NumericClaimSchema = z.object({
   validation_notes: z.string().optional(),
 });
 
-export type NumericClaim = z.infer<typeof NumericClaimSchema>;
+export type LocatorNumericClaim = z.infer<typeof LocatorNumericClaimSchema>;
 
 // ============================================================================
 // EVIDENCE RESOLUTION
@@ -217,7 +217,7 @@ export class EvidenceResolver {
   /**
    * Validate a numeric claim's evidence
    */
-  async validateNumericClaim(claim: NumericClaim): Promise<{
+  async validateNumericClaim(claim: LocatorNumericClaim): Promise<{
     valid: boolean;
     errors: string[];
     warnings: string[];
@@ -300,8 +300,8 @@ export interface EvidenceGroundingResult {
 /**
  * Extract numeric claims from a ResearchPacket
  */
-export function extractNumericClaims(packet: any): NumericClaim[] {
-  const claims: NumericClaim[] = [];
+export function extractLocatorNumericClaims(packet: any): LocatorNumericClaim[] {
+  const claims: LocatorNumericClaim[] = [];
 
   // Helper to extract claims from text
   const extractFromText = (text: string, context: string): void => {
@@ -362,7 +362,7 @@ export async function checkEvidenceGrounding(
   resolver?: EvidenceResolver,
   spotCheckSampleSize: number = 10
 ): Promise<EvidenceGroundingResult> {
-  const claims = extractNumericClaims(packet);
+  const claims = extractLocatorNumericClaims(packet);
   const errors: string[] = [];
   const warnings: string[] = [];
   
@@ -521,10 +521,10 @@ export function generateChunkId(
 
 export default {
   EvidenceLocatorSchema,
-  NumericClaimSchema,
+  LocatorNumericClaimSchema,
   SourceTypeSchema,
   EvidenceResolver,
-  extractNumericClaims,
+  extractLocatorNumericClaims,
   checkEvidenceGrounding,
   generateSecFilingDocId,
   generateTranscriptDocId,
