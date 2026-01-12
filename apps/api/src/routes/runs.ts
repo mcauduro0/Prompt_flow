@@ -31,80 +31,7 @@ runsRouter.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// Get run by ID
-runsRouter.get('/:runId', async (req: Request, res: Response) => {
-  try {
-    const run = await runsRepository.getById(req.params.runId);
-    if (!run) {
-      res.status(404).json({ error: 'Run not found' });
-      return;
-    }
-    // Transform to UI format
-    const transformed = {
-      id: run.runId,
-      type: run.runType,
-      status: run.status,
-      started_at: run.runDate,
-      completed_at: run.completedAt,
-      duration_ms: run.completedAt ? new Date(run.completedAt).getTime() - new Date(run.runDate).getTime() : null,
-      summary: (run as any).payload || {},
-      error: run.errorMessage,
-    };
-    res.json(transformed);
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-});
-
-// Get recent runs by type
-runsRouter.get('/type/:runType', async (req: Request, res: Response) => {
-  try {
-    const limit = parseInt(req.query.limit as string) || 10;
-    const runs = await runsRepository.getRecentByType(req.params.runType, limit);
-    res.json({ runs, count: runs.length });
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-});
-
-// Get latest run by type
-runsRouter.get('/type/:runType/latest', async (req: Request, res: Response) => {
-  try {
-    const run = await runsRepository.getLatestByType(req.params.runType);
-    if (!run) {
-      res.status(404).json({ error: 'No runs found for type' });
-      return;
-    }
-    res.json(run);
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-});
-
-// Get failed runs
-runsRouter.get('/status/failed', async (req: Request, res: Response) => {
-  try {
-    const limit = parseInt(req.query.limit as string) || 10;
-    const runs = await runsRepository.getFailedRuns(limit);
-    res.json({ runs, count: runs.length });
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-});
-
-// Trigger a job manually
-runsRouter.post('/trigger/:jobName', async (req: Request, res: Response) => {
-  try {
-    const { jobName } = req.params;
-    // Note: runJob import removed to avoid circular dependency
-    // Jobs should be triggered via worker CLI
-    res.json({ message: `Job ${jobName} trigger requested`, status: 'queued' });
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-});
-
-// Get system warm-up status
+// Get system warm-up status (MUST be before /:runId to avoid conflict)
 runsRouter.get('/warmup-status', async (req: Request, res: Response) => {
   try {
     // Get last Lane A run
@@ -145,7 +72,7 @@ runsRouter.get('/warmup-status', async (req: Request, res: Response) => {
   }
 });
 
-// Get scheduled jobs info
+// Get scheduled jobs info (MUST be before /:runId to avoid conflict)
 runsRouter.get('/scheduled/list', async (req: Request, res: Response) => {
   try {
     const jobs = [
@@ -155,6 +82,79 @@ runsRouter.get('/scheduled/list', async (req: Request, res: Response) => {
       { name: 'weekly_ic_bundle', schedule: '0 19 * * 5', timezone: 'America/Sao_Paulo', description: 'IC Bundle' },
     ];
     res.json({ jobs });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Get recent runs by type (MUST be before /:runId to avoid conflict)
+runsRouter.get('/type/:runType', async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 10;
+    const runs = await runsRepository.getRecentByType(req.params.runType, limit);
+    res.json({ runs, count: runs.length });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Get latest run by type (MUST be before /:runId to avoid conflict)
+runsRouter.get('/type/:runType/latest', async (req: Request, res: Response) => {
+  try {
+    const run = await runsRepository.getLatestByType(req.params.runType);
+    if (!run) {
+      res.status(404).json({ error: 'No runs found for type' });
+      return;
+    }
+    res.json(run);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Get failed runs (MUST be before /:runId to avoid conflict)
+runsRouter.get('/status/failed', async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 10;
+    const runs = await runsRepository.getFailedRuns(limit);
+    res.json({ runs, count: runs.length });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Trigger a job manually
+runsRouter.post('/trigger/:jobName', async (req: Request, res: Response) => {
+  try {
+    const { jobName } = req.params;
+    // Note: runJob import removed to avoid circular dependency
+    // Jobs should be triggered via worker CLI
+    res.json({ message: `Job ${jobName} trigger requested`, status: 'queued' });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Get run by ID (MUST be LAST - catches all other patterns)
+runsRouter.get('/:runId', async (req: Request, res: Response) => {
+  try {
+    const run = await runsRepository.getById(req.params.runId);
+    if (!run) {
+      res.status(404).json({ error: 'Run not found' });
+      return;
+    }
+    // Transform to UI format
+    const transformed = {
+      id: run.runId,
+      type: run.runType,
+      status: run.status,
+      started_at: run.runDate,
+      completed_at: run.completedAt,
+      duration_ms: run.completedAt ? new Date(run.completedAt).getTime() - new Date(run.runDate).getTime() : null,
+      summary: (run as any).payload || {},
+      error: run.errorMessage,
+    };
+    res.json(transformed);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
