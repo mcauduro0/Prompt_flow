@@ -31,6 +31,37 @@ qaRouter.get('/', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/qa/current - Get most recent QA report
+qaRouter.get('/current', async (req: Request, res: Response) => {
+  try {
+    // Get the most recent weekly_qa run
+    const runs = await runsRepository.getByType('weekly_qa', 1);
+    
+    if (runs.length === 0) {
+      res.json({ 
+        message: 'No QA reports available yet',
+        report: null 
+      });
+      return;
+    }
+    
+    const run = runs[0] as any;
+    const report = {
+      id: run.runId,
+      week_start: run.runDate,
+      week_end: run.completedAt,
+      status: run.payload?.status || (run.status === 'completed' ? 'pass' : 'fail'),
+      overall_score: run.payload?.overall_score || 0,
+      sections: run.payload?.sections || [],
+      drift_alarms: run.payload?.drift_alarms || [],
+    };
+    
+    res.json({ report });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
 // GET /api/qa/:id - Get single QA report
 qaRouter.get('/:id', async (req: Request, res: Response) => {
   try {
