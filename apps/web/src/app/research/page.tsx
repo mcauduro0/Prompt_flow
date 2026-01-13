@@ -77,7 +77,7 @@ export default function ResearchPage() {
   useEffect(() => {
     const fetchPackets = async () => {
       try {
-        const res = await fetch("/api/research");
+        const res = await fetch("/api/research/packets");
         if (res.ok) {
           const data = await res.json();
           const packetsData = data.packets || [];
