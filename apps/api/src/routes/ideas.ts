@@ -96,15 +96,69 @@ ideasRouter.get('/:ideaId', async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Idea not found' });
       return;
     }
-    // Transform to UI format
+    
+    // Parse gate results from database format to UI format
+    const dbGateResults = (idea as any).gateResults || {};
+    const gateResults = {
+      gate_0: dbGateResults.gate_0_data_sufficiency === 'pass',
+      gate_1: dbGateResults.gate_1_coherence === 'pass',
+      gate_2: dbGateResults.gate_2_edge_claim === 'pass',
+      gate_3: dbGateResults.gate_3_downside_shape === 'pass',
+      gate_4: dbGateResults.gate_4_style_fit === 'pass',
+      // Include raw results for debugging
+      raw: dbGateResults,
+      // Flag if gates have been executed
+      executed: Object.keys(dbGateResults).length > 0,
+    };
+    
+    // Calculate conviction score from score object if available
+    const scoreObj = (idea as any).score || {};
+    const convictionScore = scoreObj.total ?? 
+      (idea as any).convictionScore ?? 
+      (idea as any).conviction_score ?? 
+      0;
+    
+    // Transform to UI format with proper field mappings
     const transformed = {
       ...idea,
-      conviction_score: (idea as any).convictionScore ?? (idea as any).conviction_score ?? 0,
-      company_name: (idea as any).companyName ?? (idea as any).company_name ?? '',
-      one_liner: (idea as any).oneLiner ?? (idea as any).one_liner ?? '',
-      novelty_tag: (idea as any).noveltyTag ?? (idea as any).novelty_tag ?? 'new',
-      gate_results: (idea as any).gateResults ?? (idea as any).gate_results ?? {},
+      // Core identification
+      ticker: idea.ticker,
+      company_name: (idea as any).companyName || '',
+      style: (idea as any).styleTag || 'unknown',
+      
+      // Investment thesis content
+      headline: (idea as any).oneSentenceHypothesis || '',
+      one_liner: (idea as any).mechanism || '',
+      
+      // Scoring
+      conviction_score: convictionScore,
+      score_breakdown: scoreObj,
+      novelty_tag: (idea as any).isNewTicker ? 'new' : 'seen_before',
+      novelty_score: (idea as any).noveltyScore || null,
+      direction: 'long', // Default for Lane A ideas
+      
+      // Gate results
+      gate_results: gateResults,
+      gates_executed: Object.keys(dbGateResults).length > 0,
+      
+      // Edge and catalysts
+      edge_type: (idea as any).edgeType || [],
+      catalysts: (idea as any).catalysts || [],
+      signposts: (idea as any).signposts || [],
+      
+      // Quick metrics
+      quick_metrics: (idea as any).quickMetrics || {},
+      
+      // Discovery metadata
+      discovery_date: (idea as any).asOf,
+      time_horizon: (idea as any).timeHorizon || '1_3_years',
+      
+      // Status
+      status: idea.status,
+      is_new_ticker: (idea as any).isNewTicker || false,
+      whats_new_since_last_time: (idea as any).whatsNewSinceLastTime || null,
     };
+    
     res.json(transformed);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
