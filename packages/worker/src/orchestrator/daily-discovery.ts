@@ -527,7 +527,7 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
     };
   }
 
-  let telemetry: { total_cost: number; total_latency_ms: number; prompts_executed: number } | undefined;
+  let telemetry: { total_cost: number; total_latency_ms: number; prompts_executed: number; total_tokens?: number; provider?: string; model?: string } | undefined;
 
   try {
     // Step 1: Fetch universe from FMP
@@ -571,7 +571,7 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
         provider: legacyResult.telemetry.provider,
         model: legacyResult.telemetry.model,
       };
-      console.log(`[Lane A] Legacy telemetry: ${telemetry.prompts_executed} LLM calls, ${telemetry.total_tokens} tokens, $${telemetry.total_cost.toFixed(4)} cost`);
+      console.log(`[Lane A] Legacy telemetry: ${telemetry!.prompts_executed} LLM calls, ${telemetry!.total_tokens} tokens, $${telemetry!.total_cost.toFixed(4)} cost`);
     }
     console.log(`[Lane A] Generated ${rawIdeas.length} raw ideas`);
 
