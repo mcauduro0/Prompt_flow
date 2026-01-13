@@ -68,7 +68,9 @@
         "risk_assessment"
       ],
       "value_cost_ratio": 2,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "investment_presentation_creator",
@@ -134,7 +136,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 2,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "core",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "research_report_summary",
@@ -200,7 +204,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 2,
-      "category": "Other"
+      "category": "Other",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "contrarian_thesis_development",
@@ -266,7 +272,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 2,
-      "category": "Thesis"
+      "category": "Thesis",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "investment_memo",
@@ -332,7 +340,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 2,
-      "category": "Thesis"
+      "category": "Thesis",
+      "status_institucional": "core",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "investment_thesis_synthesis",
@@ -425,7 +435,9 @@
           "ticker"
         ]
       },
-      "category": "Thesis"
+      "category": "Thesis",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "peer_thesis_comparison",
@@ -491,7 +503,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 2,
-      "category": "Thesis"
+      "category": "Thesis",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "thesis_monitoring_framework",
@@ -557,7 +571,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 2,
-      "category": "Thesis"
+      "category": "Thesis",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "thesis_presentation",
@@ -623,7 +639,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 2,
-      "category": "Thesis"
+      "category": "Thesis",
+      "status_institucional": "core",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "variant_perception",
@@ -689,7 +707,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 2,
-      "category": "Thesis"
+      "category": "Thesis",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "business_overview_report",
@@ -755,7 +775,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "capital_allocation_analysis",
@@ -821,7 +843,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "capital_structure_optimizer",
@@ -887,7 +911,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "ceo_track_record",
@@ -953,7 +979,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "competitive_analysis",
@@ -1021,7 +1049,9 @@
         "industry_overview"
       ],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "customer_analysis",
@@ -1087,7 +1117,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "debt_structure_analysis",
@@ -1153,7 +1185,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "esg_analysis",
@@ -1219,7 +1253,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "financial_statement_analysis",
@@ -1285,7 +1321,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "geographic_analysis",
@@ -1351,7 +1389,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "ma_history_analysis",
@@ -1417,7 +1457,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "management_quality_assessment",
@@ -1483,7 +1525,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "regulatory_risk_analysis",
@@ -1549,7 +1593,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "risk_assessment",
@@ -1643,7 +1689,9 @@
           "profile"
         ]
       },
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "risk_factor_identifier",
@@ -1709,7 +1757,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "segment_analysis",
@@ -1775,7 +1825,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "short_interest_analysis",
@@ -1841,7 +1893,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "supply_chain_analysis",
@@ -1907,7 +1961,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "technology_ip_analysis",
@@ -1973,7 +2029,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "valuation_analysis",
@@ -2070,7 +2128,9 @@
           "metrics"
         ]
       },
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "working_capital_analysis",
@@ -2136,7 +2196,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "pure_play_filter",
@@ -2202,7 +2264,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "core",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "thematic_candidate_screen",
@@ -2268,7 +2332,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "core",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "commodity_analysis",
@@ -2334,7 +2400,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "credit_cycle_analysis",
@@ -2400,7 +2468,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "currency_analysis",
@@ -2466,7 +2536,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "election_impact_analysis",
@@ -2532,7 +2604,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "geopolitical_risk_analysis",
@@ -2598,7 +2672,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "liquidity_conditions_analysis",
@@ -2664,7 +2740,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "market_regime_analysis",
@@ -2730,7 +2808,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "yield_curve_analysis",
@@ -2796,7 +2876,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "portfolio_performance_reporter",
@@ -2862,7 +2944,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Monitoring"
+      "category": "Monitoring",
+      "status_institucional": "supporting",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "watchlist_screening",
@@ -2928,7 +3012,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Other"
+      "category": "Other",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "benchmark_comparison",
@@ -2994,7 +3080,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "correlation_analysis",
@@ -3060,7 +3148,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "currency_hedging_analysis",
@@ -3126,7 +3216,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "drawdown_analysis",
@@ -3192,7 +3284,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "esg_portfolio_analysis",
@@ -3258,7 +3352,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "factor_exposure_analysis",
@@ -3324,7 +3420,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "factor_exposure_analyzer",
@@ -3390,7 +3488,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "income_analysis",
@@ -3456,7 +3556,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "liquidity_analysis",
@@ -3522,7 +3624,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "portfolio_construction",
@@ -3588,7 +3692,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "core",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "position_sizer",
@@ -3654,7 +3760,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "core",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "position_sizing",
@@ -3720,7 +3828,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "rebalancing_analysis",
@@ -3786,7 +3896,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "risk_monitoring",
@@ -3852,7 +3964,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "core",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "scenario_analysis",
@@ -3918,7 +4032,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "ipo_analysis",
@@ -3984,7 +4100,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Special Situations"
+      "category": "Special Situations",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "pre_mortem_analysis",
@@ -4050,7 +4168,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.8,
-      "category": "Thesis"
+      "category": "Thesis",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "business_economics",
@@ -4117,7 +4237,9 @@
       "expected_cost_score": 6,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.5,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "china_macro_analysis",
@@ -4184,7 +4306,9 @@
       "expected_cost_score": 6,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.5,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "economic_indicator_analysis",
@@ -4251,7 +4375,9 @@
       "expected_cost_score": 6,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.5,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "fed_policy_analysis",
@@ -4318,7 +4444,9 @@
       "expected_cost_score": 6,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.5,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "inflation_analysis",
@@ -4385,7 +4513,9 @@
       "expected_cost_score": 6,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.5,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "catalyst_identification",
@@ -4451,7 +4581,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "growth_margin_drivers",
@@ -4517,7 +4649,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "industry_overview",
@@ -4583,7 +4717,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "tam_sam_som_analyzer",
@@ -4649,7 +4785,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "competitive_landscape_mapping",
@@ -4715,7 +4853,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "connecting_disparate_trends",
@@ -4781,7 +4921,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "deep_web_trend_scanner",
@@ -4847,7 +4989,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "historical_parallel_finder",
@@ -4913,7 +5057,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "historical_parallel_stress_test",
@@ -4979,7 +5125,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "identify_pure_plays",
@@ -5045,7 +5193,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "niche_publication_scanner",
@@ -5111,7 +5261,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "substack_idea_scraping",
@@ -5177,7 +5329,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "thematic_idea_generator",
@@ -5243,7 +5397,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "theme_order_effects",
@@ -5309,7 +5465,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "trend_to_equity_mapper",
@@ -5375,7 +5533,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "under_radar_discovery",
@@ -5441,7 +5601,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "value_chain_mapper",
@@ -5507,7 +5669,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "daily_market_briefing",
@@ -5573,7 +5737,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Other"
+      "category": "Other",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "investment_policy_compliance",
@@ -5639,7 +5805,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "options_overlay_strategy",
@@ -5705,7 +5873,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "performance_attribution",
@@ -5771,7 +5941,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "tax_loss_harvesting",
@@ -5837,7 +6009,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "transition_management",
@@ -5903,7 +6077,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "bull_bear_case_generator",
@@ -5969,7 +6145,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Research Synthesis"
+      "category": "Research Synthesis",
+      "status_institucional": "supporting",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "activist_situation_analyzer",
@@ -6035,7 +6213,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Special Situations"
+      "category": "Special Situations",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "spinoff_opportunity_analyzer",
@@ -6101,7 +6281,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Special Situations"
+      "category": "Special Situations",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "exit_strategy",
@@ -6167,7 +6349,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Thesis"
+      "category": "Thesis",
+      "status_institucional": "supporting",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "thesis_update",
@@ -6233,7 +6417,9 @@
       "expected_cost_score": 5,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.4,
-      "category": "Thesis"
+      "category": "Thesis",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "earnings_quality_analysis",
@@ -6301,7 +6487,9 @@
       "expected_cost_score": 7,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.29,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "core",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "sector_thesis_stress_test",
@@ -6368,7 +6556,9 @@
       "expected_cost_score": 8,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.25,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "core",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "twitter_copytrading_scraper",
@@ -6435,7 +6625,9 @@
       "expected_cost_score": 6,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.17,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "global_macro_scan",
@@ -6502,7 +6694,9 @@
       "expected_cost_score": 6,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.17,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "macro_environment_analysis",
@@ -6569,7 +6763,9 @@
       "expected_cost_score": 6,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.17,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "insider_activity_analysis",
@@ -6636,7 +6832,9 @@
       "expected_cost_score": 8,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.13,
-      "category": "Due Diligence"
+      "category": "Due Diligence",
+      "status_institucional": "supporting",
+      "dependency_type": "lane_a_promotion"
     },
     {
       "prompt_id": "sector_sensitivity_analysis",
@@ -6703,7 +6901,9 @@
       "expected_cost_score": 8,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.13,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "news_sentiment_analysis",
@@ -6772,7 +6972,9 @@
       "expected_cost_score": 8,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.13,
-      "category": "Other"
+      "category": "Other",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "sec_filing_analysis",
@@ -6839,7 +7041,9 @@
       "expected_cost_score": 8,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.13,
-      "category": "Other"
+      "category": "Other",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "sector_rotation_analysis",
@@ -6906,7 +7110,9 @@
       "expected_cost_score": 8,
       "min_signal_dependency": [],
       "value_cost_ratio": 1.13,
-      "category": "Portfolio Management"
+      "category": "Portfolio Management",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "newsletter_idea_scraping",
@@ -6974,7 +7180,9 @@
       "expected_cost_score": 7,
       "min_signal_dependency": [],
       "value_cost_ratio": 1,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "reddit_memestock_scraper",
@@ -7041,7 +7249,9 @@
       "expected_cost_score": 7,
       "min_signal_dependency": [],
       "value_cost_ratio": 1,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "earnings_season_preview",
@@ -7109,7 +7319,9 @@
       "expected_cost_score": 7,
       "min_signal_dependency": [],
       "value_cost_ratio": 1,
-      "category": "Macro"
+      "category": "Macro",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "earnings_season_analyzer",
@@ -7177,7 +7389,9 @@
       "expected_cost_score": 7,
       "min_signal_dependency": [],
       "value_cost_ratio": 1,
-      "category": "Market Analysis"
+      "category": "Market Analysis",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "competitor_earnings_comparison",
@@ -7245,7 +7459,9 @@
       "expected_cost_score": 7,
       "min_signal_dependency": [],
       "value_cost_ratio": 1,
-      "category": "Other"
+      "category": "Other",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "earnings_call_analysis",
@@ -7313,7 +7529,9 @@
       "expected_cost_score": 7,
       "min_signal_dependency": [],
       "value_cost_ratio": 1,
-      "category": "Other"
+      "category": "Other",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "earnings_preview_generator",
@@ -7381,7 +7599,9 @@
       "expected_cost_score": 7,
       "min_signal_dependency": [],
       "value_cost_ratio": 1,
-      "category": "Research Synthesis"
+      "category": "Research Synthesis",
+      "status_institucional": "supporting",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "insider_trading_analysis",
@@ -7448,7 +7668,9 @@
       "expected_cost_score": 8,
       "min_signal_dependency": [],
       "value_cost_ratio": 0.88,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "institutional_clustering_13f",
@@ -7515,7 +7737,9 @@
       "expected_cost_score": 8,
       "min_signal_dependency": [],
       "value_cost_ratio": 0.88,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "social_sentiment_scanner",
@@ -7583,7 +7807,9 @@
       "expected_cost_score": 8,
       "min_signal_dependency": [],
       "value_cost_ratio": 0.88,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "theme_subsector_expansion",
@@ -7650,7 +7876,9 @@
       "expected_cost_score": 8,
       "min_signal_dependency": [],
       "value_cost_ratio": 0.88,
-      "category": "Idea Generation"
+      "category": "Idea Generation",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     },
     {
       "prompt_id": "news_sentiment_monitor",
@@ -7719,7 +7947,9 @@
       "expected_cost_score": 8,
       "min_signal_dependency": [],
       "value_cost_ratio": 0.88,
-      "category": "Monitoring"
+      "category": "Monitoring",
+      "status_institucional": "supporting",
+      "dependency_type": "signal_threshold"
     },
     {
       "prompt_id": "sector_momentum_ranker",
@@ -7787,9 +8017,16 @@
       "expected_cost_score": 9,
       "min_signal_dependency": [],
       "value_cost_ratio": 0.78,
-      "category": "Market Analysis"
+      "category": "Market Analysis",
+      "status_institucional": "supporting",
+      "dependency_type": "always"
     }
   ],
   "version": "2.0.0",
-  "total": 116
+  "total": 116,
+  "metadata": {
+    "version": "1.0.0",
+    "institutional_fields_added": true,
+    "migration_date": "2026-01-13"
+  }
 }

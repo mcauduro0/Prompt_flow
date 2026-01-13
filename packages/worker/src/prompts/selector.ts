@@ -5,7 +5,7 @@
  * Implements value-based prioritization for optimal resource utilization.
  */
 
-import type { PromptDefinition, Lane, BudgetState } from './types.js';
+import type { PromptDefinition, Lane, BudgetState, StatusInstitucional, DependencyType } from './types.js';
 
 // ============================================================================
 // TYPES
@@ -20,6 +20,10 @@ export interface SelectionCriteria {
   required_prompt_ids?: string[];
   exclude_prompt_ids?: string[];
   completed_prompt_ids?: string[];
+  // Institutional governance filters
+  status_institucional?: StatusInstitucional[];  // Filter by institutional status
+  dependency_type?: DependencyType[];            // Filter by dependency type
+  exclude_deprecated?: boolean;                  // Auto-exclude deprecated prompts (default: true)
 }
 
 export interface SelectionResult {
@@ -108,6 +112,30 @@ export class PromptSelector {
     if (criteria.max_cost_score !== undefined) {
       candidates = candidates.filter(
         (p) => (p.expected_cost_score || 5) <= criteria.max_cost_score!
+      );
+    }
+
+    // Apply institutional governance filters
+    // Exclude deprecated prompts by default
+    if (criteria.exclude_deprecated !== false) {
+      candidates = candidates.filter(
+        (p) => p.status_institucional !== 'deprecated'
+      );
+    }
+
+    // Filter by status_institucional if specified
+    if (criteria.status_institucional && criteria.status_institucional.length > 0) {
+      const statusSet = new Set(criteria.status_institucional);
+      candidates = candidates.filter(
+        (p) => statusSet.has(p.status_institucional || 'supporting')
+      );
+    }
+
+    // Filter by dependency_type if specified
+    if (criteria.dependency_type && criteria.dependency_type.length > 0) {
+      const depTypeSet = new Set(criteria.dependency_type);
+      candidates = candidates.filter(
+        (p) => depTypeSet.has(p.dependency_type || 'always')
       );
     }
 
@@ -390,12 +418,16 @@ export class PromptSelector {
     total: number;
     byLane: Record<string, number>;
     byStage: Record<string, number>;
+    byStatusInstitucional: Record<string, number>;
+    byDependencyType: Record<string, number>;
     avgValueScore: number;
     avgCostScore: number;
     avgRatio: number;
   } {
     const byLane: Record<string, number> = {};
     const byStage: Record<string, number> = {};
+    const byStatusInstitucional: Record<string, number> = {};
+    const byDependencyType: Record<string, number> = {};
     let totalValue = 0;
     let totalCost = 0;
     let totalRatio = 0;
@@ -403,6 +435,14 @@ export class PromptSelector {
     for (const prompt of this.prompts) {
       byLane[prompt.lane] = (byLane[prompt.lane] || 0) + 1;
       byStage[prompt.stage] = (byStage[prompt.stage] || 0) + 1;
+      
+      // Institutional governance stats
+      const status = prompt.status_institucional || 'supporting';
+      byStatusInstitucional[status] = (byStatusInstitucional[status] || 0) + 1;
+      
+      const depType = prompt.dependency_type || 'always';
+      byDependencyType[depType] = (byDependencyType[depType] || 0) + 1;
+      
       totalValue += prompt.expected_value_score || 5;
       totalCost += prompt.expected_cost_score || 5;
       totalRatio += prompt.value_cost_ratio || 1;
@@ -414,10 +454,32 @@ export class PromptSelector {
       total: this.prompts.length,
       byLane,
       byStage,
+      byStatusInstitucional,
+      byDependencyType,
       avgValueScore: totalValue / count,
       avgCostScore: totalCost / count,
       avgRatio: totalRatio / count,
     };
+  }
+
+  /**
+   * Select only core prompts for critical execution paths
+   */
+  selectCorePrompts(lane: Lane): SelectionResult {
+    return this.selectPrompts({
+      lane,
+      status_institucional: ['core'],
+    });
+  }
+
+  /**
+   * Select prompts that can always be executed (no dependencies)
+   */
+  selectAlwaysAvailable(lane: Lane): SelectionResult {
+    return this.selectPrompts({
+      lane,
+      dependency_type: ['always'],
+    });
   }
 }
 

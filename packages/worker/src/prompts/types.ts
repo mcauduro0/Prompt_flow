@@ -15,6 +15,12 @@ export type ExecutorType = 'llm' | 'code' | 'hybrid';
 export type Lane = 'A' | 'B' | 'lane_a' | 'lane_b' | 'monitoring' | 'portfolio' | 'shared';
 export type PipelineStage = 'discovery' | 'screening' | 'research' | 'synthesis' | 'qa';
 export type Criticality = 'blocker' | 'optional';
+
+// Institutional status for governance and prioritization
+export type StatusInstitucional = 'core' | 'supporting' | 'optional' | 'experimental' | 'deprecated';
+
+// Dependency type for execution eligibility
+export type DependencyType = 'always' | 'lane_a_promotion' | 'gate_pass' | 'signal_threshold' | 'manual_only';
 export type ExecutionStatus = 'success' | 'skipped' | 'failed' | 'quarantined';
 
 // ============================================================================
@@ -93,6 +99,10 @@ export interface PromptDefinition {
   expected_cost_score?: number;   // 1-10: Higher = more expensive to run
   min_signal_dependency?: string[]; // Prompt IDs that must run first
   value_cost_ratio?: number;      // Computed: expected_value / expected_cost
+  
+  // Institutional governance fields
+  status_institucional?: StatusInstitucional;  // Governance classification
+  dependency_type?: DependencyType;            // Execution eligibility type
 }
 
 // ============================================================================
