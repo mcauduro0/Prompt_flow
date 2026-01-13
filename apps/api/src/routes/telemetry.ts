@@ -198,7 +198,15 @@ async function getRealStatsV2(timeRangeHours: number = 24): Promise<TelemetrySta
   
   // Process runs
   for (const run of recentRuns) {
-    const payload = run.payload || {};
+    // Handle double-stringified payload (stored as JSON string in JSONB)
+    let payload = run.payload || {};
+    if (typeof payload === 'string') {
+      try {
+        payload = JSON.parse(payload);
+      } catch (e) {
+        payload = {};
+      }
+    }
     totalExecutions++;
     
     if (run.status === 'completed') {
@@ -402,7 +410,15 @@ async function getRealBudgetV2(): Promise<BudgetStatus> {
   // Process runs
   for (const run of allRuns) {
     const runDate = new Date(run.runDate);
-    const payload = run.payload || {};
+    // Handle double-stringified payload (stored as JSON string in JSONB)
+    let payload = run.payload || {};
+    if (typeof payload === 'string') {
+      try {
+        payload = JSON.parse(payload);
+      } catch (e) {
+        payload = {};
+      }
+    }
     const cost = payload.telemetry?.total_cost || 0;
     const provider = payload.telemetry?.provider || payload.provider || 'openai';
     
@@ -577,21 +593,32 @@ router.get('/executions', async (req: Request, res: Response) => {
       allRuns = getRunsFromFile().slice(0, limit);
     }
     
-    const executions = allRuns.map((run: any) => ({
-      id: run.runId,
-      run_id: run.runId,
-      prompt_id: run.runType,
-      execution_type: 'llm',
-      provider: run.payload?.telemetry?.provider || run.payload?.provider || 'openai',
-      model: run.payload?.telemetry?.model || run.payload?.model || 'gpt-5.2-chat-latest',
-      input_tokens: run.payload?.telemetry?.input_tokens || 0,
-      output_tokens: run.payload?.telemetry?.output_tokens || 0,
-      latency_ms: run.payload?.telemetry?.total_latency_ms || run.payload?.telemetry?.duration_ms || 0,
-      cost_usd: run.payload?.telemetry?.total_cost || 0,
-      success: run.status === 'completed',
-      error: run.errorMessage,
-      created_at: run.runDate,
-    }));
+    const executions = allRuns.map((run: any) => {
+      // Handle double-stringified payload (stored as JSON string in JSONB)
+      let payload = run.payload || {};
+      if (typeof payload === 'string') {
+        try {
+          payload = JSON.parse(payload);
+        } catch (e) {
+          payload = {};
+        }
+      }
+      return {
+        id: run.runId,
+        run_id: run.runId,
+        prompt_id: run.runType,
+        execution_type: 'llm',
+        provider: payload.telemetry?.provider || payload.provider || 'openai',
+        model: payload.telemetry?.model || payload.model || 'gpt-5.2-chat-latest',
+        input_tokens: payload.telemetry?.input_tokens || 0,
+        output_tokens: payload.telemetry?.output_tokens || 0,
+        latency_ms: payload.telemetry?.total_latency_ms || payload.telemetry?.duration_ms || 0,
+        cost_usd: payload.telemetry?.total_cost || 0,
+        success: run.status === 'completed',
+        error: run.errorMessage,
+        created_at: run.runDate,
+      };
+    });
     
     res.json({ executions });
   } catch (error) {
