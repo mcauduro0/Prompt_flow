@@ -13,24 +13,59 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
-  Activity
+  Activity,
+  BookOpen,
+  PieChart,
+  Server
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { path: "/status", label: "Status", icon: Home },
-  { path: "/inbox", label: "Inbox", icon: Inbox },
-  { path: "/queue", label: "Queue", icon: Clock },
-  { path: "/research", label: "Research", icon: FileText },
-  { path: "/qa", label: "QA", icon: Shield },
-  { path: "/memory", label: "Memory", icon: Search },
-  { path: "/telemetry", label: "Telemetry", icon: Activity },
-  { path: "/settings", label: "Settings", icon: Settings },
+interface NavItem {
+  path: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  section?: string;
+}
+
+const navItems: NavItem[] = [
+  // Core workflow
+  { path: "/status", label: "Status", icon: Home, section: "core" },
+  { path: "/inbox", label: "Inbox", icon: Inbox, section: "core" },
+  { path: "/queue", label: "Queue", icon: Clock, section: "core" },
+  { path: "/research", label: "Research", icon: FileText, section: "core" },
+  
+  // Management
+  { path: "/prompts", label: "Prompts", icon: BookOpen, section: "manage" },
+  { path: "/portfolio", label: "Portfolio", icon: PieChart, section: "manage" },
+  
+  // System
+  { path: "/telemetry", label: "Telemetry", icon: Activity, section: "system" },
+  { path: "/system", label: "System", icon: Server, section: "system" },
+  
+  // Other
+  { path: "/qa", label: "QA", icon: Shield, section: "other" },
+  { path: "/memory", label: "Memory", icon: Search, section: "other" },
+  { path: "/settings", label: "Settings", icon: Settings, section: "other" },
 ];
+
+const sectionLabels: Record<string, string> = {
+  core: "Workflow",
+  manage: "Management",
+  system: "System",
+  other: "Other",
+};
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+
+  // Group items by section
+  const sections = navItems.reduce((acc, item) => {
+    const section = item.section || 'other';
+    if (!acc[section]) acc[section] = [];
+    acc[section].push(item);
+    return acc;
+  }, {} as Record<string, NavItem[]>);
 
   return (
     <aside 
@@ -66,37 +101,48 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 overflow-y-auto">
-        <div className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.path || 
-                           (item.path !== "/status" && pathname?.startsWith(item.path + "/"));
-            return (
-              <Link
-                key={item.path}
-                href={item.path}
-                className={cn(
-                  "flex items-center gap-3 rounded-md transition-calm group",
-                  collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5",
-                  isActive 
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground" 
-                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                )}
-                title={collapsed ? item.label : undefined}
-              >
-                <item.icon className={cn(
-                  "flex-shrink-0 transition-calm",
-                  collapsed ? "w-5 h-5" : "w-4 h-4",
-                  isActive ? "text-accent" : "text-muted-foreground group-hover:text-sidebar-foreground"
-                )} />
-                {!collapsed && (
-                  <span className="text-sm animate-fade-in">
-                    {item.label}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
+        {Object.entries(sections).map(([section, items]) => (
+          <div key={section} className="mb-4">
+            {/* Section label */}
+            {!collapsed && (
+              <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/40 px-3 mb-2 animate-fade-in">
+                {sectionLabels[section]}
+              </p>
+            )}
+            
+            <div className="space-y-0.5">
+              {items.map((item) => {
+                const isActive = pathname === item.path || 
+                               (item.path !== "/status" && pathname?.startsWith(item.path + "/"));
+                return (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md transition-calm group",
+                      collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
+                      isActive 
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground" 
+                        : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                    )}
+                    title={collapsed ? item.label : undefined}
+                  >
+                    <item.icon className={cn(
+                      "flex-shrink-0 transition-calm",
+                      collapsed ? "w-5 h-5" : "w-4 h-4",
+                      isActive ? "text-accent" : "text-muted-foreground group-hover:text-sidebar-foreground"
+                    )} />
+                    {!collapsed && (
+                      <span className="text-sm animate-fade-in">
+                        {item.label}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}

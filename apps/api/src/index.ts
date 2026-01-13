@@ -13,6 +13,9 @@ import { healthRouter } from './routes/health.js';
 import { qaRouter } from './routes/qa.js';
 import { memoryRouter } from './routes/memory.js';
 import { telemetryRouter } from './routes/telemetry.js';
+import { promptsRouter } from './routes/prompts.js';
+import { portfolioRouter } from './routes/portfolio.js';
+import { systemRouter } from './routes/system.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -35,6 +38,9 @@ app.use('/api/runs', runsRouter);
 app.use('/api/qa', qaRouter);
 app.use('/api/memory', memoryRouter);
 app.use('/api/telemetry', telemetryRouter);
+app.use('/api/prompts', promptsRouter);
+app.use('/api/portfolio', portfolioRouter);
+app.use('/api/system', systemRouter);
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
