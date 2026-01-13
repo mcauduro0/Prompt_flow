@@ -68,6 +68,15 @@ interface RawIdea {
   keyRisks?: string[];
   timeHorizon?: string;
   conviction?: number;
+  // Financial metrics from FMP
+  evToEbitda?: number | null;
+  pe?: number | null;
+  fcfYield?: number | null;
+  ebitMargin?: number | null;
+  netDebtToEbitda?: number | null;
+  revenueCagr3y?: number | null;
+  roic?: number | null;
+  roe?: number | null;
 }
 
 interface EnrichedStock {
@@ -182,6 +191,9 @@ async function runWithPromptLibrary(
 
       // Check if idea passed all gates and has potential
       if (result.hasInvestmentPotential && result.thesis) {
+        // Extract metrics from enriched stock data
+        const metrics = stock.metrics || {};
+        
         ideas.push({
           ticker: stock.ticker,
           companyName: stock.profile.companyName,
@@ -198,8 +210,17 @@ async function runWithPromptLibrary(
           keyRisks: result.keyRisks,
           timeHorizon: result.timeHorizon,
           conviction: result.conviction,
+          // Financial metrics from FMP
+          evToEbitda: metrics.evToEbitda ?? null,
+          pe: metrics.pe ?? null,
+          fcfYield: metrics.fcfYield ?? null,
+          ebitMargin: metrics.ebitMargin ?? null,
+          netDebtToEbitda: metrics.netDebtToEbitda ?? null,
+          revenueCagr3y: metrics.revenueCagr3y ?? null,
+          roic: metrics.roic ?? null,
+          roe: metrics.roe ?? null,
         });
-        console.log(`[Lane A/Library] Generated idea for ${stock.ticker} (conviction: ${result.conviction})`);
+        console.log(`[Lane A/Library] Generated idea for ${stock.ticker} (conviction: ${result.conviction}, P/E: ${metrics.pe?.toFixed(1) || 'N/A'})`);
       }
 
       // Rate limiting
@@ -320,8 +341,18 @@ Respond ONLY in valid JSON format:
             currentPrice: price?.close || null,
             priceChange1D: null,
             volume: price?.volume || null,
+            conviction: analysis.conviction,
+            // Financial metrics from FMP
+            evToEbitda: metrics?.evToEbitda ?? null,
+            pe: metrics?.pe ?? null,
+            fcfYield: metrics?.fcfYield ?? null,
+            ebitMargin: metrics?.ebitMargin ?? null,
+            netDebtToEbitda: metrics?.netDebtToEbitda ?? null,
+            revenueCagr3y: null, // Requires separate calculation
+            roic: metrics?.roic ?? null,
+            roe: metrics?.roe ?? null,
           });
-          console.log(`[Lane A] Generated idea for ${ticker} (conviction: ${analysis.conviction})`);
+          console.log(`[Lane A] Generated idea for ${ticker} (conviction: ${analysis.conviction}, P/E: ${metrics?.pe?.toFixed(1) || 'N/A'})`);
         }
       } catch (parseError) {
         console.warn(`[Lane A] Failed to parse LLM response for ${ticker}:`, (parseError as Error).message);
@@ -517,6 +548,11 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
     for (const idea of cappedIdeas) {
       try {
         const ideaId = uuidv4();
+        
+        // Calculate conviction score (normalize to 0-100 scale)
+        // LLM returns 1-10, we scale to 0-100 for consistency
+        const convictionScore = idea.conviction ? Math.round(idea.conviction * 10) : 0;
+        
         await ideasRepository.create({
           ideaId,
           ticker: idea.ticker,
@@ -527,15 +563,38 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
           mechanism: idea.mechanism,
           edgeType: idea.edgeType,
           status: 'new',
+          // Financial metrics from FMP
           quickMetrics: {
             market_cap_usd: idea.marketCap,
-            ev_to_ebitda: null,
-            pe: null,
-            fcf_yield: null,
-            revenue_cagr_3y: null,
-            ebit_margin: null,
-            net_debt_to_ebitda: null,
+            ev_to_ebitda: idea.evToEbitda ?? null,
+            pe: idea.pe ?? null,
+            fcf_yield: idea.fcfYield ?? null,
+            revenue_cagr_3y: idea.revenueCagr3y ?? null,
+            ebit_margin: idea.ebitMargin ?? null,
+            net_debt_to_ebitda: idea.netDebtToEbitda ?? null,
           },
+          // Conviction score from LLM analysis
+          score: idea.conviction ? {
+            total: convictionScore,
+            edge_clarity: 0,
+            business_quality_prior: 0,
+            financial_resilience_prior: 0,
+            valuation_tension: 0,
+            catalyst_clarity: 0,
+            information_availability: 0,
+            complexity_penalty: 0,
+            disclosure_friction_penalty: 0,
+          } : undefined,
+          // Time horizon if available
+          timeHorizon: idea.timeHorizon || '1_3_years',
+          // Catalysts if available
+          catalysts: idea.catalysts?.map(c => ({
+            name: c.name,
+            window: c.window,
+            probability: parseFloat(c.probability || '0.5'),
+            expected_impact: 'medium' as const,
+            how_to_monitor: '',
+          })),
         });
 
         // Record in memory for novelty tracking
