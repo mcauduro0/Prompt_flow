@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ArrowUpRight, Eye, X, ChevronRight, TrendingUp, DollarSign, Zap } from "lucide-react";
+import { ArrowUpRight, Eye, X, ChevronRight, TrendingUp, DollarSign, Zap, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Idea {
@@ -15,6 +15,7 @@ interface Idea {
   styleTag: string;
   edgeType: string[];
   status: string;
+  asOf: string; // Discovery date
   quickMetrics: {
     market_cap_usd: number | null;
   };
@@ -29,6 +30,13 @@ interface Idea {
   total_cost_usd?: number;
   llm_provider?: string;
   llm_model?: string;
+}
+
+interface InboxStats {
+  pending: number;
+  promoted: number;
+  rejected: number;
+  monitoring: number;
 }
 
 type FilterType = "all" | "new" | "quality_compounder" | "garp" | "cigar_butt" | "high_value";
@@ -48,6 +56,24 @@ const styleLabels: Record<string, string> = {
   cigar_butt: "Deep Value",
   turnaround: "Turnaround",
   special_situation: "Special Situation",
+};
+
+const formatDiscoveryDate = (dateStr: string): string => {
+  if (!dateStr) return "Unknown";
+  const date = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const dateOnly = date.toISOString().split('T')[0];
+  const todayOnly = today.toISOString().split('T')[0];
+  const yesterdayOnly = yesterday.toISOString().split('T')[0];
+  
+  if (dateOnly === todayOnly) return "Today";
+  if (dateOnly === yesterdayOnly) return "Yesterday";
+  
+  // Format as "Jan 12" or "Dec 31"
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
 const formatRelativeTime = (dateStr: string): string => {
@@ -77,6 +103,8 @@ export default function InboxPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [stats, setStats] = useState<{ total_cost: number; avg_conviction: number } | null>(null);
+  const [inboxStats, setInboxStats] = useState<InboxStats | null>(null);
+  const [byDate, setByDate] = useState<Record<string, number>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -87,6 +115,8 @@ export default function InboxPage() {
           const data = await res.json();
           const ideasData = data.ideas || [];
           setIdeas(ideasData);
+          setInboxStats(data.stats || null);
+          setByDate(data.byDate || {});
           
           // Calculate stats
           if (ideasData.length > 0) {
@@ -129,17 +159,22 @@ export default function InboxPage() {
     return idea.styleTag === filter;
   });
 
-  // Sort by conviction score (descending) then by value_cost_ratio
+  // Sort by discovery date (newest first), then by conviction score
   const sortedIdeas = [...filteredIdeas].sort((a, b) => {
+    // First sort by discovery date (newest first)
+    const dateA = new Date(a.asOf || a.createdAt).getTime();
+    const dateB = new Date(b.asOf || b.createdAt).getTime();
+    if (dateB !== dateA) return dateB - dateA;
+    
+    // Then by conviction score
     const convA = a.convictionScore || 0;
     const convB = b.convictionScore || 0;
     if (convB !== convA) return convB - convA;
     return (b.value_cost_ratio || 0) - (a.value_cost_ratio || 0);
   });
 
-  const lastDiscoveryTime = ideas.length > 0 
-    ? formatRelativeTime(ideas[0].createdAt)
-    : null;
+  // Get unique discovery dates for display
+  const discoveryDates = Object.keys(byDate).sort().reverse();
 
   return (
     <AppLayout>
@@ -152,26 +187,66 @@ export default function InboxPage() {
                 Idea Inbox
               </h1>
               <span className="text-sm text-muted-foreground">
-                {ideas.length} pending
+                {ideas.length} pending review
               </span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              Review and triage investment ideas from Lane A
+              All investment ideas awaiting manual review from Lane A Discovery
             </p>
           </div>
 
-          {/* Stats bar */}
-          {stats && (
+          {/* Global Stats bar */}
+          {inboxStats && (
             <div className="px-8 pb-4 flex items-center gap-6">
               <div className="flex items-center gap-2 text-sm">
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
-                <span className="text-muted-foreground">Avg Conviction:</span>
-                <span className="font-medium text-foreground">{stats.avg_conviction.toFixed(1)}/10</span>
+                <Clock className="w-4 h-4 text-amber-400" />
+                <span className="text-muted-foreground">Pending:</span>
+                <span className="font-medium text-foreground">{inboxStats.pending}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <DollarSign className="w-4 h-4 text-amber-400" />
-                <span className="text-muted-foreground">Discovery Cost:</span>
-                <span className="font-medium text-foreground">${stats.total_cost.toFixed(4)}</span>
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                <span className="text-muted-foreground">Promoted:</span>
+                <span className="font-medium text-foreground">{inboxStats.promoted}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <XCircle className="w-4 h-4 text-red-400" />
+                <span className="text-muted-foreground">Rejected:</span>
+                <span className="font-medium text-foreground">{inboxStats.rejected}</span>
+              </div>
+              {stats && (
+                <>
+                  <div className="w-px h-4 bg-border" />
+                  <div className="flex items-center gap-2 text-sm">
+                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    <span className="text-muted-foreground">Avg Conviction:</span>
+                    <span className="font-medium text-foreground">{stats.avg_conviction.toFixed(1)}/10</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <DollarSign className="w-4 h-4 text-amber-400" />
+                    <span className="text-muted-foreground">Discovery Cost:</span>
+                    <span className="font-medium text-foreground">${stats.total_cost.toFixed(4)}</span>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Discovery dates summary */}
+          {discoveryDates.length > 0 && (
+            <div className="px-8 pb-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Discovery dates:</span>
+                {discoveryDates.slice(0, 5).map((date) => (
+                  <span key={date} className="px-2 py-0.5 bg-secondary rounded text-xs">
+                    {formatDiscoveryDate(date)} ({byDate[date]})
+                  </span>
+                ))}
+                {discoveryDates.length > 5 && (
+                  <span className="text-muted-foreground text-xs">
+                    +{discoveryDates.length - 5} more
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -209,7 +284,7 @@ export default function InboxPage() {
               </div>
             ) : sortedIdeas.length === 0 ? (
               <div className="text-center py-16">
-                <p className="text-muted-foreground">No ideas in inbox.</p>
+                <p className="text-muted-foreground">No ideas pending review.</p>
                 <p className="text-sm text-muted-foreground/60 mt-2">
                   Ideas will appear after the next discovery run.
                 </p>
@@ -238,7 +313,7 @@ export default function InboxPage() {
           <footer className="border-t border-border px-8 py-4">
             <div className="max-w-3xl mx-auto">
               <p className="text-annotation text-muted-foreground/50">
-                {ideas.length} ideas · Last discovery run {lastDiscoveryTime}
+                {ideas.length} ideas pending review across {discoveryDates.length} discovery run{discoveryDates.length !== 1 ? 's' : ''}
               </p>
             </div>
           </footer>
@@ -261,6 +336,7 @@ interface IdeaCardProps {
 function IdeaCard({ idea, index, expanded, onToggle, onPromote, onReject, onViewDetail }: IdeaCardProps) {
   const valueCostRatio = idea.value_cost_ratio || 0;
   const isHighValue = valueCostRatio >= 2.0;
+  const discoveryDate = formatDiscoveryDate(idea.asOf || idea.createdAt);
   
   return (
     <article
@@ -278,8 +354,13 @@ function IdeaCard({ idea, index, expanded, onToggle, onPromote, onReject, onView
     >
       {/* Top metadata row */}
       <div className="flex items-center justify-between mb-4">
-        {/* Left side: Novelty + Market Cap */}
+        {/* Left side: Discovery Date + Novelty + Market Cap */}
         <div className="flex items-center gap-3">
+          {/* Discovery Date Badge */}
+          <span className="text-annotation px-2 py-0.5 rounded bg-secondary/50 text-muted-foreground flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            {discoveryDate}
+          </span>
           <span className={cn(
             "text-label",
             idea.isNewTicker ? "text-accent" : "text-muted-foreground/50"

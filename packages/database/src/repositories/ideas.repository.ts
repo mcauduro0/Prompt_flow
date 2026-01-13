@@ -45,7 +45,20 @@ export const ideasRepository = {
   },
 
   /**
-   * Get ideas for date range ranked by novelty
+   * Get ALL ideas pending review (status = 'new'), regardless of discovery date
+   * This is the main inbox query - shows everything that needs manual review
+   */
+  async getPendingReview(limit = 500): Promise<Idea[]> {
+    return db
+      .select()
+      .from(ideas)
+      .where(eq(ideas.status, 'new'))
+      .orderBy(desc(ideas.asOf), desc(ideas.rankScore))
+      .limit(limit);
+  },
+
+  /**
+   * Get ideas for a specific date (legacy method, kept for compatibility)
    */
   async getIdeaInbox(asOf: string, limit = 120): Promise<Idea[]> {
     return db
@@ -132,6 +145,7 @@ export const ideasRepository = {
       .set({
         status: 'promoted',
         nextAction: 'promote_to_lane_b',
+        promotedAt: new Date(),
         updatedAt: new Date(),
       })
       .where(inArray(ideas.ideaId, ideaIds))
@@ -149,6 +163,27 @@ export const ideasRepository = {
       })
       .from(ideas)
       .where(eq(ideas.asOf, asOf))
+      .groupBy(ideas.status);
+
+    return result.reduce(
+      (acc, row) => {
+        acc[row.status] = row.count;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+  },
+
+  /**
+   * Count all ideas by status (global stats)
+   */
+  async countByStatus(): Promise<Record<string, number>> {
+    const result = await db
+      .select({
+        status: ideas.status,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(ideas)
       .groupBy(ideas.status);
 
     return result.reduce(

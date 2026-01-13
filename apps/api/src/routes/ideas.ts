@@ -41,10 +41,45 @@ ideasRouter.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// Get ideas inbox for today
+// Get ideas inbox - ALL pending review ideas (status = 'new'), regardless of date
+// This is the main inbox endpoint for manual review workflow
 ideasRouter.get('/inbox', async (req: Request, res: Response) => {
   try {
-    const asOf = req.query.date as string ?? new Date().toISOString().split('T')[0];
+    const limit = parseInt(req.query.limit as string) || 500;
+    
+    // Get ALL ideas pending review (status = 'new'), not filtered by date
+    const ideas = await ideasRepository.getPendingReview(limit);
+    
+    // Get global stats for the inbox
+    const stats = await ideasRepository.countByStatus();
+    
+    // Group ideas by discovery date for UI display
+    const byDate: Record<string, number> = {};
+    ideas.forEach((idea: any) => {
+      const dateStr = idea.asOf ? new Date(idea.asOf).toISOString().split('T')[0] : 'unknown';
+      byDate[dateStr] = (byDate[dateStr] || 0) + 1;
+    });
+    
+    res.json({ 
+      ideas, 
+      count: ideas.length,
+      stats: {
+        pending: stats['new'] || 0,
+        promoted: stats['promoted'] || 0,
+        rejected: stats['rejected'] || 0,
+        monitoring: stats['monitoring'] || 0,
+      },
+      byDate,
+    });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Get ideas for a specific date (legacy endpoint, kept for compatibility)
+ideasRouter.get('/inbox/date/:date', async (req: Request, res: Response) => {
+  try {
+    const asOf = req.params.date;
     const limit = parseInt(req.query.limit as string) || 120;
     const ideas = await ideasRepository.getIdeaInbox(asOf, limit);
     res.json({ ideas, asOf, count: ideas.length });
@@ -173,6 +208,16 @@ ideasRouter.get('/stats/:date', async (req: Request, res: Response) => {
   try {
     const counts = await ideasRepository.countByStatusForDate(req.params.date);
     res.json({ date: req.params.date, counts });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Get global stats
+ideasRouter.get('/stats', async (req: Request, res: Response) => {
+  try {
+    const counts = await ideasRepository.countByStatus();
+    res.json({ counts });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
