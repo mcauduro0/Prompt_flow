@@ -49,6 +49,9 @@ export interface DiscoveryResult {
     total_cost: number;
     total_latency_ms: number;
     prompts_executed: number;
+    total_tokens?: number;
+    provider?: string;
+    model?: string;
   };
 }
 
@@ -246,12 +249,21 @@ async function runWithPromptLibrary(
 
 /**
  * Generate investment ideas using LLM with enriched data (legacy)
+ * Now includes telemetry tracking for tokens, cost, and latency
  */
 async function generateIdeasLegacy(
   stocks: EnrichedStock[],
   llm: LLMClient
-): Promise<RawIdea[]> {
+): Promise<{ ideas: RawIdea[]; telemetry: { total_tokens: number; total_cost: number; total_latency_ms: number; llm_calls: number; provider: string; model: string } }> {
   const ideas: RawIdea[] = [];
+  
+  // Telemetry tracking
+  let totalTokens = 0;
+  let totalCost = 0;
+  let totalLatency = 0;
+  let llmCalls = 0;
+  const provider = 'openai';
+  const model = 'gpt-5.2-chat-latest';
 
   for (const stock of stocks) {
     try {
@@ -313,10 +325,21 @@ Respond ONLY in valid JSON format:
   "conviction": number
 }`;
 
+      const callStart = Date.now();
       const response = await llm.complete({
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
       });
+      const callLatency = Date.now() - callStart;
+      
+      // Track telemetry
+      llmCalls++;
+      totalLatency += callLatency;
+      const promptTokens = response.usage?.promptTokens || 0;
+      const completionTokens = response.usage?.completionTokens || 0;
+      totalTokens += promptTokens + completionTokens;
+      // Cost estimation: GPT-5.2 ~$0.01/1K input, $0.03/1K output
+      totalCost += (promptTokens * 0.00001) + (completionTokens * 0.00003);
 
       try {
         // Extract JSON from response
@@ -365,7 +388,17 @@ Respond ONLY in valid JSON format:
     }
   }
 
-  return ideas;
+  return {
+    ideas,
+    telemetry: {
+      total_tokens: totalTokens,
+      total_cost: totalCost,
+      total_latency_ms: totalLatency,
+      llm_calls: llmCalls,
+      provider,
+      model,
+    },
+  };
 }
 
 // ============================================================================
@@ -527,7 +560,18 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
     } else {
       console.log('[Lane A] Step 3: Generating ideas with LLM (legacy)...');
       const llm = createResilientClient();
-      rawIdeas = await generateIdeasLegacy(enrichedStocks, llm);
+      const legacyResult = await generateIdeasLegacy(enrichedStocks, llm);
+      rawIdeas = legacyResult.ideas;
+      // Convert legacy telemetry format to standard format
+      telemetry = {
+        total_cost: legacyResult.telemetry.total_cost,
+        total_latency_ms: legacyResult.telemetry.total_latency_ms,
+        prompts_executed: legacyResult.telemetry.llm_calls,
+        total_tokens: legacyResult.telemetry.total_tokens,
+        provider: legacyResult.telemetry.provider,
+        model: legacyResult.telemetry.model,
+      };
+      console.log(`[Lane A] Legacy telemetry: ${telemetry.prompts_executed} LLM calls, ${telemetry.total_tokens} tokens, $${telemetry.total_cost.toFixed(4)} cost`);
     }
     console.log(`[Lane A] Generated ${rawIdeas.length} raw ideas`);
 
