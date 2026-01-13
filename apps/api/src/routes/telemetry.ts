@@ -9,15 +9,12 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { runsRepository } from '@arc/database';
 
-// Try to import from database, fallback to file-based storage
-let runsRepository: any = null;
-try {
-  const db = require('@arc/database');
-  runsRepository = db.runsRepository;
-} catch (e) {
-  console.log('[Telemetry] Database not available, using file-based storage');
-}
+// ES Module compatibility
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // File paths
 const RUNS_DB_FILE = '/home/ubuntu/Prompt_flow/output/runs_db.json';
@@ -165,13 +162,8 @@ interface BudgetStatus {
 async function getRealStatsV2(timeRangeHours: number = 24): Promise<TelemetryStatsV2> {
   const cutoffDate = new Date(Date.now() - timeRangeHours * 60 * 60 * 1000);
   
-  // Get data sources
-  let allRuns: any[] = [];
-  if (runsRepository) {
-    allRuns = await runsRepository.getAll(100);
-  } else {
-    allRuns = getRunsFromFile();
-  }
+  // Get data sources from database
+  const allRuns = await runsRepository.getAll(100);
   const recentRuns = allRuns.filter((run: any) => 
     new Date(run.runDate) >= cutoffDate
   );
@@ -393,12 +385,8 @@ async function getRealBudgetV2(): Promise<BudgetStatus> {
   today.setHours(0, 0, 0, 0);
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   
-  let allRuns: any[] = [];
-  if (runsRepository) {
-    allRuns = await runsRepository.getAll(500);
-  } else {
-    allRuns = getRunsFromFile();
-  }
+  // Get data sources from database
+  const allRuns = await runsRepository.getAll(500);
   
   // Also include smoke test results
   const smokeTestResults = getSmokeTestResults();
@@ -586,12 +574,8 @@ router.get('/executions', async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 20;
     
-    let allRuns: any[] = [];
-    if (runsRepository) {
-      allRuns = await runsRepository.getAll(limit);
-    } else {
-      allRuns = getRunsFromFile().slice(0, limit);
-    }
+    // Get data sources from database
+    const allRuns = await runsRepository.getAll(limit);
     
     const executions = allRuns.map((run: any) => {
       // Handle double-stringified payload (stored as JSON string in JSONB)
