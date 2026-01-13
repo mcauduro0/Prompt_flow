@@ -191,7 +191,7 @@ async function getRealStatsV2(timeRangeHours: number = 24): Promise<TelemetrySta
   // Process runs
   for (const run of recentRuns) {
     // Handle double-stringified payload (stored as JSON string in JSONB)
-    let payload = run.payload || {};
+    let payload: any = run.payload || {};
     if (typeof payload === 'string') {
       try {
         payload = JSON.parse(payload);
