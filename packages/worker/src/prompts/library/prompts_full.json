@@ -11,7 +11,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -147,7 +147,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -213,7 +213,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.4,
         "max_tokens": 4000
       },
@@ -438,7 +438,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -504,7 +504,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -636,7 +636,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -702,7 +702,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 5000
       },
@@ -768,7 +768,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -834,7 +834,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -900,7 +900,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -966,7 +966,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -1034,7 +1034,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -1100,7 +1100,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -1166,7 +1166,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -1232,7 +1232,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 5000
       },
@@ -1298,7 +1298,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -1364,7 +1364,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -1430,7 +1430,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -1496,7 +1496,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -1562,7 +1562,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -1656,7 +1656,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -1722,7 +1722,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -1788,7 +1788,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -1854,7 +1854,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -1920,7 +1920,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -1986,7 +1986,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 5000
       },
@@ -2083,7 +2083,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -2149,7 +2149,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -2215,7 +2215,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -2281,7 +2281,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -2347,7 +2347,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -2413,7 +2413,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -2479,7 +2479,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.4,
         "max_tokens": 4000
       },
@@ -2545,7 +2545,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4o-mini",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.4,
         "max_tokens": 3000
       },
@@ -2611,7 +2611,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -2677,7 +2677,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -2743,7 +2743,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -2809,7 +2809,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -2875,7 +2875,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -2941,7 +2941,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -3007,7 +3007,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -3073,7 +3073,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -3139,7 +3139,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -3205,7 +3205,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -3271,7 +3271,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -3337,7 +3337,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -3403,7 +3403,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -3469,7 +3469,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -3535,7 +3535,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -3601,7 +3601,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -3667,7 +3667,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -3733,7 +3733,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -3799,7 +3799,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -3865,7 +3865,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -3931,7 +3931,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -3997,7 +3997,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.4,
         "max_tokens": 4000
       },
@@ -4063,7 +4063,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -4130,7 +4130,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4o-mini",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -4197,7 +4197,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -4264,7 +4264,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4o-mini",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -4331,7 +4331,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -4398,7 +4398,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -4464,7 +4464,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -4530,7 +4530,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -4596,7 +4596,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -4662,7 +4662,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -4728,7 +4728,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.4,
         "max_tokens": 4000
       },
@@ -4794,7 +4794,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.4,
         "max_tokens": 4000
       },
@@ -4860,7 +4860,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -4992,7 +4992,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -5058,7 +5058,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -5124,7 +5124,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -5190,7 +5190,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -5256,7 +5256,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.4,
         "max_tokens": 4000
       },
@@ -5322,7 +5322,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -5388,7 +5388,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -5454,7 +5454,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -5520,7 +5520,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4o-mini",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -5586,7 +5586,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -5652,7 +5652,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -5718,7 +5718,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -5784,7 +5784,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -5850,7 +5850,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -5916,7 +5916,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -5982,7 +5982,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -6048,7 +6048,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -6114,7 +6114,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -6180,7 +6180,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -6246,7 +6246,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -6314,7 +6314,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -6381,7 +6381,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4o-mini",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -6448,7 +6448,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4o-mini",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -6515,7 +6515,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4o-mini",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -6582,7 +6582,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -6649,7 +6649,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -6716,7 +6716,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -6852,7 +6852,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -6919,7 +6919,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -6987,7 +6987,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4o-mini",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 3000
       },
@@ -7054,7 +7054,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -7122,7 +7122,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -7190,7 +7190,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -7326,7 +7326,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -7394,7 +7394,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 3000
       },
@@ -7461,7 +7461,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -7528,7 +7528,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -7596,7 +7596,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -7663,7 +7663,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -7732,7 +7732,7 @@
       "criticality": "required",
       "llm_config": {
         "provider": "openai",
-        "model": "gpt-4",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },

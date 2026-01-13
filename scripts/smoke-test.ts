@@ -160,10 +160,16 @@ async function runPromptTest(testConfig: typeof SMOKE_TEST_PROMPTS[0]): Promise<
       result.tokens_used = (completion.usage?.input_tokens || 0) + (completion.usage?.output_tokens || 0);
       result.cost_usd = (completion.usage?.input_tokens || 0) * 0.000015 + (completion.usage?.output_tokens || 0) * 0.000075;
     } else {
+      // GPT-5.1+ uses max_completion_tokens instead of max_tokens and doesn't support temperature
+      const isGpt5Plus = model.includes('gpt-5.1') || model.includes('gpt-5.2');
       const completion = await openai.chat.completions.create({
         model: model,
-        temperature: llmConfig.temperature || 0.7,
-        max_tokens: llmConfig.max_tokens || 2000,
+        ...(isGpt5Plus 
+          ? { max_completion_tokens: llmConfig.max_tokens || 2000 }
+          : { 
+              temperature: llmConfig.temperature || 0.7,
+              max_tokens: llmConfig.max_tokens || 2000 
+            }),
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },

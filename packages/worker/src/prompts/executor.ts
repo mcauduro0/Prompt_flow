@@ -317,6 +317,15 @@ export class PromptExecutor {
   ): number {
     // Pricing per 1M tokens (approximate)
     const pricing: Record<string, { input: number; output: number }> = {
+      // GPT-5 Series (latest)
+      'gpt-5.2-pro': { input: 5, output: 20 },
+      'gpt-5.2': { input: 3, output: 12 },
+      'gpt-5.1': { input: 2.5, output: 10 },
+      'gpt-5-pro': { input: 4, output: 16 },
+      'gpt-5': { input: 2, output: 8 },
+      'gpt-5-mini': { input: 0.5, output: 2 },
+      'gpt-5-nano': { input: 0.1, output: 0.4 },
+      // GPT-4 Series
       'gpt-4o': { input: 2.5, output: 10 },
       'gpt-4o-mini': { input: 0.15, output: 0.6 },
       'gpt-4-turbo': { input: 10, output: 30 },
