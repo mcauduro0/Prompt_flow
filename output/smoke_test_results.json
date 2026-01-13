@@ -1,100 +1,157 @@
 {
-  "timestamp": "2026-01-13T00:05:40.824Z",
+  "timestamp": "2026-01-13T00:28:20.929Z",
   "summary": {
-    "total": 7,
-    "passed": 7,
+    "total": 8,
+    "passed": 8,
     "failed": 0,
     "skipped": 0,
     "pass_rate": 100
   },
   "metrics": {
-    "total_tokens": 8426,
-    "total_cost_usd": 0.0045804
+    "total_tokens": 17634,
+    "total_cost_usd": 0.228103,
+    "total_time_ms": 231945
+  },
+  "by_provider": {
+    "openai": {
+      "passed": 5,
+      "total": 5
+    },
+    "google": {
+      "passed": 2,
+      "total": 2
+    },
+    "anthropic": {
+      "passed": 1,
+      "total": 1
+    }
+  },
+  "by_lane": {
+    "lane_a": {
+      "passed": 2,
+      "total": 2
+    },
+    "portfolio": {
+      "passed": 1,
+      "total": 1
+    },
+    "monitoring": {
+      "passed": 1,
+      "total": 1
+    },
+    "utility": {
+      "passed": 1,
+      "total": 1
+    },
+    "lane_b": {
+      "passed": 3,
+      "total": 3
+    }
   },
   "results": [
     {
       "prompt_id": "macro_environment_analysis",
       "lane": "lane_a",
       "status": "pass",
-      "execution_time_ms": 9721,
-      "tokens_used": 646,
-      "cost_usd": 0.0003543,
+      "execution_time_ms": 6938,
+      "tokens_used": 329,
+      "cost_usd": 0.00547,
       "llm_called": true,
       "llm_provider": "openai",
-      "output_length": 2067,
-      "output_preview": "I don’t see the actual macro data attached — the placeholder `{{macro_data}}` didn’t populate.\n\nTo deliver a **data‑driven, investment‑grade macro analysis**, I need one of the following from you:\n\n##..."
+      "llm_model": "gpt-5.2-chat-latest",
+      "output_length": 1052,
+      "output_preview": "I don’t see the actual **{{macro_data}}** attached. To provide a **data-driven** analysis (with spec..."
     },
     {
       "prompt_id": "thematic_idea_generator",
       "lane": "lane_a",
       "status": "pass",
-      "execution_time_ms": 29129,
-      "tokens_used": 1931,
-      "cost_usd": 0.0010910999999999998,
+      "execution_time_ms": 23712,
+      "tokens_used": 1823,
+      "cost_usd": 0.034210000000000004,
       "llm_called": true,
       "llm_provider": "openai",
-      "output_length": 7719,
-      "output_preview": "Below is a **thematic investment framework and ranked candidate list** for **AI Infrastructure**, constructed from a **risk‑adjusted return perspective** and spanning market caps and geographies.\n\n---..."
-    },
-    {
-      "prompt_id": "business_overview_report",
-      "lane": "lane_b",
-      "status": "pass",
-      "execution_time_ms": 26517,
-      "tokens_used": 1708,
-      "cost_usd": 0.0009370499999999999,
-      "llm_called": true,
-      "llm_provider": "openai",
-      "output_length": 7036,
-      "output_preview": "Below is a comprehensive **business overview and strategic analysis of Fastenal Company (NASDAQ: FAST)**, written from an equity research perspective.\n\n---\n\n# Fastenal Company (FAST) – Business Overvi..."
-    },
-    {
-      "prompt_id": "valuation_analysis",
-      "lane": "lane_b",
-      "status": "pass",
-      "execution_time_ms": 25777,
-      "tokens_used": 1937,
-      "cost_usd": 0.0010586999999999999,
-      "llm_called": true,
-      "llm_provider": "openai",
-      "output_length": 5386,
-      "output_preview": "Below is a **full intrinsic valuation of Fastenal Company (NASDAQ: FAST)** based on **publicly available financials (FY2023–TTM 2024)** and reasonable forward-looking assumptions.  \nIf you later provi..."
+      "llm_model": "gpt-5.2-chat-latest",
+      "output_length": 6712,
+      "output_preview": "Below is a **thematic investment screen for “AI Infrastructure”**, structured for portfolio construc..."
     },
     {
       "prompt_id": "portfolio_construction",
       "lane": "portfolio",
       "status": "pass",
-      "execution_time_ms": 12899,
-      "tokens_used": 1034,
-      "cost_usd": 0.00050475,
+      "execution_time_ms": 13740,
+      "tokens_used": 1119,
+      "cost_usd": 0.018525000000000003,
       "llm_called": true,
       "llm_provider": "openai",
-      "output_length": 3295,
-      "output_preview": "Below is a structured portfolio construction based on the provided ideas and constraints, using reasonable assumptions where data is not specified.\n\n---\n\n## 1. PORTFOLIO ALLOCATION\n\n**Constraint:** Ma..."
+      "llm_model": "gpt-5.2-chat-latest",
+      "output_length": 3536,
+      "output_preview": "Below is a structured portfolio construction based on your inputs and the stated constraint.  ---  #..."
     },
     {
       "prompt_id": "news_sentiment_monitor",
       "lane": "monitoring",
       "status": "pass",
-      "execution_time_ms": 4732,
-      "tokens_used": 270,
-      "cost_usd": 0.00012509999999999998,
+      "execution_time_ms": 3132,
+      "tokens_used": 228,
+      "cost_usd": 0.0033300000000000005,
       "llm_called": true,
       "llm_provider": "openai",
-      "output_length": 481,
-      "output_preview": "I’m missing the inputs needed to run the monitor.\n\nPlease provide:\n- **Ticker:** (e.g., AAPL)\n- **News Feed:** (paste recent headlines/articles or a link/source range)\n- **Thesis:** (your investment t..."
+      "llm_model": "gpt-5.2-chat-latest",
+      "output_length": 574,
+      "output_preview": "I’m missing the actual inputs. Please provide:  - **Ticker / Company** - **News feed text or link** ..."
     },
     {
       "prompt_id": "daily_market_briefing",
       "lane": "utility",
       "status": "pass",
-      "execution_time_ms": 11684,
-      "tokens_used": 900,
-      "cost_usd": 0.0005094,
+      "execution_time_ms": 15859,
+      "tokens_used": 1171,
+      "cost_usd": 0.022400000000000003,
       "llm_called": true,
       "llm_provider": "openai",
-      "output_length": 3397,
-      "output_preview": "Below is a **professional daily market briefing template** you can use with the provided inputs. It is structured for institutional-style consumption and highlights actionable insights.\n\n---\n\n# **Dail..."
+      "llm_model": "gpt-5.2-chat-latest",
+      "output_length": 3999,
+      "output_preview": "Below is a **daily market briefing format** designed to plug directly into your provided inputs (**{..."
+    },
+    {
+      "prompt_id": "business_overview_report",
+      "lane": "lane_b",
+      "status": "pass",
+      "execution_time_ms": 53866,
+      "tokens_used": 5471,
+      "cost_usd": 0.016413,
+      "llm_called": true,
+      "llm_provider": "google",
+      "llm_model": "gemini-2.5-pro",
+      "output_length": 13910,
+      "output_preview": "Of course. Here is a comprehensive business overview for Fastenal (FAST), structured as an equity re..."
+    },
+    {
+      "prompt_id": "valuation_analysis",
+      "lane": "lane_b",
+      "status": "pass",
+      "execution_time_ms": 52388,
+      "tokens_used": 5930,
+      "cost_usd": 0.01779,
+      "llm_called": true,
+      "llm_provider": "google",
+      "llm_model": "gemini-2.5-pro",
+      "output_length": 10511,
+      "output_preview": "Of course. Below is a comprehensive intrinsic value analysis for Fastenal Company (FAST), presented ..."
+    },
+    {
+      "prompt_id": "investment_thesis_synthesis",
+      "lane": "lane_b",
+      "status": "pass",
+      "execution_time_ms": 62310,
+      "tokens_used": 1563,
+      "cost_usd": 0.109965,
+      "llm_called": true,
+      "llm_provider": "anthropic",
+      "llm_model": "claude-opus-4-20250514",
+      "output_length": 4630,
+      "output_preview": "## Investment Thesis: Fastenal Company (FAST)  ### One-Sentence Thesis Fastenal's unmatched branch d..."
     }
   ]
 }

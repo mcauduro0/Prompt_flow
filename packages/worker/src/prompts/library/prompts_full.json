@@ -10,10 +10,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "anthropic",
+        "model": "claude-opus-4-20250514",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a research analyst developing investment scenarios.",
       "user_prompt_template": "Company: {{ticker}}\n\nSCENARIO ANALYSIS:\n\n1. BULL CASE\n   - Key assumptions\n   - Revenue/earnings trajectory\n   - Multiple expansion potential\n   - Target price and upside\n   - Probability assessment\n\n2. BASE CASE\n   - Consensus assumptions\n   - Expected performance\n   - Fair value estimate\n   - Key drivers\n\n3. BEAR CASE\n   - Risk scenarios\n   - Downside assumptions\n   - Trough valuation\n   - Target price and downside\n   - Probability assessment\n\n4. SCENARIO COMPARISON\n   - Key differentiating factors\n   - Signposts to monitor\n   - Decision triggers\n\n5. EXPECTED VALUE\n   - Probability-weighted return\n   - Risk/reward assessment\n   - Position sizing implications\n\nProvide specific price targets for each scenario.",
@@ -80,10 +80,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "anthropic",
-        "model": "claude-3-opus",
+        "provider": "openai",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
-        "max_tokens": 5000
+        "max_tokens": 4000
       },
       "system_prompt": "You are an investment banking analyst creating a pitch.",
       "user_prompt_template": "Create an investment presentation for: {{ticker}}\nBased on the following research: {{research_summary}}\n\nPRESENTATION STRUCTURE:\n\nSLIDE 1: Executive Summary\n- Investment recommendation\n- Key thesis points\n- Target price and upside\n\nSLIDE 2: Company Overview\n- Business description\n- Key products/services\n- Geographic presence\n\nSLIDE 3: Investment Thesis\n- 3-4 key thesis points\n- Supporting evidence\n\nSLIDE 4: Industry Analysis\n- Market size and growth\n- Competitive positioning\n- Industry trends\n\nSLIDE 5: Financial Analysis\n- Revenue and earnings trends\n- Margin analysis\n- Balance sheet strength\n\nSLIDE 6: Valuation\n- Valuation methodology\n- Comparable analysis\n- DCF summary\n\nSLIDE 7: Risks\n- Key risk factors\n- Mitigants\n\nSLIDE 8: Catalysts & Timeline\n- Near-term catalysts\n- Investment timeline\n\nProvide content for each slide in presentation-ready format.",
@@ -149,7 +149,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in research analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Summarize research report for: {{ticker}}\n\nReport: {{report}}\n\nExtract: Rating, price target, key thesis points, risks, catalysts.",
@@ -212,10 +212,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.4,
-        "max_tokens": 4000
+        "provider": "anthropic",
+        "model": "claude-opus-4-20250514",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in strategy analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Develop contrarian thesis for: {{ticker}}\n\nCurrent sentiment: {{sentiment}}\n\nAnalyze:\n1. Why is sentiment so negative/positive?\n2. What is the market missing?\n3. What would change sentiment?\n4. Historical precedents\n5. Risk/reward of contrarian bet",
@@ -279,9 +279,9 @@
       "criticality": "required",
       "llm_config": {
         "provider": "anthropic",
-        "model": "claude-3-opus",
-        "temperature": 0.3,
-        "max_tokens": 6000
+        "model": "claude-opus-4-20250514",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in output analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Create an investment memorandum for: {{ticker}}\n\nResearch: {{research}}\n\nInclude: Executive summary, business overview, investment thesis, financial analysis, valuation, risks, recommendation.\n\nFormat for investment committee presentation.",
@@ -345,9 +345,9 @@
       "criticality": "required",
       "llm_config": {
         "provider": "anthropic",
-        "model": "claude-3-opus",
-        "temperature": 0.3,
-        "max_tokens": 5000
+        "model": "claude-opus-4-20250514",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in synthesis analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Synthesize an investment thesis for: {{ticker}}\n\nBased on research: {{research_summary}}\n\nStructure:\n1. One-sentence thesis\n2. Key thesis points (3-5)\n3. Supporting evidence\n4. Key assumptions\n5. What could go wrong\n6. Catalysts and timeline\n7. Valuation and target price\n\nWrite in assertive, sell-side style.",
@@ -506,7 +506,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in monitoring analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Create monitoring framework for thesis: {{thesis}}\n\nCompany: {{ticker}}\n\nDefine:\n1. Key performance indicators to track\n2. Thesis confirmation signals\n3. Thesis invalidation triggers\n4. Data sources and frequency\n5. Review schedule",
@@ -570,9 +570,9 @@
       "criticality": "required",
       "llm_config": {
         "provider": "anthropic",
-        "model": "claude-3-opus",
-        "temperature": 0.3,
-        "max_tokens": 5000
+        "model": "claude-opus-4-20250514",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in output analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Create thesis presentation for: {{ticker}}\n\nAudience: {{audience}}\nResearch: {{research}}\n\nStructure for 10-minute pitch:\n1. Hook/headline\n2. Company overview\n3. Investment thesis\n4. Key evidence\n5. Valuation\n6. Risks and mitigants\n7. Recommendation",
@@ -635,10 +635,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 3000
+        "provider": "anthropic",
+        "model": "claude-opus-4-20250514",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in edge analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Identify variant perception for: {{ticker}}\n\nConsensus view: {{consensus}}\n\nAnalyze:\n1. Where does our view differ from consensus?\n2. Why might we be right?\n3. What does the market not understand?\n4. What would prove us right/wrong?\n5. Time horizon for thesis to play out",
@@ -701,10 +701,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.2,
-        "max_tokens": 5000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior equity research analyst preparing a comprehensive business overview.",
       "user_prompt_template": "Company: {{ticker}}\n\nProvide a detailed analysis covering:\n\n1. BUSINESS DESCRIPTION\n   - What does the company do?\n   - Core products and services\n   - Revenue model and pricing\n   - Customer segments\n\n2. BUSINESS MODEL ANALYSIS\n   - Value proposition\n   - Key resources and capabilities\n   - Cost structure\n   - Revenue streams breakdown\n\n3. COMPETITIVE POSITION\n   - Market position and share\n   - Key competitors\n   - Competitive advantages (moat)\n   - Barriers to entry\n\n4. GROWTH STRATEGY\n   - Organic growth initiatives\n   - M&A strategy\n   - Geographic expansion\n   - New product development\n\n5. KEY SUCCESS FACTORS\n   - Critical success factors\n   - Key performance indicators\n   - Management priorities\n\nProvide specific data points and cite sources where possible.",
@@ -767,10 +767,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.2,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a capital allocation specialist.",
       "user_prompt_template": "Company: {{ticker}}\n\nCAPITAL ALLOCATION ANALYSIS:\n\n1. HISTORICAL ALLOCATION\n   - CapEx (maintenance vs growth)\n   - M&A activity and returns\n   - R&D investment\n   - Dividends and buybacks\n   - Debt paydown\n\n2. RETURN ON CAPITAL\n   - ROIC by segment\n   - Incremental ROIC\n   - Return on acquisitions\n   - Buyback effectiveness\n\n3. BALANCE SHEET OPTIMIZATION\n   - Optimal capital structure\n   - Current vs target leverage\n   - Cash deployment priorities\n\n4. MANAGEMENT FRAMEWORK\n   - Stated capital allocation priorities\n   - Hurdle rates\n   - Decision-making process\n\n5. FORWARD OUTLOOK\n   - Expected allocation mix\n   - M&A pipeline\n   - Capacity for shareholder returns\n\nAssess management's capital allocation skill and alignment.",
@@ -833,10 +833,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a corporate finance specialist analyzing capital structure.",
       "user_prompt_template": "Company: {{ticker}}\nBalance Sheet: {{balance_sheet}}\nDebt Details: {{debt_data}}\n\nAnalyze:\n1. Current leverage ratios vs. peers\n2. Debt maturity profile\n3. Interest coverage and debt service\n4. Credit rating implications\n5. Optimal capital structure\n6. Refinancing opportunities\n7. Capital return capacity\n\nProvide recommendations for capital structure optimization.",
@@ -899,10 +899,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "anthropic",
+        "model": "claude-opus-4-20250514",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are an executive assessment specialist.",
       "user_prompt_template": "Analyze the CEO track record for: {{ticker}}\nCEO Name: {{ceo_name}}\n\nCEO TRACK RECORD ANALYSIS:\n\n1. CAREER HISTORY\n   - Previous roles and companies\n   - Performance at each role\n   - Industry experience\n   - Education and credentials\n\n2. CURRENT TENURE\n   - Time in role\n   - Stock performance during tenure\n   - Operational achievements\n   - Strategic decisions\n\n3. CAPITAL ALLOCATION\n   - M&A track record\n   - Organic investment returns\n   - Shareholder return decisions\n\n4. LEADERSHIP STYLE\n   - Management philosophy\n   - Organizational changes\n   - Culture impact\n   - Communication style\n\n5. COMPENSATION ANALYSIS\n   - Pay structure\n   - Performance alignment\n   - Ownership stake\n   - Peer comparison\n\nProvide a CEO quality score with detailed justification.",
@@ -965,10 +965,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a competitive intelligence analyst.",
       "user_prompt_template": "Company: {{ticker}}\nCompetitors: {{competitors}}\n\nCOMPETITIVE ANALYSIS:\n\n1. MARKET POSITIONING\n   - Market share by segment\n   - Geographic positioning\n   - Customer segment focus\n   - Price positioning\n\n2. COMPETITIVE ADVANTAGES\n   - Source of competitive advantage\n   - Sustainability of moat\n   - Relative strengths/weaknesses\n\n3. COMPARATIVE ANALYSIS\n   - Financial comparison (growth, margins, returns)\n   - Operational comparison\n   - Strategic comparison\n   - Valuation comparison\n\n4. COMPETITIVE THREATS\n   - Direct competitors\n   - New entrants\n   - Substitutes\n   - Disruptive technologies\n\n5. COMPETITIVE RESPONSE\n   - Historical competitive actions\n   - Likely responses to threats\n   - Strategic options\n\nCreate a competitive scorecard with rankings.",
@@ -1033,10 +1033,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a customer analytics specialist.",
       "user_prompt_template": "Company: {{ticker}}\n\nCUSTOMER ANALYSIS:\n\n1. CUSTOMER BASE\n   - Total customers/users\n   - Customer segments\n   - Geographic distribution\n   - Customer size distribution\n\n2. CONCENTRATION\n   - Top 10 customer revenue %\n   - Single customer dependency\n   - Sector concentration\n\n3. CUSTOMER ECONOMICS\n   - Customer acquisition cost\n   - Lifetime value\n   - Retention/churn rates\n   - Net revenue retention\n\n4. CUSTOMER SATISFACTION\n   - NPS scores\n   - Customer reviews\n   - Complaint trends\n   - Competitive win rates\n\n5. GROWTH DYNAMICS\n   - New customer growth\n   - Expansion revenue\n   - Cross-sell/upsell success\n   - Market penetration\n\nAssess customer quality and concentration risk.",
@@ -1099,10 +1099,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.2,
-        "max_tokens": 3000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a credit analyst evaluating debt structure.",
       "user_prompt_template": "Company: {{ticker}}\nDebt Data: {{debt_data}}\n\nDEBT STRUCTURE ANALYSIS:\n\n1. DEBT OVERVIEW\n   - Total debt outstanding\n   - Debt composition (bank, bonds, other)\n   - Maturity profile\n   - Interest rates (fixed vs floating)\n\n2. CREDIT METRICS\n   - Leverage ratios\n   - Interest coverage\n   - Debt/EBITDA\n   - Net debt/equity\n\n3. COVENANT ANALYSIS\n   - Key covenants\n   - Current compliance\n   - Headroom analysis\n   - Amendment history\n\n4. REFINANCING RISK\n   - Near-term maturities\n   - Market access\n   - Credit rating trajectory\n   - Refinancing costs\n\n5. CAPITAL STRUCTURE\n   - Optimal leverage\n   - Peer comparison\n   - Rating agency views\n\nAssess credit risk and refinancing capacity.",
@@ -1165,10 +1165,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are an ESG analyst evaluating sustainability factors.",
       "user_prompt_template": "Company: {{ticker}}\n\nESG ANALYSIS:\n\n1. ENVIRONMENTAL\n   - Carbon footprint and targets\n   - Energy efficiency\n   - Waste management\n   - Water usage\n   - Climate risk exposure\n\n2. SOCIAL\n   - Employee relations\n   - Diversity and inclusion\n   - Supply chain labor practices\n   - Community impact\n   - Product safety\n\n3. GOVERNANCE\n   - Board composition\n   - Executive compensation\n   - Shareholder rights\n   - Business ethics\n   - Transparency\n\n4. MATERIALITY ASSESSMENT\n   - Industry-specific ESG factors\n   - Financial materiality\n   - Stakeholder priorities\n\n5. RATINGS & BENCHMARKS\n   - Third-party ESG ratings\n   - Peer comparison\n   - Improvement trajectory\n\n6. INVESTMENT IMPLICATIONS\n   - ESG risks to thesis\n   - Opportunities from ESG leadership\n   - Regulatory considerations\n\nProvide ESG scores by category and overall.",
@@ -1231,10 +1231,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.2,
-        "max_tokens": 5000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a forensic accountant analyzing financial statements.",
       "user_prompt_template": "Company: {{ticker}}\nFinancial Data: {{financial_data}}\n\nPerform a comprehensive analysis:\n\n1. INCOME STATEMENT ANALYSIS\n   - Revenue recognition policies\n   - Gross margin trends and drivers\n   - Operating expense analysis\n   - Non-recurring items\n   - Earnings quality assessment\n\n2. BALANCE SHEET ANALYSIS\n   - Asset quality review\n   - Working capital analysis\n   - Debt structure and covenants\n   - Off-balance sheet items\n   - Goodwill and intangibles\n\n3. CASH FLOW ANALYSIS\n   - Operating cash flow quality\n   - CapEx requirements\n   - Free cash flow generation\n   - Cash conversion cycle\n\n4. RED FLAGS SCREENING\n   - Aggressive accounting\n   - Related party transactions\n   - Audit opinion issues\n   - Restatement history\n\n5. KEY RATIOS\n   - Profitability ratios\n   - Liquidity ratios\n   - Solvency ratios\n   - Efficiency ratios\n\nHighlight any concerns or areas requiring further investigation.",
@@ -1297,10 +1297,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a geographic analyst evaluating regional exposure.",
       "user_prompt_template": "Company: {{ticker}}\n\nGEOGRAPHIC ANALYSIS:\n\n1. REVENUE BREAKDOWN\n   - Revenue by region\n   - Growth rates by geography\n   - Market share by region\n   - Customer concentration\n\n2. OPERATIONAL FOOTPRINT\n   - Manufacturing locations\n   - Distribution centers\n   - Employee distribution\n   - R&D centers\n\n3. REGIONAL DYNAMICS\n   - Market maturity\n   - Competitive intensity\n   - Regulatory environment\n   - Growth opportunities\n\n4. RISK ASSESSMENT\n   - Currency exposure\n   - Political risk\n   - Trade policy impact\n   - Tax considerations\n\n5. STRATEGIC PRIORITIES\n   - Expansion plans\n   - Market exits\n   - Localization strategy\n\nIdentify geographic opportunities and risks.",
@@ -1363,10 +1363,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are an M&A analyst evaluating acquisition history.",
       "user_prompt_template": "Company: {{ticker}}\n\nM&A HISTORY ANALYSIS:\n\n1. ACQUISITION HISTORY\n   - List of acquisitions (last 10 years)\n   - Deal sizes and multiples paid\n   - Strategic rationale\n   - Financing methods\n\n2. INTEGRATION SUCCESS\n   - Revenue synergies achieved\n   - Cost synergies realized\n   - Integration timeline\n   - Cultural integration\n\n3. RETURN ANALYSIS\n   - Return on acquisitions\n   - Goodwill impairments\n   - Write-downs\n   - Divestitures\n\n4. CURRENT PIPELINE\n   - Stated M&A strategy\n   - Potential targets\n   - Financial capacity\n   - Regulatory constraints\n\n5. LESSONS LEARNED\n   - Successful patterns\n   - Failed acquisitions\n   - Management learnings\n\nAssess M&A capability and future deal risk.",
@@ -1429,10 +1429,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "anthropic",
+        "model": "claude-opus-4-20250514",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are an executive assessment specialist evaluating management.",
       "user_prompt_template": "Company: {{ticker}}\n\nMANAGEMENT ASSESSMENT:\n\n1. CEO EVALUATION\n   - Background and experience\n   - Track record at current company\n   - Previous company performance\n   - Leadership style\n   - Compensation alignment\n\n2. MANAGEMENT TEAM\n   - Key executives and tenure\n   - Depth of bench\n   - Recent departures\n   - Insider ownership\n\n3. CAPITAL ALLOCATION TRACK RECORD\n   - M&A history and returns\n   - Organic investment returns\n   - Dividend/buyback decisions\n   - Balance sheet management\n\n4. CORPORATE GOVERNANCE\n   - Board composition and independence\n   - Shareholder rights\n   - Related party transactions\n   - ESG considerations\n\n5. COMMUNICATION & CREDIBILITY\n   - Guidance accuracy\n   - Transparency\n   - Investor relations quality\n\nProvide a management quality score (1-10) with justification.",
@@ -1495,10 +1495,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a regulatory affairs analyst.",
       "user_prompt_template": "Company: {{ticker}}\nIndustry: {{industry}}\n\nREGULATORY RISK ANALYSIS:\n\n1. REGULATORY ENVIRONMENT\n   - Key regulators\n   - Current regulations\n   - Compliance requirements\n   - Licensing/permits\n\n2. PENDING CHANGES\n   - Proposed regulations\n   - Legislative activity\n   - Regulatory trends\n   - Timeline for changes\n\n3. COMPLIANCE STATUS\n   - Historical compliance\n   - Current investigations\n   - Consent decrees\n   - Remediation efforts\n\n4. LITIGATION\n   - Pending lawsuits\n   - Class actions\n   - Patent disputes\n   - Potential liabilities\n\n5. POLITICAL RISK\n   - Policy sensitivity\n   - Lobbying activity\n   - Political exposure\n   - Trade policy impact\n\nQuantify potential financial impact of regulatory risks.",
@@ -1561,10 +1561,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a risk analyst identifying investment risks.",
       "user_prompt_template": "Company: {{ticker}}\n\nRISK ASSESSMENT:\n\n1. BUSINESS RISKS\n   - Customer concentration\n   - Supplier dependency\n   - Technology obsolescence\n   - Competitive threats\n   - Execution risks\n\n2. FINANCIAL RISKS\n   - Leverage and liquidity\n   - Currency exposure\n   - Interest rate sensitivity\n   - Covenant compliance\n   - Pension obligations\n\n3. REGULATORY/LEGAL RISKS\n   - Regulatory environment\n   - Pending litigation\n   - Compliance issues\n   - Political/policy risks\n\n4. ESG RISKS\n   - Environmental liabilities\n   - Social/labor issues\n   - Governance concerns\n\n5. MACRO RISKS\n   - Economic sensitivity\n   - Geopolitical exposure\n   - Commodity exposure\n\nFor each risk:\n- Probability (High/Medium/Low)\n- Impact (High/Medium/Low)\n- Mitigants\n- Monitoring indicators\n\nCreate a risk matrix and overall risk score.",
@@ -1655,10 +1655,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a risk analyst identifying investment risks.",
       "user_prompt_template": "Company: {{ticker}}\nBusiness Description: {{business_data}}\n10-K Risk Factors: {{risk_factors}}\n\nCategorize and assess risks:\n1. Business/operational risks\n2. Financial/leverage risks\n3. Regulatory/legal risks\n4. Competitive risks\n5. Macro/cyclical risks\n6. ESG risks\n\nFor each risk:\n- Probability of occurrence\n- Potential impact on value\n- Mitigation factors\n\nProvide a risk-adjusted investment recommendation.",
@@ -1721,10 +1721,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.2,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a segment analyst evaluating business units.",
       "user_prompt_template": "Company: {{ticker}}\n\nSEGMENT ANALYSIS:\n\n1. SEGMENT OVERVIEW\n   - Business segments defined\n   - Revenue by segment\n   - Operating income by segment\n   - Asset allocation\n\n2. PERFORMANCE METRICS\n   - Growth rates by segment\n   - Margin trends\n   - Return on assets\n   - Market position\n\n3. STRATEGIC FIT\n   - Synergies between segments\n   - Shared resources\n   - Cross-selling opportunities\n   - Portfolio coherence\n\n4. VALUATION\n   - Sum-of-the-parts analysis\n   - Segment multiples\n   - Conglomerate discount\n   - Spin-off potential\n\n5. OUTLOOK\n   - Growth prospects by segment\n   - Investment priorities\n   - Potential divestitures\n\nIdentify value creation opportunities by segment.",
@@ -1787,10 +1787,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 3000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a quantitative analyst analyzing short interest.",
       "user_prompt_template": "Company: {{ticker}}\nShort Interest Data: {{short_data}}\n\nSHORT INTEREST ANALYSIS:\n\n1. CURRENT METRICS\n   - Short interest (shares and %)\n   - Days to cover\n   - Short interest ratio\n   - Cost to borrow\n\n2. HISTORICAL TRENDS\n   - Short interest over time\n   - Correlation with price\n   - Changes around events\n\n3. PEER COMPARISON\n   - Relative short interest\n   - Sector average\n   - Outlier analysis\n\n4. SHORT THESIS ASSESSMENT\n   - Likely short thesis\n   - Validity of concerns\n   - Potential catalysts for covering\n\n5. SQUEEZE POTENTIAL\n   - Technical setup\n   - Float analysis\n   - Institutional ownership\n   - Options market activity\n\nProvide a short squeeze probability score and key triggers.",
@@ -1853,10 +1853,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a supply chain analyst.",
       "user_prompt_template": "Company: {{ticker}}\n\nSUPPLY CHAIN ANALYSIS:\n\n1. SUPPLIER ANALYSIS\n   - Key suppliers and dependencies\n   - Geographic concentration\n   - Single-source risks\n   - Supplier financial health\n\n2. MANUFACTURING\n   - Production facilities\n   - Capacity utilization\n   - Automation level\n   - Quality control\n\n3. LOGISTICS\n   - Distribution network\n   - Inventory management\n   - Lead times\n   - Transportation costs\n\n4. RISK ASSESSMENT\n   - Supply disruption risks\n   - Geopolitical exposure\n   - Natural disaster vulnerability\n   - Commodity price exposure\n\n5. RESILIENCE\n   - Diversification efforts\n   - Safety stock levels\n   - Alternative sourcing\n   - Vertical integration\n\nIdentify key supply chain risks and mitigants.",
@@ -1919,10 +1919,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a technology and IP analyst.",
       "user_prompt_template": "Company: {{ticker}}\n\nTECHNOLOGY & IP ANALYSIS:\n\n1. TECHNOLOGY STACK\n   - Core technologies\n   - Proprietary systems\n   - Technical capabilities\n   - R&D focus areas\n\n2. INTELLECTUAL PROPERTY\n   - Patent portfolio\n   - Key patents and expiration\n   - Trade secrets\n   - Trademarks/brands\n\n3. COMPETITIVE ADVANTAGE\n   - Technology moat\n   - Barriers to replication\n   - First-mover advantages\n   - Network effects\n\n4. R&D EFFECTIVENESS\n   - R&D spending trends\n   - Innovation output\n   - Time to market\n   - Success rate\n\n5. TECHNOLOGY RISKS\n   - Obsolescence risk\n   - Disruption threats\n   - Technical debt\n   - Talent retention\n\nAssess technology competitive advantage sustainability.",
@@ -1985,10 +1985,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.2,
-        "max_tokens": 5000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a valuation specialist performing intrinsic value analysis.",
       "user_prompt_template": "Company: {{ticker}}\nFinancial Data: {{financial_data}}\n\nVALUATION ANALYSIS:\n\n1. DCF VALUATION\n   - Revenue projections (5-year)\n   - Margin assumptions\n   - CapEx and working capital\n   - Terminal value assumptions\n   - WACC calculation\n   - Sensitivity analysis\n\n2. COMPARABLE COMPANY ANALYSIS\n   - Peer group selection\n   - Trading multiples (EV/EBITDA, P/E, EV/Revenue)\n   - Premium/discount justification\n   - Implied valuation range\n\n3. PRECEDENT TRANSACTIONS\n   - Relevant M&A transactions\n   - Transaction multiples\n   - Control premium analysis\n\n4. SUM-OF-THE-PARTS\n   - Segment valuation\n   - Hidden assets\n   - Conglomerate discount/premium\n\n5. VALUATION SUMMARY\n   - Triangulated fair value\n   - Upside/downside scenarios\n   - Key value drivers\n   - Margin of safety\n\nProvide specific price targets with probability weighting.",
@@ -2082,10 +2082,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.2,
-        "max_tokens": 3000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a treasury analyst evaluating working capital.",
       "user_prompt_template": "Company: {{ticker}}\nFinancial Data: {{financial_data}}\n\nWORKING CAPITAL ANALYSIS:\n\n1. COMPONENTS\n   - Accounts receivable (DSO)\n   - Inventory (DIO)\n   - Accounts payable (DPO)\n   - Cash conversion cycle\n\n2. TRENDS\n   - Historical trends\n   - Seasonal patterns\n   - Peer comparison\n   - Industry benchmarks\n\n3. QUALITY ASSESSMENT\n   - Receivables aging\n   - Inventory obsolescence\n   - Payables sustainability\n\n4. CASH FLOW IMPACT\n   - Working capital investment\n   - Cash generation potential\n   - Optimization opportunities\n\n5. MANAGEMENT\n   - Working capital policies\n   - Supply chain financing\n   - Factoring arrangements\n\nIdentify working capital optimization opportunities.",
@@ -2151,7 +2151,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are an equity analyst specializing in identifying pure-play investment opportunities.",
       "user_prompt_template": "Given the theme: \"{{theme}}\" and the list of candidate companies: {{companies}}\n\nFor each company, analyze:\n1. Revenue breakdown by segment/product line\n2. Calculate percentage of revenue directly tied to the theme\n3. Assess strategic focus and management commentary on the theme\n4. Evaluate competitive moat within the theme\n5. Consider geographic exposure to theme adoption\n\nClassification criteria:\n- PURE PLAY: >70% revenue exposure, core strategic focus\n- SIGNIFICANT EXPOSURE: 30-70% revenue exposure\n- DIVERSIFIED: <30% revenue exposure\n\nRank companies by \"purity\" of exposure and investment attractiveness.",
@@ -2280,10 +2280,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 3000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in commodities analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze commodity market: {{commodity}}\n\nEvaluate: Supply/demand, inventory, cost curve, price outlook, equity implications.",
@@ -2346,10 +2346,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 3000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in credit analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze credit cycle conditions:\n\nData: {{credit_data}}\n\nEvaluate: Spreads, defaults, lending standards, cycle position, sector implications.",
@@ -2412,10 +2412,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 3000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in fx analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze currency dynamics for: {{currency_pair}}\n\nEvaluate: Fundamentals, technicals, carry, positioning, outlook.",
@@ -2478,10 +2478,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.4,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in political analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze election impact:\n\nElection: {{election}}\nScenarios: {{scenarios}}\n\nEvaluate: Policy implications, sector winners/losers, positioning strategies.",
@@ -2547,7 +2547,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.4,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in geopolitical analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze geopolitical risks:\n\nCurrent events: {{events}}\n\nEvaluate: Risk scenarios, probability, market impact, hedging strategies.",
@@ -2610,10 +2610,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.2,
-        "max_tokens": 3000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in liquidity analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze market liquidity conditions:\n\nEvaluate: Fed balance sheet, repo markets, money markets, equity market liquidity.",
@@ -2676,10 +2676,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 3000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in regime analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze current market regime:\n\nData: {{market_data}}\n\nClassify regime: Risk-on/off, trending/ranging, vol regime. Provide strategy implications.",
@@ -2742,10 +2742,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.2,
-        "max_tokens": 3000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in rates analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze yield curve:\n\nData: {{yield_data}}\n\nEvaluate: Shape, term premium, inversion signals, sector implications.",
@@ -2877,7 +2877,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in screening analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Screen watchlist for opportunities: {{watchlist}}\n\nCriteria: {{criteria}}\n\nIdentify stocks meeting criteria and rank by attractiveness.",
@@ -2943,7 +2943,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in analytics analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Compare portfolio {{portfolio}} to benchmark {{benchmark}}.\n\nAnalyze: Active weights, tracking error, information ratio, sector/factor deviations.",
@@ -3072,10 +3072,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.2,
-        "max_tokens": 3000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in hedging analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze currency exposure for portfolio: {{portfolio}}\n\nEvaluate: FX exposure by currency, hedging costs, optimal hedge ratio.",
@@ -3141,7 +3141,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in risk analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze drawdown history for portfolio: {{portfolio}}\n\nEvaluate: Maximum drawdown, drawdown duration, recovery time, drawdown frequency.",
@@ -3204,10 +3204,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 3000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a senior investment analyst specializing in esg analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze ESG profile for portfolio: {{portfolio}}\n\nEvaluate: ESG scores, carbon footprint, controversies, alignment with objectives.",
@@ -3273,7 +3273,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in analytics analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze factor exposures for portfolio: {{portfolio}}\n\nEvaluate exposures to: Market, Size, Value, Momentum, Quality, Volatility, Dividend Yield.\n\nProvide factor loadings, risk contribution, and recommendations for factor tilts.",
@@ -3405,7 +3405,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in analytics analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze income characteristics for portfolio: {{portfolio}}\n\nEvaluate: Dividend yield, dividend growth, income stability, tax efficiency.",
@@ -3471,7 +3471,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a liquidity analyst evaluating portfolio tradability.",
       "user_prompt_template": "Portfolio: {{portfolio}}\n\nLIQUIDITY ANALYSIS:\n\n1. POSITION LIQUIDITY\n   - Average daily volume\n   - Days to liquidate\n   - Bid-ask spreads\n   - Market depth\n\n2. PORTFOLIO LIQUIDITY\n   - Aggregate liquidity score\n   - Liquidity distribution\n   - Concentration in illiquid names\n\n3. STRESS SCENARIOS\n   - Liquidity under stress\n   - Fire sale discounts\n   - Correlation of liquidity\n\n4. EXECUTION ANALYSIS\n   - Expected market impact\n   - Optimal execution strategy\n   - Time to execute\n\n5. RECOMMENDATIONS\n   - Liquidity improvements\n   - Position adjustments\n   - Execution guidelines\n\nProvide liquidity risk assessment.",
@@ -3669,7 +3669,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a risk manager determining position sizes.",
       "user_prompt_template": "Position: {{ticker}}\nConviction level: {{conviction}}\nPortfolio context: {{portfolio}}\n\nPOSITION SIZING ANALYSIS:\n\n1. CONVICTION ASSESSMENT\n   - Thesis strength\n   - Information edge\n   - Catalyst clarity\n   - Risk/reward profile\n\n2. RISK METRICS\n   - Position volatility\n   - Beta to portfolio\n   - Correlation with holdings\n   - Tail risk\n\n3. SIZING FRAMEWORKS\n   - Kelly criterion\n   - Risk parity\n   - Equal weight baseline\n   - Conviction-weighted\n\n4. CONSTRAINTS\n   - Liquidity limits\n   - Concentration limits\n   - Sector limits\n   - Regulatory limits\n\n5. RECOMMENDATION\n   - Optimal position size\n   - Entry strategy\n   - Scaling approach\n\nProvide specific position size with justification.",
@@ -3735,7 +3735,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a portfolio manager analyzing rebalancing needs.",
       "user_prompt_template": "Current Portfolio: {{current_portfolio}}\nTarget Allocation: {{target_allocation}}\n\nREBALANCING ANALYSIS:\n\n1. DRIFT ANALYSIS\n   - Current vs target weights\n   - Drift by position\n   - Drift by sector/factor\n   - Threshold breaches\n\n2. REBALANCING TRADES\n   - Required trades\n   - Trade sizes\n   - Priority ranking\n   - Execution timeline\n\n3. COST ANALYSIS\n   - Transaction costs\n   - Tax implications\n   - Market impact\n   - Opportunity cost of not rebalancing\n\n4. OPTIMIZATION\n   - Tax-loss harvesting opportunities\n   - Wash sale considerations\n   - Lot selection\n\n5. RECOMMENDATION\n   - Rebalance now vs wait\n   - Partial vs full rebalance\n   - Execution strategy\n\nProvide specific trade recommendations.",
@@ -3930,10 +3930,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are an IPO analyst evaluating a new issue.",
       "user_prompt_template": "Company: {{company}}\nS-1 Data: {{s1_data}}\nComparables: {{comps}}\n\nAnalyze:\n1. Business model and moat\n2. Growth trajectory\n3. Profitability path\n4. Valuation vs. comps\n5. Use of proceeds\n6. Lock-up dynamics\n\nProvide IPO investment recommendation.",
@@ -4199,7 +4199,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in economic analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze economic indicators: {{indicators}}\n\nEvaluate: Trend, surprise vs consensus, leading indicator signals, recession probability.",
@@ -4266,7 +4266,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in monetary analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze Federal Reserve policy stance and outlook:\n\nRecent communications: {{fed_communications}}\n\nEvaluate: Rate path, QT, forward guidance, market implications.",
@@ -4333,7 +4333,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in economic analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze inflation dynamics:\n\nData: {{inflation_data}}\n\nEvaluate: Components, drivers, persistence, policy implications, investment hedges.",
@@ -4529,10 +4529,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are an industry analyst providing a sector overview.",
       "user_prompt_template": "Industry: {{industry}}\n\nINDUSTRY ANALYSIS:\n\n1. MARKET STRUCTURE\n   - Market size and growth\n   - Key segments\n   - Geographic breakdown\n   - Cyclicality\n\n2. COMPETITIVE DYNAMICS\n   - Porter's Five Forces analysis\n   - Market concentration\n   - Key success factors\n   - Barriers to entry\n\n3. VALUE CHAIN\n   - Industry value chain map\n   - Margin distribution\n   - Power dynamics\n\n4. TRENDS & DISRUPTION\n   - Key industry trends\n   - Technology impact\n   - Regulatory environment\n   - ESG considerations\n\n5. OUTLOOK\n   - Growth projections\n   - Key catalysts/risks\n   - Structural changes\n\nIdentify the most attractive segments and positioning.",
@@ -4595,10 +4595,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a market analyst sizing the opportunity.",
       "user_prompt_template": "Company: {{ticker}}\nMarket Data: {{market_data}}\n\nAnalyze:\n1. Total Addressable Market (TAM) - top-down and bottom-up\n2. Serviceable Addressable Market (SAM)\n3. Serviceable Obtainable Market (SOM)\n4. Current market share and trajectory\n5. Market growth drivers and inhibitors\n6. Competitive intensity and share dynamics\n\nProvide market opportunity assessment with revenue implications.",
@@ -4925,8 +4925,8 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "anthropic",
-        "model": "claude-3-opus",
+        "provider": "openai",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
         "max_tokens": 4000
       },
@@ -5060,7 +5060,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a research analyst mining niche publications for ideas.",
       "user_prompt_template": "Analyze content from the following niche publications:\n{{publication_content}}\n\nIndustry focus: {{industry}}\n\nExtract investment-relevant information:\n\n1. INDUSTRY DEVELOPMENTS\n   - New product launches\n   - Regulatory changes\n   - Technology shifts\n   - M&A activity\n\n2. COMPANY-SPECIFIC INSIGHTS\n   - Market share changes\n   - Operational developments\n   - Management changes\n   - Financial indicators\n\n3. COMPETITIVE DYNAMICS\n   - New entrants\n   - Exits or consolidation\n   - Pricing trends\n   - Capacity changes\n\n4. INVESTMENT IMPLICATIONS\n   - Potential winners and losers\n   - Timing considerations\n   - Risk factors\n\nProvide specific, actionable insights with ticker symbols.",
@@ -5126,7 +5126,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are an analyst curating ideas from investment Substacks.",
       "user_prompt_template": "Analyze the following Substack content:\n{{substack_content}}\n\nFor each investment idea:\n1. Extract the core thesis\n2. Identify supporting data and analysis\n3. Note the author's track record if known\n4. Assess the depth and quality of research\n5. Identify potential biases or conflicts\n6. Extract specific price targets or valuations\n7. Note the recommended position sizing\n\nQuality assessment criteria:\n- Depth of primary research\n- Quality of financial analysis\n- Consideration of risks\n- Clarity of thesis\n- Track record of author\n\nProvide a curated list ranked by quality and conviction.",
@@ -5522,7 +5522,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in market analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Create daily market briefing:\n\nMarket data: {{market_data}}\nNews: {{news}}\n\nInclude: Market summary, key movers, sector performance, economic calendar, key themes.",
@@ -5588,7 +5588,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in compliance analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Check compliance of {{portfolio}} against investment policy: {{policy}}\n\nIdentify violations and remediation actions.",
@@ -5654,7 +5654,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in hedging analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Design options overlay strategy for portfolio: {{portfolio}}\n\nObjective: {{objective}} (income, protection, or both)",
@@ -5786,7 +5786,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a tax-aware portfolio manager.",
       "user_prompt_template": "Portfolio: {{portfolio}}\nTax Situation: {{tax_situation}}\n\nTAX-LOSS HARVESTING ANALYSIS:\n\n1. LOSS IDENTIFICATION\n   - Positions with unrealized losses\n   - Short-term vs long-term\n   - Loss amounts\n   - Cost basis by lot\n\n2. HARVESTING OPPORTUNITIES\n   - Harvestable losses\n   - Tax benefit calculation\n   - Wash sale considerations\n   - Replacement securities\n\n3. STRATEGY\n   - Prioritization of harvests\n   - Timing considerations\n   - Year-end planning\n   - Carry-forward analysis\n\n4. IMPLEMENTATION\n   - Specific trades\n   - Replacement positions\n   - Holding period management\n\n5. PROJECTED BENEFIT\n   - Tax savings\n   - After-tax return impact\n   - Multi-year planning\n\nProvide specific harvesting recommendations.",
@@ -5981,10 +5981,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "anthropic",
+        "model": "claude-opus-4-20250514",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are analyzing an activist situation.",
       "user_prompt_template": "Target: {{ticker}}\nActivist: {{activist}}\n13D Filing: {{filing_data}}\n\nAnalyze:\n1. Activist track record\n2. Campaign objectives\n3. Board/management response\n4. Likely outcomes\n5. Timeline expectations\n6. Value creation potential\n\nProvide investment recommendation.",
@@ -6047,10 +6047,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.3,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a special situations analyst evaluating spinoffs.",
       "user_prompt_template": "Parent Company: {{parent_ticker}}\nSpinoff Details: {{spinoff_details}}\n\nAnalyze:\n1. Strategic rationale for separation\n2. Standalone valuation of spinoff\n3. Forced selling dynamics\n4. Index inclusion/exclusion impact\n5. Management incentive alignment\n6. Hidden value unlocking potential\n\nProvide investment recommendation for both parent and spinoff.",
@@ -6116,7 +6116,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in execution analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Develop exit strategy for: {{ticker}}\n\nCurrent position: {{position}}\nThesis: {{thesis}}\n\nDefine:\n1. Target price exit\n2. Stop-loss levels\n3. Time-based exit\n4. Thesis invalidation exit\n5. Scaling strategy",
@@ -6182,7 +6182,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in monitoring analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Update investment thesis for: {{ticker}}\n\nOriginal thesis: {{original_thesis}}\nNew information: {{new_info}}\n\nEvaluate:\n1. Does new info confirm or challenge thesis?\n2. What assumptions need updating?\n3. How does fair value change?\n4. Should position size change?\n5. Updated conviction level",
@@ -6245,10 +6245,10 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "openai",
-        "model": "gpt-5.2-chat-latest",
-        "temperature": 0.2,
-        "max_tokens": 4000
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 8000
       },
       "system_prompt": "You are a forensic accountant assessing earnings quality.",
       "user_prompt_template": "Company: {{ticker}}\nFinancial Data: {{financial_data}}\n\nEARNINGS QUALITY ASSESSMENT:\n\n1. ACCRUALS ANALYSIS\n   - Accruals ratio\n   - Change in working capital\n   - Deferred revenue trends\n   - Accrued expenses\n\n2. CASH CONVERSION\n   - CFO to Net Income ratio\n   - Free cash flow yield\n   - Cash earnings vs reported\n\n3. REVENUE QUALITY\n   - Revenue recognition policies\n   - Deferred revenue\n   - Contract assets/liabilities\n   - Channel stuffing indicators\n\n4. EXPENSE QUALITY\n   - Capitalization policies\n   - Depreciation/amortization\n   - Stock compensation\n   - Restructuring charges\n\n5. ONE-TIME ITEMS\n   - Non-recurring gains/losses\n   - Asset sales\n   - Tax benefits\n   - Pension adjustments\n\n6. RED FLAGS\n   - Beneish M-Score\n   - Altman Z-Score\n   - Piotroski F-Score\n   - Audit opinion\n\nProvide an earnings quality score (1-10) with detailed justification.",
@@ -6383,7 +6383,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a social media analyst tracking financial Twitter (FinTwit).",
       "user_prompt_template": "Analyze tweets from notable financial accounts:\n{{twitter_data}}\n\nYour analysis should:\n1. Extract specific stock mentions and sentiment\n2. Identify thesis summaries from threads\n3. Track position changes announced\n4. Assess credibility of sources\n5. Cross-reference multiple sources for consensus\n6. Identify contrarian views\n\nFor each idea extracted:\n- Source credibility score\n- Thesis summary\n- Time horizon mentioned\n- Price targets if any\n- Potential conflicts of interest\n\nProvide a curated list of high-conviction ideas from credible sources.",
@@ -6584,7 +6584,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are an analyst specializing in insider transaction analysis.",
       "user_prompt_template": "Company: {{ticker}}\nInsider Data: {{insider_data}}\n\nINSIDER ACTIVITY ANALYSIS:\n\n1. RECENT TRANSACTIONS\n   - Purchases vs sales\n   - Transaction sizes\n   - Insider roles\n   - Transaction types\n\n2. PATTERN ANALYSIS\n   - Historical patterns\n   - Timing relative to announcements\n   - Cluster activity\n\n3. SIGNAL ASSESSMENT\n   - Open market purchases (bullish)\n   - 10b5-1 plan sales (neutral)\n   - Discretionary sales (potentially bearish)\n   - Option exercises\n\n4. CONTEXT\n   - Compensation structure\n   - Diversification needs\n   - Historical accuracy of signals\n\n5. PEER COMPARISON\n   - Relative insider activity\n   - Sector trends\n\nProvide an insider sentiment score and key observations.",
@@ -6651,7 +6651,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in sector analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze sector sensitivity to macro factors:\n\nSector: {{sector}}\nMacro factors: Interest rates, GDP, inflation, USD, oil\n\nProvide sensitivity coefficients and current positioning.",
@@ -6718,7 +6718,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in sentiment analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze news sentiment for: {{ticker}}\n\nNews articles: {{news}}\n\nEvaluate: Overall sentiment, key themes, potential market impact, trading implications.",
@@ -6784,8 +6784,8 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "anthropic",
-        "model": "claude-3-opus",
+        "provider": "openai",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -6854,7 +6854,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in strategy analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Analyze sector rotation opportunities based on: {{market_conditions}}\n\nEvaluate sector momentum, valuations, and economic sensitivity.",
@@ -6921,7 +6921,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are an investment analyst tasked with extracting actionable investment ideas from financial newsletters.",
       "user_prompt_template": "Analyze the following newsletter content: {{newsletter_content}}\n\nFor each investment idea mentioned:\n1. Identify the ticker symbol and company name\n2. Summarize the investment thesis in 2-3 sentences\n3. Extract key data points and metrics cited\n4. Identify the time horizon (short/medium/long term)\n5. Note any price targets or valuation metrics mentioned\n6. Assess the conviction level based on language used\n7. Identify potential conflicts of interest or biases\n\nProvide a structured summary suitable for further due diligence.",
@@ -6989,7 +6989,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.3,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a social sentiment analyst monitoring retail investor communities.",
       "user_prompt_template": "Analyze the following Reddit data from r/wallstreetbets and related subreddits:\n{{reddit_data}}\n\nYour analysis should:\n1. Identify most mentioned tickers and sentiment\n2. Track momentum in mentions over time\n3. Identify emerging \"meme\" candidates\n4. Assess quality of DD (due diligence) posts\n5. Gauge overall market sentiment (bullish/bearish)\n6. Identify potential short squeeze candidates\n7. Flag pump-and-dump patterns\n\nProvide a ranked list of tickers with:\n- Mention frequency and trend\n- Sentiment score (-1 to +1)\n- Quality of underlying thesis\n- Risk assessment for institutional investors",
@@ -7192,7 +7192,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a senior investment analyst specializing in earnings analysis. Provide detailed, data-driven analysis with specific metrics and actionable insights.",
       "user_prompt_template": "Compare earnings for competitors: {{tickers}}\n\nEarnings data: {{earnings_data}}\n\nAnalyze: Relative performance, market share trends, margin comparison, guidance comparison.",
@@ -7257,8 +7257,8 @@
       "execution_type": "llm",
       "criticality": "required",
       "llm_config": {
-        "provider": "anthropic",
-        "model": "claude-3-opus",
+        "provider": "openai",
+        "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
         "max_tokens": 4000
       },
@@ -7396,7 +7396,7 @@
         "provider": "openai",
         "model": "gpt-5.2-chat-latest",
         "temperature": 0.2,
-        "max_tokens": 3000
+        "max_tokens": 4000
       },
       "system_prompt": "You are a compliance and investment analyst specializing in insider transaction analysis.",
       "user_prompt_template": "Analyze the following Form-4 filing data for {{ticker}}:\n{{form4_data}}\n\nYour analysis should cover:\n1. Transaction type (purchase, sale, option exercise, gift)\n2. Transaction size relative to insider's total holdings\n3. Transaction timing (relative to earnings, announcements)\n4. Insider role and historical trading patterns\n5. Cluster buying/selling among multiple insiders\n6. Comparison to sector peer insider activity\n\nProvide a signal assessment:\n- BULLISH: Significant open-market purchases by multiple insiders\n- NEUTRAL: Routine transactions, option exercises, 10b5-1 plans\n- BEARISH: Large sales outside of planned programs\n\nInclude historical context and statistical significance.",
