@@ -17,7 +17,36 @@ const __dirname = path.dirname(__filename);
 // Path to prompts library
 const PROMPTS_FILE = path.join(__dirname, '../../../../packages/worker/src/prompts/library/prompts_full.json');
 
-interface PromptDefinition {
+// Raw prompt structure from prompts_full.json
+interface RawPrompt {
+  prompt_id: string;
+  version: string;
+  name: string;
+  description: string;
+  lane: string;
+  stage: string;
+  category: string;
+  execution_type: string;
+  criticality: string;
+  llm_config?: {
+    provider: string;
+    model: string;
+    temperature?: number;
+    max_tokens?: number;
+  };
+  system_prompt: string;
+  user_prompt_template: string;
+  output_schema: Record<string, unknown>;
+  expected_value_score: number;
+  expected_cost_score: number;
+  value_cost_ratio: number;
+  min_signal_dependency: string[] | number;
+  dependency_type?: string;
+  status_institucional?: string;
+}
+
+// Normalized prompt for API response
+interface NormalizedPrompt {
   id: string;
   name: string;
   description: string;
@@ -26,17 +55,42 @@ interface PromptDefinition {
   category: string;
   provider: string;
   model: string;
-  system_prompt: string;
-  user_prompt_template: string;
-  output_schema: Record<string, unknown>;
   expected_value_score: number;
   expected_cost_score: number;
   value_cost_ratio: number;
-  min_signal_dependency: number;
-  dependency_type: string;
   status_institucional: string;
+  dependency_type: string;
   template_version: string;
   variables: string[];
+  system_prompt?: string;
+  user_prompt_template?: string;
+}
+
+// Extract variables from template
+function extractVariables(template: string): string[] {
+  const matches = template.match(/\{\{(\w+)\}\}/g) || [];
+  return [...new Set(matches.map(m => m.replace(/\{\{|\}\}/g, '')))];
+}
+
+// Normalize raw prompt to API format
+function normalizePrompt(raw: RawPrompt): NormalizedPrompt {
+  return {
+    id: raw.prompt_id,
+    name: raw.name,
+    description: raw.description,
+    lane: raw.lane,
+    stage: raw.stage,
+    category: raw.category,
+    provider: raw.llm_config?.provider || raw.execution_type || 'code',
+    model: raw.llm_config?.model || 'N/A',
+    expected_value_score: raw.expected_value_score || 0,
+    expected_cost_score: raw.expected_cost_score || 0,
+    value_cost_ratio: raw.value_cost_ratio || 0,
+    status_institucional: raw.status_institucional || (raw.criticality === 'required' ? 'core' : 'supporting'),
+    dependency_type: raw.dependency_type || (Array.isArray(raw.min_signal_dependency) ? 'signal_threshold' : 'always'),
+    template_version: raw.version || '1.0.0',
+    variables: extractVariables(raw.user_prompt_template || ''),
+  };
 }
 
 // GET /api/prompts - List all prompts with filtering
@@ -44,12 +98,15 @@ promptsRouter.get('/', async (req, res) => {
   try {
     const { lane, stage, category, status, provider, search } = req.query;
     
-    let prompts: PromptDefinition[] = [];
+    let rawPrompts: RawPrompt[] = [];
     
     if (fs.existsSync(PROMPTS_FILE)) {
       const data = JSON.parse(fs.readFileSync(PROMPTS_FILE, 'utf-8'));
-      prompts = data.prompts || [];
+      rawPrompts = data.prompts || [];
     }
+    
+    // Normalize all prompts
+    let prompts = rawPrompts.map(normalizePrompt);
     
     // Apply filters
     let filtered = prompts;
@@ -106,23 +163,7 @@ promptsRouter.get('/', async (req, res) => {
     }
     
     res.json({
-      prompts: filtered.map(p => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        lane: p.lane,
-        stage: p.stage,
-        category: p.category,
-        provider: p.provider,
-        model: p.model,
-        expected_value_score: p.expected_value_score,
-        expected_cost_score: p.expected_cost_score,
-        value_cost_ratio: p.value_cost_ratio,
-        status_institucional: p.status_institucional,
-        dependency_type: p.dependency_type,
-        template_version: p.template_version,
-        variables: p.variables || [],
-      })),
+      prompts: filtered,
       stats,
     });
   } catch (error) {
@@ -141,13 +182,22 @@ promptsRouter.get('/:id', async (req, res) => {
     }
     
     const data = JSON.parse(fs.readFileSync(PROMPTS_FILE, 'utf-8'));
-    const prompts: PromptDefinition[] = data.prompts || [];
+    const rawPrompts: RawPrompt[] = data.prompts || [];
     
-    const prompt = prompts.find(p => p.id === id);
+    const rawPrompt = rawPrompts.find(p => p.prompt_id === id);
     
-    if (!prompt) {
+    if (!rawPrompt) {
       return res.status(404).json({ error: 'Prompt not found' });
     }
+    
+    // Return full details including templates
+    const prompt = {
+      ...normalizePrompt(rawPrompt),
+      system_prompt: rawPrompt.system_prompt,
+      user_prompt_template: rawPrompt.user_prompt_template,
+      output_schema: rawPrompt.output_schema,
+      llm_config: rawPrompt.llm_config,
+    };
     
     res.json({ prompt });
   } catch (error) {
@@ -159,12 +209,14 @@ promptsRouter.get('/:id', async (req, res) => {
 // GET /api/prompts/filters/options - Get available filter options
 promptsRouter.get('/filters/options', async (req, res) => {
   try {
-    let prompts: PromptDefinition[] = [];
+    let rawPrompts: RawPrompt[] = [];
     
     if (fs.existsSync(PROMPTS_FILE)) {
       const data = JSON.parse(fs.readFileSync(PROMPTS_FILE, 'utf-8'));
-      prompts = data.prompts || [];
+      rawPrompts = data.prompts || [];
     }
+    
+    const prompts = rawPrompts.map(normalizePrompt);
     
     const lanes = [...new Set(prompts.map(p => p.lane))].sort();
     const stages = [...new Set(prompts.map(p => p.stage))].sort();
