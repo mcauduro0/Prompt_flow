@@ -262,7 +262,7 @@ async function getRealStatsV2(timeRangeHours: number = 24): Promise<TelemetrySta
       recentErrors.push({
         prompt_id: run.runType,
         error: run.errorMessage,
-        created_at: run.runDate,
+        created_at: run.runDate instanceof Date ? run.runDate.toISOString() : String(run.runDate),
       });
     }
   }
@@ -399,7 +399,7 @@ async function getRealBudgetV2(): Promise<BudgetStatus> {
   for (const run of allRuns) {
     const runDate = new Date(run.runDate);
     // Handle double-stringified payload (stored as JSON string in JSONB)
-    let payload = run.payload || {};
+    let payload: any = run.payload || {};
     if (typeof payload === 'string') {
       try {
         payload = JSON.parse(payload);
