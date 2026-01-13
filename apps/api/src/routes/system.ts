@@ -6,8 +6,13 @@
 import { Router } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 export const systemRouter: Router = Router();
+
+// ES Module compatibility for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Paths
 const RUNS_DB_FILE = path.join(__dirname, '../../../../output/runs_db.json');

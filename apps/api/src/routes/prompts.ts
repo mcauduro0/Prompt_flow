@@ -6,8 +6,13 @@
 import { Router } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 export const promptsRouter: Router = Router();
+
+// ES Module compatibility for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Path to prompts library
 const PROMPTS_FILE = path.join(__dirname, '../../../../packages/worker/src/prompts/library/prompts_full.json');
