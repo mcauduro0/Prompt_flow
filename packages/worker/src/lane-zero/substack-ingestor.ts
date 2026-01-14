@@ -11,18 +11,54 @@
 import type { LLMClient, LLMRequest } from '@arc/llm-client';
 import { Lane0StateManager } from './state-manager.js';
 
-// Lista de newsletters de investimento do Substack
+// Lista de newsletters de investimento do Substack (33 fontes)
 export const INVESTMENT_NEWSLETTERS = [
-  { slug: 'compoundingquality', name: 'Compounding Quality', priority: 1 },
-  { slug: 'capitalistletters', name: 'Capitalist Letters', priority: 1 },
-  { slug: 'citriniresearch', name: 'Citrini Research', priority: 1 },
-  { slug: 'schwarcapital', name: 'Schwar Capital Research', priority: 1 },
-  { slug: 'doomberg', name: 'Doomberg', priority: 2 },
-  { slug: 'a16z', name: 'a16z', priority: 2 },
-  { slug: 'semianalysis', name: 'SemiAnalysis', priority: 1 },
-  { slug: 'theaimaker', name: 'The AI Maker', priority: 3 },
-  { slug: 'aimadessimple', name: 'AI Made Simple', priority: 3 },
-  { slug: 'marketsentiment', name: 'Market Sentiment', priority: 2 },
+  // Tier 1 - Core Value Investing & Quality
+  { slug: 'deepvaluecapitalbykyler', name: 'Deep Value Capital by Kyler', priority: 1, url: 'https://deepvaluecapitalbykyler.substack.com/' },
+  { slug: 'compoundingquality', name: 'Compounding Quality', priority: 1, url: 'https://www.compoundingquality.net/' },
+  { slug: 'multibaggerideas', name: 'Multibagger Ideas', priority: 1, url: 'https://multibaggerideas.substack.com/' },
+  { slug: 'schwarcapital', name: 'Schwar Capital', priority: 1, url: 'https://www.schwarcapital.com/' },
+  { slug: 'potentialmultibaggers', name: 'Potential Multibaggers', priority: 1, url: 'https://www.potentialmultibaggers.com/' },
+  { slug: 'investinassets', name: 'Invest In Assets', priority: 1, url: 'https://www.investinassets.net/' },
+  { slug: 'heavymoatinvestments', name: 'Heavy Moat Investments', priority: 1, url: 'https://heavymoatinvestments.substack.com/' },
+  { slug: '100baggerhunting', name: '100 Bagger Hunting', priority: 1, url: 'https://www.100baggerhunting.com/' },
+  
+  // Tier 2 - Growth & Tech Focus
+  { slug: 'hypertechinvest', name: 'Hypertech Invest', priority: 1, url: 'https://hypertechinvest.com/' },
+  { slug: 'capitalist-letters', name: 'Capitalist Letters', priority: 1, url: 'https://www.capitalist-letters.com' },
+  { slug: 'asymmetricfinance', name: 'Asymmetric Finance', priority: 1, url: 'https://www.asymmetricfinance.co/' },
+  { slug: 'capitalemployed', name: 'Capital Employed', priority: 1, url: 'https://www.capitalemployed.com/' },
+  { slug: 'generational', name: 'Generational', priority: 1, url: 'https://www.generational.pub/' },
+  
+  // Tier 3 - Macro & Market Analysis
+  { slug: 'variantperception', name: 'Variant Perception', priority: 2, url: 'https://blog.variantperception.com/' },
+  { slug: 'fidenzamacro', name: 'Fidenza Macro', priority: 2, url: 'https://www.fidenzamacro.com/' },
+  { slug: 'citriniresearch', name: 'Citrini Research', priority: 2, url: 'https://www.citriniresearch.com/' },
+  { slug: 'marketsentiment', name: 'Market Sentiment', priority: 2, url: 'https://www.marketsentiment.co/' },
+  
+  // Tier 4 - Deep Research & Analysis
+  { slug: 'quanta72', name: 'Quanta 72', priority: 1, url: 'https://quanta72.substack.com/' },
+  { slug: 'stockanalysiscompilation', name: 'Stock Analysis Compilation', priority: 1, url: 'https://stockanalysiscompilation.substack.com/' },
+  { slug: 'superfluousvalue', name: 'Superfluous Value', priority: 1, url: 'https://superfluousvalue.substack.com/' },
+  { slug: 'hiddenvalueideas', name: 'Hidden Value Ideas', priority: 1, url: 'https://hiddenvalueideas.substack.com/' },
+  { slug: 'roetheboat', name: 'ROE The Boat', priority: 1, url: 'https://www.roetheboat.com/' },
+  { slug: 'valueinvestingworld', name: 'Value Investing World', priority: 1, url: 'https://valueinvestingworld.substack.com/' },
+  
+  // Tier 5 - Short Selling & Contrarian
+  { slug: 'thebearcave', name: 'The Bear Cave', priority: 2, url: 'https://thebearcave.substack.com/' },
+  
+  // Tier 6 - Small Caps & Micro Caps
+  { slug: 'tinytitans', name: 'Tiny Titans', priority: 1, url: 'https://tinytitans.substack.com/' },
+  { slug: 'microcapinterviews', name: 'Microcap Interviews', priority: 1, url: 'https://microcapinterviews.substack.com' },
+  
+  // Tier 7 - Legendary Investors & Wisdom
+  { slug: 'vitaliy', name: 'Vitaliy Katsenelson', priority: 2, url: 'https://vitaliy.substack.com/' },
+  { slug: 'gspier', name: 'Guy Spier', priority: 2, url: 'https://gspier.substack.com/' },
+  { slug: 'michaeljburry', name: 'Michael J. Burry', priority: 1, url: 'https://michaeljburry.substack.com/' },
+  
+  // Tier 8 - DIY & Educational
+  { slug: 'diyinvestingstocks', name: 'DIY Investing Stocks', priority: 2, url: 'https://diyinvestingstocks.substack.com/' },
+  { slug: 'continuouscompounding', name: 'Continuous Compounding', priority: 2, url: 'https://continuouscompounding.substack.com/' },
 ];
 
 // Interface para ideia bruta extraída

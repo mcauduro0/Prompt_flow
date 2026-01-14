@@ -52,7 +52,7 @@ export interface PromptTemplate {
 
 // Default models following Build Pack
 export const DEFAULT_MODELS = {
-  openai: 'gpt-4o',
+  openai: 'gpt-5.2',
   anthropic: 'claude-sonnet-4-20250514',
   google: 'gemini-2.5-flash',
 } as const;
