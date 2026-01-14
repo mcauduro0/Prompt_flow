@@ -23,7 +23,7 @@ import {
   NOVELTY_PENALTY_WINDOW_DAYS,
   SYSTEM_TIMEZONE,
 } from '@arc/shared';
-import { createFMPClient, createPolygonClient } from '@arc/retriever';
+import { createFMPClient, createPolygonClient, getDataRetrieverHub, type SocialSentimentData } from '@arc/retriever';
 import { createResilientClient, type LLMClient } from '@arc/llm-client';
 import { ideasRepository, runsRepository, memoryRepository } from '@arc/database';
 import {
@@ -83,6 +83,7 @@ interface RawIdea {
 }
 
 interface EnrichedStock {
+  socialSentiment?: SocialSentimentData | null;
   ticker: string;
   profile: any;
   metrics: any;
@@ -120,21 +121,23 @@ async function fetchUniverse(): Promise<string[]> {
 }
 
 /**
- * Enrich stock data from both FMP and Polygon
+ * Enrich stock data from FMP, Polygon, and Reddit
  */
 async function enrichStockData(tickers: string[]): Promise<EnrichedStock[]> {
   const fmp = createFMPClient();
   const polygon = createPolygonClient();
+  const dataHub = getDataRetrieverHub();
   const enriched: EnrichedStock[] = [];
 
   for (const ticker of tickers) {
     try {
-      // Fetch from both sources in parallel
-      const [profileResult, metricsResult, priceResult, newsResult] = await Promise.all([
+      // Fetch from all sources in parallel
+      const [profileResult, metricsResult, priceResult, newsResult, sentimentResult] = await Promise.all([
         fmp.getProfile(ticker),
         fmp.getKeyMetrics(ticker),
         polygon.getLatestPrice(ticker),
         polygon.getNews(ticker, 5),
+        dataHub.getRedditSentiment(ticker),
       ]);
 
       if (!profileResult.success || !profileResult.data) {
@@ -148,7 +151,13 @@ async function enrichStockData(tickers: string[]): Promise<EnrichedStock[]> {
         metrics: metricsResult.data,
         price: priceResult.data,
         news: newsResult.data || [],
+        socialSentiment: sentimentResult.success ? (sentimentResult.data as SocialSentimentData) : null,
       });
+
+      // Log social sentiment if available
+      if (sentimentResult.success && sentimentResult.data) {
+        console.log(`[Lane A] Reddit sentiment for ${ticker}: score=${(sentimentResult.data as SocialSentimentData).reddit_sentiment?.toFixed(2) || 'N/A'}, mentions=${(sentimentResult.data as SocialSentimentData).reddit_mentions_24h || 0}`);
+      }
 
       // Rate limiting - be gentle with APIs
       await new Promise(resolve => setTimeout(resolve, 300));

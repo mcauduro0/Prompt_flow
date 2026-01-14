@@ -34,6 +34,10 @@ import {
   createBusinessModelAgent,
   createIndustryMoatAgent,
   createValuationAgent,
+  createFinancialForensicsAgent,
+  createCapitalAllocationAgent,
+  createManagementQualityAgent,
+  createRiskStressAgent,
   type AgentContext,
   type AgentResult,
 } from '../agents/index.js';
@@ -160,6 +164,7 @@ async function runDeepResearch(
       includeNews: true,
       includeFilings: true,
       priceHistoryDays: 365,
+      includeMacro: true,
     });
 
     if (!companyData.profile) {
@@ -204,6 +209,43 @@ async function runDeepResearch(
     const valuationResult = await valuationAgent.run(agentContext);
     if (valuationResult.success) {
       modules.valuation = valuationResult.data;
+      agentContext.previousModules = { ...agentContext.previousModules, valuation: valuationResult.data };
+    }
+
+    // Financial Forensics Agent
+    console.log(`[Lane B] Running Financial Forensics Agent for ${ticker}...`);
+    const financialForensicsAgent = createFinancialForensicsAgent(llm, aggregator);
+    const financialForensicsResult = await financialForensicsAgent.run(agentContext);
+    if (financialForensicsResult.success) {
+      modules.financialForensics = financialForensicsResult.data;
+      agentContext.previousModules = { ...agentContext.previousModules, financialForensics: financialForensicsResult.data };
+    }
+
+    // Capital Allocation Agent
+    console.log(`[Lane B] Running Capital Allocation Agent for ${ticker}...`);
+    const capitalAllocationAgent = createCapitalAllocationAgent(llm, aggregator);
+    const capitalAllocationResult = await capitalAllocationAgent.run(agentContext);
+    if (capitalAllocationResult.success) {
+      modules.capitalAllocation = capitalAllocationResult.data;
+      agentContext.previousModules = { ...agentContext.previousModules, capitalAllocation: capitalAllocationResult.data };
+    }
+
+    // Management Quality Agent
+    console.log(`[Lane B] Running Management Quality Agent for ${ticker}...`);
+    const managementQualityAgent = createManagementQualityAgent(llm, aggregator);
+    const managementQualityResult = await managementQualityAgent.run(agentContext);
+    if (managementQualityResult.success) {
+      modules.managementQuality = managementQualityResult.data;
+      agentContext.previousModules = { ...agentContext.previousModules, managementQuality: managementQualityResult.data };
+    }
+
+    // Risk & Stress Agent
+    console.log(`[Lane B] Running Risk & Stress Agent for ${ticker}...`);
+    const riskStressAgent = createRiskStressAgent(llm, aggregator);
+    const riskStressResult = await riskStressAgent.run(agentContext);
+    if (riskStressResult.success) {
+      modules.riskStress = riskStressResult.data;
+      agentContext.previousModules = { ...agentContext.previousModules, riskStress: riskStressResult.data };
     }
 
     // Step 4: Run gates on the research
@@ -242,6 +284,10 @@ async function runDeepResearch(
         business: modules.businessModel,
         industryMoat: modules.industryMoat,
         valuation: modules.valuation,
+        financials: modules.financialForensics,
+        capitalAllocation: modules.capitalAllocation,
+        management: modules.managementQuality,
+        risk: modules.riskStress,
       },
       gateResults,
       currentPrice: companyData.latestPrice?.close,
@@ -263,11 +309,11 @@ async function runDeepResearch(
       modules: {
         business: modules.businessModel || null,
         industry_moat: modules.industryMoat || null,
-        financials: null, // TODO: Add financial forensics agent
-        capital_allocation: null, // TODO: Add capital allocation agent
-        management: null, // TODO: Add management quality agent
+        financials: modules.financialForensics || null,
+        capital_allocation: modules.capitalAllocation || null,
+        management: modules.managementQuality || null,
         valuation: modules.valuation || null,
-        risk: null, // TODO: Add risk stress agent
+        risk: modules.riskStress || null,
         synthesis: modules.synthesis || null,
       },
       gateResults,
@@ -289,6 +335,8 @@ async function runDeepResearch(
       bear_case: synthesis.bear_case,
       key_risks: synthesis.risks,
       position_guidance: synthesis.position_guidance,
+      target_price: synthesis.target_price,
+      upside_percent: synthesis.upside_percent,
     } : null;
 
     // Build monitoring plan

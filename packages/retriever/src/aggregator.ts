@@ -2,10 +2,10 @@
  * ARC Investment Factory - Data Aggregator
  * Combines data from multiple sources for comprehensive company analysis
  */
-
 import { FMPClient, createFMPClient } from './sources/fmp.js';
 import { PolygonClient, createPolygonClient } from './sources/polygon.js';
 import { SECEdgarClient, createSECEdgarClient } from './sources/sec-edgar.js';
+import { FREDClient, getFREDClient, type MacroIndicators } from './sources/fred.js';
 import type {
   CompanyProfile,
   FinancialMetrics,
@@ -32,6 +32,7 @@ export interface AggregatedCompanyData {
   news?: NewsArticle[];
   filings?: SECFiling[];
   analystEstimates?: AnalystEstimate;
+  macroIndicators?: MacroIndicators;
   errors: string[];
 }
 
@@ -39,11 +40,13 @@ export class DataAggregator {
   private fmpClient: FMPClient;
   private polygonClient: PolygonClient;
   private secClient: SECEdgarClient;
+  private fredClient: FREDClient;
 
   constructor(config: DataSourceConfig = {}) {
     this.fmpClient = createFMPClient(config.fmpApiKey);
     this.polygonClient = createPolygonClient(config.polygonApiKey);
     this.secClient = createSECEdgarClient(config.secUserAgent);
+    this.fredClient = getFREDClient();
   }
 
   /**
@@ -56,6 +59,7 @@ export class DataAggregator {
       includePriceHistory?: boolean;
       includeNews?: boolean;
       includeFilings?: boolean;
+      includeMacro?: boolean;
       priceHistoryDays?: number;
     } = {}
   ): Promise<AggregatedCompanyData> {
@@ -64,6 +68,7 @@ export class DataAggregator {
       includePriceHistory = false,
       includeNews = true,
       includeFilings = true,
+      includeMacro = true,
       priceHistoryDays = 365,
     } = options;
 
@@ -152,6 +157,18 @@ export class DataAggregator {
       }
     }
 
+    // Fetch macro indicators if requested (NEW)
+    if (includeMacro) {
+      try {
+        const macroResult = await this.fredClient.getMacroIndicators();
+        result.macroIndicators = macroResult;
+        console.log(`[DataAggregator] Fetched macro indicators: GDP=${macroResult.gdp_growth}%, Unemployment=${macroResult.unemployment_rate}%, Fed Funds=${macroResult.fed_funds_rate}%`);
+      } catch (error) {
+        errors.push(`Macro: ${(error as Error).message}`);
+        console.warn(`[DataAggregator] Failed to fetch macro indicators:`, (error as Error).message);
+      }
+    }
+
     // Fetch analyst estimates
     const estimatesResult = await this.fmpClient.getPriceTarget(ticker);
     if (estimatesResult.success) {
@@ -221,7 +238,6 @@ export class DataAggregator {
       exchange: params.exchange,
       limit: params.limit ?? 100,
     });
-
     return result.success ? result.data ?? [] : [];
   }
 
@@ -239,6 +255,13 @@ export class DataAggregator {
   async isMarketOpen(): Promise<boolean> {
     const result = await this.polygonClient.getMarketStatus();
     return result.success && result.data?.market === 'open';
+  }
+
+  /**
+   * Get macro indicators only (for standalone use)
+   */
+  async getMacroIndicators(): Promise<MacroIndicators> {
+    return this.fredClient.getMacroIndicators();
   }
 }
 
