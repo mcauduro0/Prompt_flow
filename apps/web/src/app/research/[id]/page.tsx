@@ -1,57 +1,148 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { ArrowLeft, Download, CheckCircle, AlertCircle, FileText } from "lucide-react";
-import { cn } from "@/lib/utils";
 
-const modules = ["Business Model", "Industry & Moat", "Financial Forensics", "Capital Allocation", "Management Quality", "Valuation", "Risk & Stress"];
+interface Packet {
+  id: string;
+  ticker: string;
+  company_name: string;
+  headline: string;
+  summary?: string;
+  is_complete: boolean;
+  style?: string;
+  variant_perception?: string;
+  historical_parallels?: string;
+  modules?: Array<{ status?: string; summary?: string }>;
+}
+
+const moduleNames = ["Business Model", "Industry & Moat", "Financial Forensics", "Capital Allocation", "Management Quality", "Valuation", "Risk & Stress"];
 
 export default function ResearchDetailPage() {
   const params = useParams();
-  const [packet, setPacket] = useState<any>(null);
+  const [packet, setPacket] = useState<Packet | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const [error, setError] = useState<string | null>(null);
   const packetId = params?.id as string | undefined;
 
-  useEffect(() => { 
-    const fetchPacket = async () => { 
+  useEffect(() => {
+    const fetchPacket = async () => {
       if (!packetId) return;
-      try { 
-        const res = await fetch(`/api/research/${packetId}`); 
-        if (res.ok) { const data = await res.json(); setPacket(data); } 
-      } catch (err) { console.error(err); } finally { setLoading(false); } 
-    }; 
-    if (packetId) fetchPacket(); 
+      try {
+        const res = await fetch(`/api/research/packets/${packetId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setPacket(data);
+        } else {
+          setError("Failed to fetch packet");
+        }
+      } catch (err) {
+        setError("Error fetching packet");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (packetId) fetchPacket();
   }, [packetId]);
 
-  if (loading) return <AppLayout><div className="flex items-center justify-center min-h-screen"><div className="animate-pulse text-muted-foreground">Loading...</div></div></AppLayout>;
-  if (!packet) return <AppLayout><div className="flex items-center justify-center min-h-screen text-muted-foreground">Packet not found</div></AppLayout>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground p-8">
+        <div className="animate-pulse">Loading packet...</div>
+      </div>
+    );
+  }
+
+  if (error || !packet) {
+    return (
+      <div className="min-h-screen bg-background text-foreground p-8">
+        <Link href="/research" className="text-accent hover:underline mb-4 block">
+          Back to Research
+        </Link>
+        <div className="text-red-500">{error || "Packet not found"}</div>
+      </div>
+    );
+  }
 
   return (
-    <AppLayout>
-      <div className="min-h-screen flex flex-col">
-        <header className="page-header">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4"><Link href="/research" className="p-2 rounded-md hover:bg-secondary transition-colors"><ArrowLeft className="w-5 h-5" /></Link><div><div className="flex items-center gap-3"><h1 className="page-header-title">{packet.ticker}</h1><span className="text-sm text-accent uppercase">{packet.style?.replace("_", " ")}</span>{packet.is_complete ? <CheckCircle className="w-5 h-5 text-success" /> : <AlertCircle className="w-5 h-5 text-warning" />}</div><p className="page-header-subtitle">{packet.company_name}</p></div></div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors"><Download className="w-4 h-4" /> Export PDF</button>
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border bg-card/50 px-8 py-6">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
+          <div className="flex items-center gap-4">
+            <Link href="/research" className="p-2 rounded-md hover:bg-secondary transition-colors text-xl">
+              Back
+            </Link>
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold">{packet.ticker}</h1>
+                {packet.style && (
+                  <span className="text-sm text-accent uppercase">{packet.style.replace("_", " ")}</span>
+                )}
+                <span className={`px-2 py-0.5 rounded text-xs ${packet.is_complete ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
+                  {packet.is_complete ? "Complete" : "In Progress"}
+                </span>
+              </div>
+              <p className="text-muted-foreground">{packet.company_name}</p>
+            </div>
           </div>
-        </header>
-        <main className="flex-1 p-8">
-          <div className="content-area space-y-8">
-            <section className="governance-card"><h2 className="text-section-title mb-4">Executive Summary</h2><p className="text-lg font-medium mb-4">{packet.headline}</p><p className="text-muted-foreground">{packet.summary || "Summary not available"}</p></section>
-            <section className="governance-card"><h2 className="text-section-title mb-4">Research Modules</h2>
-              <div className="grid md:grid-cols-2 gap-4">{modules.map((mod, i) => { const moduleData = packet.modules?.[i] || {}; const isComplete = moduleData.status === "complete"; return (<div key={i} className={cn("p-4 rounded-md border", isComplete ? "border-success/30 bg-success/5" : "border-border bg-secondary/30")}><div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><FileText className="w-4 h-4 text-accent" /><span className="font-medium">{mod}</span></div>{isComplete ? <CheckCircle className="w-4 h-4 text-success" /> : <AlertCircle className="w-4 h-4 text-muted-foreground" />}</div><p className="text-sm text-muted-foreground">{moduleData.summary || "Pending analysis..."}</p></div>); })}</div>
-            </section>
-            {packet.variant_perception && (<section className="governance-card"><h2 className="text-section-title mb-4">Variant Perception</h2><p className="text-sm">{packet.variant_perception}</p></section>)}
-            {packet.historical_parallels && (<section className="governance-card"><h2 className="text-section-title mb-4">Historical Parallels</h2><p className="text-sm">{packet.historical_parallels}</p></section>)}
-            {packet.pre_mortem && (<section className="governance-card governance-card-warn"><h2 className="text-section-title mb-4">Pre-Mortem Analysis</h2><p className="text-sm">{packet.pre_mortem}</p></section>)}
-            {packet.monitoring_plan && (<section className="governance-card"><h2 className="text-section-title mb-4">Monitoring Plan</h2><p className="text-sm">{packet.monitoring_plan}</p></section>)}
+          <button className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors">
+            Export PDF
+          </button>
+        </div>
+      </header>
+      
+      <main className="p-8 max-w-6xl mx-auto space-y-8">
+        <section className="bg-card border border-border rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Executive Summary</h2>
+          <p className="text-lg font-medium mb-4">{packet.headline}</p>
+          {packet.summary && (
+            <p className="text-muted-foreground">{packet.summary}</p>
+          )}
+        </section>
+
+        <section className="bg-card border border-border rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Research Modules</h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            {moduleNames.map((mod, i) => {
+              const moduleData = packet.modules?.[i] || {};
+              const isComplete = moduleData.status === "complete";
+              return (
+                <div
+                  key={i}
+                  className={`p-4 rounded-md border ${
+                    isComplete ? "border-green-500/30 bg-green-500/5" : "border-border bg-secondary/30"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">{mod}</span>
+                    <span className={isComplete ? "text-green-500" : "text-muted-foreground"}>
+                      {isComplete ? "Done" : "Pending"}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {moduleData.summary || "Pending analysis..."}
+                  </p>
+                </div>
+              );
+            })}
           </div>
-        </main>
-      </div>
-    </AppLayout>
+        </section>
+
+        {packet.variant_perception && (
+          <section className="bg-card border border-border rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Variant Perception</h2>
+            <p className="text-sm text-foreground">{packet.variant_perception}</p>
+          </section>
+        )}
+
+        {packet.historical_parallels && (
+          <section className="bg-card border border-border rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Historical Parallels</h2>
+            <p className="text-sm text-foreground">{packet.historical_parallels}</p>
+          </section>
+        )}
+      </main>
+    </div>
   );
 }
