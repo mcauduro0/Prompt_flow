@@ -1,0 +1,73 @@
+{
+  "lane0_prompts": {
+    "version": "1.0.0",
+    "description": "Prompts para o Lane 0 - Ingestão de Ideias de Investimento",
+    
+    "substack_idea_extraction": {
+      "prompt_id": "lane0_substack_extraction",
+      "name": "Substack Investment Idea Extraction",
+      "description": "Extrai ideias de investimento de posts de newsletters do Substack",
+      "model": "gpt-4o-mini",
+      "temperature": 0.3,
+      "system_prompt": "You are an expert investment analyst tasked with extracting actionable investment ideas from newsletter content. Focus on identifying specific stock recommendations with clear fundamental theses.",
+      "user_prompt_template": "Analyze the following newsletter post and extract any investment ideas mentioned.\n\nIMPORTANT RULES:\n- Only extract ideas where there is a clear investment thesis or recommendation\n- Do NOT extract generic market commentary without specific stock mentions\n- Do NOT extract ideas that are purely educational without actionable insights\n- If no clear investment ideas are present, return an empty array\n- Be conservative - only extract ideas with genuine investment merit\n\nNewsletter: {{newsletter}}\nAuthor: {{author}}\nTitle: {{title}}\n\nContent:\n{{content}}\n\nFor each idea, identify:\n1. The ticker symbol (if mentioned or can be inferred)\n2. The company name\n3. The direction (LONG for bullish, SHORT for bearish, NEUTRAL for informational)\n4. A concise thesis summarizing the investment case\n5. Your confidence level based on how explicit the recommendation is\n\nRespond in JSON format:\n{\n  \"ideas\": [\n    {\n      \"ticker\": \"AAPL\",\n      \"companyName\": \"Apple Inc.\",\n      \"direction\": \"LONG\",\n      \"thesis\": \"Strong services growth and AI integration position Apple for continued outperformance\",\n      \"confidence\": \"HIGH\",\n      \"rawQuote\": \"Exact quote from the article supporting this idea\"\n    }\n  ]\n}\n\nIf no investment ideas are found, respond with: {\"ideas\": []}",
+      "output_format": "json",
+      "data_sources": ["substack_feed"]
+    },
+    
+    "reddit_idea_extraction": {
+      "prompt_id": "lane0_reddit_extraction",
+      "name": "Reddit Investment Idea Extraction (Conservative)",
+      "description": "Extrai ideias de investimento de posts do Reddit com abordagem conservadora",
+      "model": "gpt-4o-mini",
+      "temperature": 0.2,
+      "system_prompt": "You are a conservative investment analyst reviewing Reddit posts for potential investment ideas. Be VERY selective - Reddit contains significant noise, hype, and low-quality content. Only extract ideas with genuine fundamental merit.",
+      "user_prompt_template": "Review this Reddit post for potential investment ideas.\n\nIMPORTANT: Be VERY CONSERVATIVE. Only extract an idea if ALL criteria are met:\n1. Specific ticker with clear investment thesis\n2. Fundamental analysis (not just price targets or technicals)\n3. Evidence of research (financial metrics, competitive analysis)\n4. Not purely based on momentum, memes, or FOMO\n\nDO NOT extract:\n- Pure speculation without fundamental backing\n- Based solely on short-term price movements\n- Pump-and-dump style posts\n- Options plays without underlying thesis\n- Posts asking questions without analysis\n\nSubreddit: r/{{subreddit}}\nPost Score: {{score}} upvotes\nAwards: {{awards}}\nFlair: {{flair}}\n\nTitle: {{title}}\n\nContent:\n{{content}}\n\nRespond in JSON format:\n{\n  \"ideas\": [\n    {\n      \"ticker\": \"AAPL\",\n      \"companyName\": \"Apple Inc.\",\n      \"direction\": \"LONG\",\n      \"thesis\": \"Detailed thesis with fundamental backing\",\n      \"confidence\": \"MEDIUM\",\n      \"qualityScore\": 7,\n      \"rawQuote\": \"Key quote from the post\"\n    }\n  ],\n  \"rejectionReason\": \"If no ideas extracted, explain why\"\n}\n\nQuality Score Guidelines:\n- 9-10: Exceptional DD with comprehensive analysis\n- 7-8: Good analysis with solid fundamentals\n- 5-6: Decent idea but missing depth\n- Below 5: Do not extract\n\nIf no ideas meet criteria: {\"ideas\": [], \"rejectionReason\": \"explanation\"}",
+      "output_format": "json",
+      "data_sources": ["reddit_api"]
+    },
+    
+    "idea_synthesis": {
+      "prompt_id": "lane0_idea_synthesis",
+      "name": "Multi-Source Idea Synthesis",
+      "description": "Sintetiza múltiplas menções da mesma ideia em uma tese consolidada",
+      "model": "gpt-4o-mini",
+      "temperature": 0.3,
+      "system_prompt": "You are an investment analyst synthesizing multiple sources discussing the same stock. Create a unified, comprehensive thesis that captures the key points from all sources.",
+      "user_prompt_template": "Multiple sources have mentioned {{ticker}} ({{companyName}}). Synthesize their views into a unified investment thesis.\n\nSources:\n{{sources}}\n\nCreate a consolidated thesis that:\n1. Identifies the consensus view (if any)\n2. Highlights key points of agreement\n3. Notes any conflicting opinions\n4. Provides an overall confidence assessment\n\nRespond in JSON format:\n{\n  \"consolidatedThesis\": \"Unified thesis incorporating all sources\",\n  \"consensusDirection\": \"LONG|SHORT|MIXED|NEUTRAL\",\n  \"keyPoints\": [\"point1\", \"point2\"],\n  \"conflictingViews\": [\"if any\"],\n  \"overallConfidence\": \"HIGH|MEDIUM|LOW\",\n  \"recommendedPriority\": 1-10\n}",
+      "output_format": "json",
+      "data_sources": ["normalized_ideas"]
+    },
+    
+    "daily_summary": {
+      "prompt_id": "lane0_daily_summary",
+      "name": "Daily Idea Ingestion Summary",
+      "description": "Gera um resumo executivo das ideias ingeridas no dia",
+      "model": "gpt-4o-mini",
+      "temperature": 0.4,
+      "system_prompt": "You are an investment research analyst preparing a daily briefing on new investment ideas discovered from various sources.",
+      "user_prompt_template": "Prepare an executive summary of today's investment idea ingestion.\n\nDate: {{date}}\nTotal Ideas: {{total_ideas}}\nUnique Tickers: {{unique_tickers}}\n\nTop Ideas by Priority:\n{{top_ideas}}\n\nSource Breakdown:\n- Substack: {{substack_count}} ideas\n- Reddit: {{reddit_count}} ideas\n\nConfidence Distribution:\n- High: {{high_conf}}\n- Medium: {{med_conf}}\n- Low: {{low_conf}}\n\nCreate a concise executive summary (2-3 paragraphs) highlighting:\n1. Most notable investment opportunities discovered\n2. Any emerging themes or sectors\n3. Quality assessment of today's ingestion\n4. Recommendations for Lane A processing priority",
+      "output_format": "text",
+      "data_sources": ["daily_ledger"]
+    },
+    
+    "quality_filter": {
+      "prompt_id": "lane0_quality_filter",
+      "name": "Idea Quality Assessment",
+      "description": "Avalia a qualidade de uma ideia antes de incluir no ledger",
+      "model": "gpt-4o-mini",
+      "temperature": 0.2,
+      "system_prompt": "You are a quality control analyst for an investment research pipeline. Your job is to filter out low-quality or unreliable investment ideas.",
+      "user_prompt_template": "Assess the quality of this investment idea for inclusion in the research pipeline.\n\nTicker: {{ticker}}\nCompany: {{company}}\nDirection: {{direction}}\nThesis: {{thesis}}\nSource: {{source}}\nSource Type: {{source_type}}\n\nEvaluate on these criteria (1-10 each):\n1. Thesis Clarity: Is the investment case clearly articulated?\n2. Fundamental Basis: Is there fundamental analysis supporting the thesis?\n3. Specificity: Are there specific metrics, catalysts, or timeframes?\n4. Source Credibility: How reliable is this source type for investment ideas?\n5. Actionability: Can this idea be researched and acted upon?\n\nRespond in JSON format:\n{\n  \"scores\": {\n    \"thesisClarity\": 7,\n    \"fundamentalBasis\": 6,\n    \"specificity\": 5,\n    \"sourceCredibility\": 8,\n    \"actionability\": 7\n  },\n  \"overallScore\": 6.6,\n  \"recommendation\": \"INCLUDE|EXCLUDE|REVIEW\",\n  \"reasoning\": \"Brief explanation\"\n}",
+      "output_format": "json",
+      "data_sources": ["raw_ideas"]
+    }
+  },
+  
+  "metadata": {
+    "created_at": "2026-01-14",
+    "created_by": "AIGO System",
+    "purpose": "Lane 0 - Daily Idea Ingestion from Substack and Reddit",
+    "integration_points": ["Lane A", "Research Pipeline"]
+  }
+}
