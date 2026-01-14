@@ -17,6 +17,30 @@ interface MonitoringPlan {
   catalysts?: MonitoringPlanCatalyst[];
 }
 
+interface ModuleData {
+  summary?: string;
+  evidence?: string[];
+  key_questions?: string[];
+  unit_economics?: Record<string, unknown>;
+}
+
+interface RawPacketModules {
+  business?: ModuleData;
+  industry_moat?: ModuleData;
+  financials?: ModuleData;
+  capital_allocation?: ModuleData;
+  management?: ModuleData;
+  valuation?: ModuleData;
+  risk?: ModuleData;
+  synthesis?: ModuleData;
+}
+
+interface RawPacket {
+  packet?: {
+    modules?: RawPacketModules;
+  };
+}
+
 interface Packet {
   id: string;
   ticker: string;
@@ -29,16 +53,25 @@ interface Packet {
   historical_parallels?: string;
   pre_mortem?: string;
   monitoring_plan?: MonitoringPlan;
-  modules?: Array<{ status?: string; summary?: string }>;
+  _raw?: RawPacket;
 }
 
-const moduleNames = ["Business Model", "Industry & Moat", "Financial Forensics", "Capital Allocation", "Management Quality", "Valuation", "Risk & Stress"];
+const moduleConfig = [
+  { key: "business", name: "Business Model" },
+  { key: "industry_moat", name: "Industry & Moat" },
+  { key: "financials", name: "Financial Forensics" },
+  { key: "capital_allocation", name: "Capital Allocation" },
+  { key: "management", name: "Management Quality" },
+  { key: "valuation", name: "Valuation" },
+  { key: "risk", name: "Risk & Stress" },
+];
 
 export default function ResearchDetailPage() {
   const params = useParams();
   const [packet, setPacket] = useState<Packet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const packetId = params?.id as string | undefined;
 
   useEffect(() => {
@@ -62,6 +95,18 @@ export default function ResearchDetailPage() {
     if (packetId) fetchPacket();
   }, [packetId]);
 
+  const toggleModule = (key: string) => {
+    setExpandedModules((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background text-foreground p-8">
@@ -80,6 +125,8 @@ export default function ResearchDetailPage() {
       </div>
     );
   }
+
+  const modules = packet._raw?.packet?.modules;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -120,25 +167,39 @@ export default function ResearchDetailPage() {
         <section className="bg-card border border-border rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Research Modules</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            {moduleNames.map((mod, i) => {
-              const moduleData = packet.modules?.[i] || {};
-              const isComplete = moduleData.status === "complete";
+            {moduleConfig.map((mod) => {
+              const moduleData = modules?.[mod.key as keyof RawPacketModules];
+              const hasData = moduleData?.summary;
+              const isExpanded = expandedModules.has(mod.key);
+              
               return (
                 <div
-                  key={i}
-                  className={`p-4 rounded-md border ${
-                    isComplete ? "border-green-500/30 bg-green-500/5" : "border-border bg-secondary/30"
+                  key={mod.key}
+                  className={`p-4 rounded-md border cursor-pointer transition-all ${
+                    hasData ? "border-green-500/30 bg-green-500/5 hover:bg-green-500/10" : "border-border bg-secondary/30"
                   }`}
+                  onClick={() => hasData && toggleModule(mod.key)}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium">{mod}</span>
-                    <span className={isComplete ? "text-green-500" : "text-muted-foreground"}>
-                      {isComplete ? "Done" : "Pending"}
+                    <span className="font-medium">{mod.name}</span>
+                    <span className={hasData ? "text-green-500" : "text-muted-foreground"}>
+                      {hasData ? "Complete" : "Pending"}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {moduleData.summary || "Pending analysis..."}
+                  <p className={`text-sm text-muted-foreground ${isExpanded ? "" : "line-clamp-2"}`}>
+                    {moduleData?.summary || "Pending analysis..."}
                   </p>
+                  {hasData && (
+                    <button 
+                      className="text-xs text-accent mt-2 hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleModule(mod.key);
+                      }}
+                    >
+                      {isExpanded ? "Show less" : "Read more"}
+                    </button>
+                  )}
                 </div>
               );
             })}
