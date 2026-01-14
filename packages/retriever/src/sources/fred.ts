@@ -1,7 +1,8 @@
 /**
- * ARC Investment Factory - FRED API Client
+ * ARC Investment Factory - FRED API Client with Intelligent Caching
  * 
  * Federal Reserve Economic Data (FRED) API client for macroeconomic indicators.
+ * Implements intelligent caching based on each indicator's update frequency.
  * Documentation: https://fred.stlouisfed.org/docs/api/fred/
  */
 
@@ -58,12 +59,64 @@ export interface MacroIndicators {
 }
 
 // ============================================================================
-// FRED CLIENT
+// CACHE CONFIGURATION
+// ============================================================================
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  expiresAt: number;
+}
+
+interface SeriesCacheConfig {
+  seriesId: string;
+  name: string;
+  updateFrequency: 'daily' | 'weekly' | 'monthly' | 'quarterly';
+  cacheTTLMinutes: number;
+}
+
+// Cache TTL based on update frequency
+// Daily data: cache for 4 hours (market data updates throughout day)
+// Weekly data: cache for 24 hours
+// Monthly data: cache for 7 days
+// Quarterly data: cache for 30 days
+const SERIES_CACHE_CONFIG: SeriesCacheConfig[] = [
+  // Daily indicators
+  { seriesId: 'DGS10', name: 'Treasury 10Y', updateFrequency: 'daily', cacheTTLMinutes: 240 },
+  { seriesId: 'DGS2', name: 'Treasury 2Y', updateFrequency: 'daily', cacheTTLMinutes: 240 },
+  { seriesId: 'FEDFUNDS', name: 'Fed Funds Rate', updateFrequency: 'daily', cacheTTLMinutes: 240 },
+  { seriesId: 'SP500', name: 'S&P 500', updateFrequency: 'daily', cacheTTLMinutes: 240 },
+  { seriesId: 'VIXCLS', name: 'VIX', updateFrequency: 'daily', cacheTTLMinutes: 240 },
+  
+  // Monthly indicators
+  { seriesId: 'UNRATE', name: 'Unemployment Rate', updateFrequency: 'monthly', cacheTTLMinutes: 10080 }, // 7 days
+  { seriesId: 'CPIAUCSL', name: 'CPI', updateFrequency: 'monthly', cacheTTLMinutes: 10080 },
+  { seriesId: 'UMCSENT', name: 'Consumer Sentiment', updateFrequency: 'monthly', cacheTTLMinutes: 10080 },
+  { seriesId: 'INDPRO', name: 'Industrial Production', updateFrequency: 'monthly', cacheTTLMinutes: 10080 },
+  { seriesId: 'HOUST', name: 'Housing Starts', updateFrequency: 'monthly', cacheTTLMinutes: 10080 },
+  { seriesId: 'RSXFS', name: 'Retail Sales', updateFrequency: 'monthly', cacheTTLMinutes: 10080 },
+  
+  // Quarterly indicators
+  { seriesId: 'A191RL1Q225SBEA', name: 'GDP Growth', updateFrequency: 'quarterly', cacheTTLMinutes: 43200 }, // 30 days
+];
+
+// ============================================================================
+// FRED CLIENT WITH INTELLIGENT CACHE
 // ============================================================================
 
 export class FREDClient {
   private apiKey: string;
   private baseUrl = 'https://api.stlouisfed.org/fred';
+  
+  // In-memory cache
+  private cache: Map<string, CacheEntry<any>> = new Map();
+  
+  // Cache statistics
+  private cacheStats = {
+    hits: 0,
+    misses: 0,
+    apiCalls: 0,
+  };
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey || process.env.FRED_API_KEY || '';
@@ -73,7 +126,77 @@ export class FREDClient {
   }
 
   /**
-   * Get series observations
+   * Get cache TTL for a series based on its update frequency
+   */
+  private getCacheTTL(seriesId: string): number {
+    const config = SERIES_CACHE_CONFIG.find(c => c.seriesId === seriesId);
+    if (config) {
+      return config.cacheTTLMinutes * 60 * 1000; // Convert to milliseconds
+    }
+    // Default: 4 hours for unknown series
+    return 4 * 60 * 60 * 1000;
+  }
+
+  /**
+   * Get from cache if valid
+   */
+  private getFromCache<T>(key: string): T | null {
+    const entry = this.cache.get(key);
+    if (entry && Date.now() < entry.expiresAt) {
+      this.cacheStats.hits++;
+      console.log(`[FREDClient] Cache HIT for ${key}`);
+      return entry.data as T;
+    }
+    if (entry) {
+      // Expired, remove from cache
+      this.cache.delete(key);
+    }
+    this.cacheStats.misses++;
+    console.log(`[FREDClient] Cache MISS for ${key}`);
+    return null;
+  }
+
+  /**
+   * Set cache entry
+   */
+  private setCache<T>(key: string, data: T, seriesId: string): void {
+    const ttl = this.getCacheTTL(seriesId);
+    const entry: CacheEntry<T> = {
+      data,
+      timestamp: Date.now(),
+      expiresAt: Date.now() + ttl,
+    };
+    this.cache.set(key, entry);
+    
+    const config = SERIES_CACHE_CONFIG.find(c => c.seriesId === seriesId);
+    const ttlMinutes = Math.round(ttl / 60000);
+    console.log(`[FREDClient] Cached ${key} (${config?.name || seriesId}) for ${ttlMinutes} minutes`);
+  }
+
+  /**
+   * Get cache statistics
+   */
+  getCacheStats(): { hits: number; misses: number; hitRate: number; apiCalls: number; savedCalls: number } {
+    const total = this.cacheStats.hits + this.cacheStats.misses;
+    return {
+      hits: this.cacheStats.hits,
+      misses: this.cacheStats.misses,
+      hitRate: total > 0 ? this.cacheStats.hits / total : 0,
+      apiCalls: this.cacheStats.apiCalls,
+      savedCalls: this.cacheStats.hits,
+    };
+  }
+
+  /**
+   * Clear cache
+   */
+  clearCache(): void {
+    this.cache.clear();
+    console.log('[FREDClient] Cache cleared');
+  }
+
+  /**
+   * Get series observations with caching
    */
   async getSeriesObservations(
     seriesId: string,
@@ -84,6 +207,14 @@ export class FREDClient {
       sort_order?: 'asc' | 'desc';
     }
   ): Promise<FREDObservation[]> {
+    const cacheKey = `obs:${seriesId}:${JSON.stringify(options || {})}`;
+    
+    // Check cache first
+    const cached = this.getFromCache<FREDObservation[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const params = new URLSearchParams({
       series_id: seriesId,
       api_key: this.apiKey,
@@ -100,12 +231,18 @@ export class FREDClient {
     }
 
     try {
+      this.cacheStats.apiCalls++;
       const response = await fetch(`${this.baseUrl}/series/observations?${params}`);
       if (!response.ok) {
         throw new Error(`FRED API error: ${response.status}`);
       }
       const data = await response.json() as { observations?: FREDObservation[] };
-      return data.observations || [];
+      const observations = data.observations || [];
+      
+      // Cache the result
+      this.setCache(cacheKey, observations, seriesId);
+      
+      return observations;
     } catch (error) {
       console.error(`[FREDClient] Error fetching ${seriesId}:`, error);
       return [];
@@ -113,9 +250,17 @@ export class FREDClient {
   }
 
   /**
-   * Get series metadata
+   * Get series metadata with caching
    */
   async getSeriesInfo(seriesId: string): Promise<FREDSeries | null> {
+    const cacheKey = `info:${seriesId}`;
+    
+    // Check cache first
+    const cached = this.getFromCache<FREDSeries>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const params = new URLSearchParams({
       series_id: seriesId,
       api_key: this.apiKey,
@@ -123,72 +268,99 @@ export class FREDClient {
     });
 
     try {
+      this.cacheStats.apiCalls++;
       const response = await fetch(`${this.baseUrl}/series?${params}`);
       if (!response.ok) {
         throw new Error(`FRED API error: ${response.status}`);
       }
       const data = await response.json() as { seriess?: FREDSeries[] };
-      return data.seriess?.[0] || null;
+      const series = data.seriess?.[0] || null;
+      
+      if (series) {
+        // Cache series info for 24 hours (metadata rarely changes)
+        const entry: CacheEntry<FREDSeries> = {
+          data: series,
+          timestamp: Date.now(),
+          expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+        };
+        this.cache.set(cacheKey, entry);
+      }
+      
+      return series;
     } catch (error) {
-      console.error(`[FREDClient] Error fetching series info ${seriesId}:`, error);
+      console.error(`[FREDClient] Error fetching series info for ${seriesId}:`, error);
       return null;
     }
   }
 
   /**
-   * Get latest value for a series
+   * Get latest value for a series with caching
    */
   async getLatestValue(seriesId: string): Promise<{ value: number; date: string } | null> {
+    const cacheKey = `latest:${seriesId}`;
+    
+    // Check cache first
+    const cached = this.getFromCache<{ value: number; date: string }>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const observations = await this.getSeriesObservations(seriesId, { limit: 1 });
-    if (observations.length === 0) return null;
+    if (observations.length === 0) {
+      return null;
+    }
 
     const latest = observations[0];
     const value = parseFloat(latest.value);
-    if (isNaN(value)) return null;
+    if (isNaN(value)) {
+      return null;
+    }
 
-    return { value, date: latest.date };
+    const result = { value, date: latest.date };
+    
+    // Cache is already handled by getSeriesObservations, but we cache the parsed result too
+    this.setCache(cacheKey, result, seriesId);
+    
+    return result;
   }
 
   /**
-   * Get comprehensive macro indicators
+   * Get all macro indicators with intelligent caching
    */
   async getMacroIndicators(): Promise<MacroIndicators> {
-    const indicators: MacroIndicators = {};
+    const cacheKey = 'macro:all';
+    
+    // Check if we have a recent full macro snapshot
+    const cached = this.getFromCache<MacroIndicators>(cacheKey);
+    if (cached) {
+      return cached;
+    }
 
-    // Key FRED series IDs
-    const series = {
-      gdp_growth: 'A191RL1Q225SBEA', // Real GDP Growth Rate
-      unemployment_rate: 'UNRATE', // Unemployment Rate
-      inflation_cpi: 'CPIAUCSL', // Consumer Price Index
-      fed_funds_rate: 'FEDFUNDS', // Federal Funds Rate
-      treasury_10y: 'DGS10', // 10-Year Treasury
-      treasury_2y: 'DGS2', // 2-Year Treasury
-      consumer_sentiment: 'UMCSENT', // Consumer Sentiment
-      industrial_production: 'INDPRO', // Industrial Production
-      housing_starts: 'HOUST', // Housing Starts
-      retail_sales: 'RSXFS', // Retail Sales
-      sp500: 'SP500', // S&P 500
-      vix: 'VIXCLS', // VIX
+    const seriesMap: Record<string, string> = {
+      'gdp_growth': 'A191RL1Q225SBEA',
+      'unemployment_rate': 'UNRATE',
+      'inflation_cpi': 'CPIAUCSL',
+      'fed_funds_rate': 'FEDFUNDS',
+      'treasury_10y': 'DGS10',
+      'treasury_2y': 'DGS2',
+      'consumer_sentiment': 'UMCSENT',
+      'industrial_production': 'INDPRO',
+      'housing_starts': 'HOUST',
+      'retail_sales': 'RSXFS',
+      'sp500': 'SP500',
+      'vix': 'VIXCLS',
     };
 
-    // Fetch all indicators in parallel
-    const results = await Promise.allSettled([
-      this.getLatestValue(series.gdp_growth),
-      this.getLatestValue(series.unemployment_rate),
-      this.getLatestValue(series.inflation_cpi),
-      this.getLatestValue(series.fed_funds_rate),
-      this.getLatestValue(series.treasury_10y),
-      this.getLatestValue(series.treasury_2y),
-      this.getLatestValue(series.consumer_sentiment),
-      this.getLatestValue(series.industrial_production),
-      this.getLatestValue(series.housing_starts),
-      this.getLatestValue(series.retail_sales),
-      this.getLatestValue(series.sp500),
-      this.getLatestValue(series.vix),
-    ]);
+    const keys = Object.keys(seriesMap);
+    const seriesIds = Object.values(seriesMap);
 
-    // Map results to indicators
-    const keys = Object.keys(series) as (keyof typeof series)[];
+    // Fetch all series in parallel
+    const results = await Promise.allSettled(
+      seriesIds.map(id => this.getLatestValue(id))
+    );
+
+    const indicators: MacroIndicators = {};
+
     results.forEach((result, index) => {
       if (result.status === 'fulfilled' && result.value) {
         const key = keys[index];
@@ -248,6 +420,17 @@ export class FREDClient {
     if (indicators.treasury_10y !== undefined && indicators.treasury_2y !== undefined) {
       indicators.yield_curve_spread = indicators.treasury_10y - indicators.treasury_2y;
     }
+
+    // Cache the full macro snapshot for 4 hours (minimum of daily indicators)
+    const entry: CacheEntry<MacroIndicators> = {
+      data: indicators,
+      timestamp: Date.now(),
+      expiresAt: Date.now() + 4 * 60 * 60 * 1000,
+    };
+    this.cache.set(cacheKey, entry);
+    
+    const stats = this.getCacheStats();
+    console.log(`[FREDClient] Macro indicators fetched. Cache stats: ${stats.hits} hits, ${stats.misses} misses, ${stats.apiCalls} API calls`);
 
     return indicators;
   }

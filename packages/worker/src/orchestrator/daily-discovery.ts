@@ -313,8 +313,13 @@ Financial Metrics (TTM):
 Recent News:
 ${newsSummary}
 
+Social Sentiment (Reddit):
+${stock.socialSentiment ? `- Reddit Mentions (24h): ${stock.socialSentiment.reddit_mentions_24h || 0}
+- Sentiment Score: ${stock.socialSentiment.reddit_sentiment?.toFixed(2) || 'N/A'} (-1 to 1 scale)
+- Key Themes: ${stock.socialSentiment.key_themes?.join(', ') || 'N/A'}` : 'No social sentiment data available'}
+
 Based on this information, provide your analysis:
-1. Does this company have investment potential? Consider quality of business, valuation, and catalysts.
+1. Does this company have investment potential? Consider quality of business, valuation, catalysts, and social sentiment (if available - high Reddit interest may indicate retail momentum or crowded trade).
 2. A brief investment thesis (2-3 sentences max)
 3. Investment style classification:
    - quality_compounder: High quality business with durable moat, strong ROIC, can compound value over time

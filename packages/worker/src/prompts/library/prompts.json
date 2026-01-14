@@ -14,29 +14,74 @@
       "is_gate": true,
       "lane": "lane_a",
       "pipeline_stage": "discovery",
-      "data_sources": ["fmp", "polygon"],
+      "data_sources": [
+        "fmp",
+        "polygon"
+      ],
       "inputs_schema": {
         "type": "object",
         "properties": {
-          "ticker": { "type": "string" },
-          "profile": { "type": "object" },
-          "metrics": { "type": "object" },
-          "price": { "type": "object" }
+          "ticker": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "object"
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "price": {
+            "type": "object"
+          }
         },
-        "required": ["ticker"]
+        "required": [
+          "ticker"
+        ]
       },
       "output_schema": {
         "type": "object",
         "properties": {
-          "gate": { "type": "string", "enum": ["DATA_SUFFICIENCY"] },
-          "pass": { "type": "boolean" },
-          "score": { "type": "number", "minimum": 0, "maximum": 1 },
-          "errors": { "type": "array", "items": { "type": "string" } },
-          "warnings": { "type": "array", "items": { "type": "string" } },
-          "metrics": { "type": "object" },
-          "decision_reason": { "type": "string" }
+          "gate": {
+            "type": "string",
+            "enum": [
+              "DATA_SUFFICIENCY"
+            ]
+          },
+          "pass": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "decision_reason": {
+            "type": "string"
+          }
         },
-        "required": ["gate", "pass", "score", "errors", "warnings", "decision_reason"]
+        "required": [
+          "gate",
+          "pass",
+          "score",
+          "errors",
+          "warnings",
+          "decision_reason"
+        ]
       },
       "template": ""
     },
@@ -51,7 +96,12 @@
       "is_gate": false,
       "lane": "lane_a",
       "pipeline_stage": "discovery",
-      "data_sources": ["fmp", "polygon", "news"],
+      "data_sources": [
+        "fmp",
+        "polygon",
+        "news",
+        "reddit"
+      ],
       "llm_config": {
         "provider": "openai",
         "model": "gpt-4o",
@@ -61,30 +111,101 @@
       "inputs_schema": {
         "type": "object",
         "properties": {
-          "ticker": { "type": "string" },
-          "profile": { "type": "object" },
-          "metrics": { "type": "object" },
-          "price": { "type": "object" },
-          "news": { "type": "array" }
+          "ticker": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "object"
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "price": {
+            "type": "object"
+          },
+          "news": {
+            "type": "array"
+          },
+          "socialSentiment": {
+            "type": "object",
+            "properties": {
+              "reddit_mentions_24h": {
+                "type": "number"
+              },
+              "reddit_sentiment": {
+                "type": "number"
+              },
+              "subreddit_breakdown": {
+                "type": "array"
+              },
+              "key_themes": {
+                "type": "array"
+              }
+            }
+          }
         },
-        "required": ["ticker", "profile", "metrics"]
+        "required": [
+          "ticker",
+          "profile",
+          "metrics"
+        ]
       },
       "output_schema": {
         "type": "object",
         "properties": {
-          "hasInvestmentPotential": { "type": "boolean" },
-          "thesis": { "type": "string", "minLength": 50 },
-          "styleTag": { "type": "string", "enum": ["quality_compounder", "garp", "cigar_butt"] },
-          "mechanism": { "type": "string" },
-          "edgeType": { "type": "array", "items": { "type": "string" } },
-          "conviction": { "type": "number", "minimum": 1, "maximum": 10 },
-          "catalysts": { "type": "array", "items": { "type": "object" } },
-          "keyRisks": { "type": "array", "items": { "type": "string" } },
-          "timeHorizon": { "type": "string" }
+          "hasInvestmentPotential": {
+            "type": "boolean"
+          },
+          "thesis": {
+            "type": "string",
+            "minLength": 50
+          },
+          "styleTag": {
+            "type": "string",
+            "enum": [
+              "quality_compounder",
+              "garp",
+              "cigar_butt"
+            ]
+          },
+          "mechanism": {
+            "type": "string"
+          },
+          "edgeType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "conviction": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "catalysts": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "keyRisks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "timeHorizon": {
+            "type": "string"
+          }
         },
-        "required": ["hasInvestmentPotential", "thesis", "styleTag", "conviction"]
+        "required": [
+          "hasInvestmentPotential",
+          "thesis",
+          "styleTag",
+          "conviction"
+        ]
       },
-      "template": "[SYSTEM]\nYou are a senior investment analyst at a fundamental-focused hedge fund with a disciplined, research-driven approach. Your role is to identify high-conviction investment opportunities through rigorous analysis.\n\nYou must be selective - only flag companies with genuine investment potential based on:\n1. Quality of business (competitive position, returns on capital, management)\n2. Valuation (margin of safety, risk/reward)\n3. Catalysts (identifiable events that could unlock value)\n\nBe skeptical. Most companies are fairly valued. Only proceed if you see a genuine edge.\n[/SYSTEM]\n\n## Company Overview\n\n**Company:** {{profile.companyName}} ({{ticker}})\n**Sector:** {{profile.sector}}\n**Industry:** {{profile.industry}}\n**Market Cap:** ${{profile.marketCap}}B\n**Current Price:** ${{price.price}}\n\n## Business Description\n\n{{profile.description}}\n\n## Financial Metrics (TTM)\n\n| Metric | Value |\n|--------|-------|\n| EV/EBITDA | {{metrics.evToEbitda}} |\n| P/E | {{metrics.pe}} |\n| FCF Yield | {{metrics.fcfYield}}% |\n| EBIT Margin | {{metrics.ebitMargin}}% |\n| Gross Margin | {{metrics.grossMargin}}% |\n| ROIC | {{metrics.roic}}% |\n| ROE | {{metrics.roe}}% |\n| Net Debt/EBITDA | {{metrics.netDebtToEbitda}} |\n\n## Recent News\n\n{{news}}\n\n---\n\n## Your Task\n\nAnalyze this company and determine if it warrants further research. Consider:\n\n1. **Investment Potential**: Is there a genuine opportunity here? Be honest - most companies don't qualify.\n\n2. **Investment Thesis**: If yes, articulate a clear, falsifiable thesis in 2-3 sentences.\n\n3. **Style Classification**:\n   - `quality_compounder`: High-quality business with durable moat, strong ROIC (>15%), can compound value over 5+ years\n   - `garp`: Growth at reasonable price - solid growth prospects at fair valuation (PEG < 1.5)\n   - `cigar_butt`: Deep value - trading significantly below intrinsic value with identifiable catalyst\n\n4. **Mechanism**: How will value be realized? (e.g., multiple expansion, earnings growth, capital return, M&A)\n\n5. **Edge Type**: What is our informational or analytical edge? (e.g., misunderstood business model, overlooked catalyst, market overreaction, variant perception)\n\n6. **Conviction**: Rate 1-10 based on quality of opportunity and confidence in thesis.\n\n7. **Catalysts**: Identify 1-3 specific events that could unlock value, with timeframes.\n\n8. **Key Risks**: List 2-4 risks that could invalidate the thesis.\n\n9. **Time Horizon**: Expected holding period (6-12 months, 1-3 years, 3-5 years).\n\nRespond ONLY in valid JSON format:\n\n```json\n{\n  \"hasInvestmentPotential\": boolean,\n  \"thesis\": \"string\",\n  \"styleTag\": \"quality_compounder\" | \"garp\" | \"cigar_butt\",\n  \"mechanism\": \"string\",\n  \"edgeType\": [\"string\"],\n  \"conviction\": number,\n  \"catalysts\": [{\"name\": \"string\", \"window\": \"string\", \"probability\": \"high|medium|low\"}],\n  \"keyRisks\": [\"string\"],\n  \"timeHorizon\": \"6_12_months\" | \"1_3_years\" | \"3_5_years\"\n}\n```"
+      "template": "[SYSTEM]\nYou are a senior investment analyst at a fundamental-focused hedge fund with a disciplined, research-driven approach. Your role is to identify high-conviction investment opportunities through rigorous analysis.\n\nYou must be selective - only flag companies with genuine investment potential based on:\n1. Quality of business (competitive position, returns on capital, management)\n2. Valuation (margin of safety, risk/reward)\n3. Catalysts (identifiable events that could unlock value)\n\nBe skeptical. Most companies are fairly valued. Only proceed if you see a genuine edge.\n[/SYSTEM]\n\n## Company Overview\n\n**Company:** {{profile.companyName}} ({{ticker}})\n**Sector:** {{profile.sector}}\n**Industry:** {{profile.industry}}\n**Market Cap:** ${{profile.marketCap}}B\n**Current Price:** ${{price.price}}\n\n## Business Description\n\n{{profile.description}}\n\n## Financial Metrics (TTM)\n\n| Metric | Value |\n|--------|-------|\n| EV/EBITDA | {{metrics.evToEbitda}} |\n| P/E | {{metrics.pe}} |\n| FCF Yield | {{metrics.fcfYield}}% |\n| EBIT Margin | {{metrics.ebitMargin}}% |\n| Gross Margin | {{metrics.grossMargin}}% |\n| ROIC | {{metrics.roic}}% |\n| ROE | {{metrics.roe}}% |\n| Net Debt/EBITDA | {{metrics.netDebtToEbitda}} |\n\n## Recent News\n\n{{news}}\n\n## Social Sentiment (Reddit)\n\n{{#if socialSentiment}}\n| Metric | Value |\n|--------|-------|\n| Reddit Mentions (24h) | {{socialSentiment.reddit_mentions_24h}} |\n| Sentiment Score | {{socialSentiment.reddit_sentiment}} (-1 to 1 scale) |\n| Key Themes | {{socialSentiment.key_themes}} |\n\n**Subreddit Breakdown:**\n{{#each socialSentiment.subreddit_breakdown}}\n- r/{{this.subreddit}}: {{this.mentions}} mentions, sentiment {{this.sentiment}}\n{{/each}}\n{{else}}\n*No social sentiment data available*\n{{/if}}\n\n---\n\n## Your Task\n\nAnalyze this company and determine if it warrants further research. Consider:\n\n1. **Investment Potential** (Consider Social Sentiment if available - high Reddit interest may indicate retail momentum or crowded trade): Is there a genuine opportunity here? Be honest - most companies don't qualify.\n\n2. **Investment Thesis**: If yes, articulate a clear, falsifiable thesis in 2-3 sentences.\n\n3. **Style Classification**:\n   - `quality_compounder`: High-quality business with durable moat, strong ROIC (>15%), can compound value over 5+ years\n   - `garp`: Growth at reasonable price - solid growth prospects at fair valuation (PEG < 1.5)\n   - `cigar_butt`: Deep value - trading significantly below intrinsic value with identifiable catalyst\n\n4. **Mechanism**: How will value be realized? (e.g., multiple expansion, earnings growth, capital return, M&A)\n\n5. **Edge Type**: What is our informational or analytical edge? (e.g., misunderstood business model, overlooked catalyst, market overreaction, variant perception)\n\n6. **Conviction**: Rate 1-10 based on quality of opportunity and confidence in thesis.\n\n7. **Catalysts**: Identify 1-3 specific events that could unlock value, with timeframes.\n\n8. **Key Risks**: List 2-4 risks that could invalidate the thesis.\n\n9. **Time Horizon**: Expected holding period (6-12 months, 1-3 years, 3-5 years).\n\nRespond ONLY in valid JSON format:\n\n```json\n{\n  \"hasInvestmentPotential\": boolean,\n  \"thesis\": \"string\",\n  \"styleTag\": \"quality_compounder\" | \"garp\" | \"cigar_butt\",\n  \"mechanism\": \"string\",\n  \"edgeType\": [\"string\"],\n  \"conviction\": number,\n  \"catalysts\": [{\"name\": \"string\", \"window\": \"string\", \"probability\": \"high|medium|low\"}],\n  \"keyRisks\": [\"string\"],\n  \"timeHorizon\": \"6_12_months\" | \"1_3_years\" | \"3_5_years\"\n}\n```"
     },
     {
       "prompt_id": "gate_coherence",
@@ -102,26 +223,70 @@
       "inputs_schema": {
         "type": "object",
         "properties": {
-          "thesis": { "type": "string" },
-          "bull_case": { "type": "string" },
-          "bear_case": { "type": "string" },
-          "catalysts": { "type": "array" },
-          "time_horizon": { "type": "string" }
+          "thesis": {
+            "type": "string"
+          },
+          "bull_case": {
+            "type": "string"
+          },
+          "bear_case": {
+            "type": "string"
+          },
+          "catalysts": {
+            "type": "array"
+          },
+          "time_horizon": {
+            "type": "string"
+          }
         },
-        "required": ["thesis"]
+        "required": [
+          "thesis"
+        ]
       },
       "output_schema": {
         "type": "object",
         "properties": {
-          "gate": { "type": "string", "enum": ["COHERENCE"] },
-          "pass": { "type": "boolean" },
-          "score": { "type": "number", "minimum": 0, "maximum": 1 },
-          "errors": { "type": "array", "items": { "type": "string" } },
-          "warnings": { "type": "array", "items": { "type": "string" } },
-          "metrics": { "type": "object" },
-          "decision_reason": { "type": "string" }
+          "gate": {
+            "type": "string",
+            "enum": [
+              "COHERENCE"
+            ]
+          },
+          "pass": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "decision_reason": {
+            "type": "string"
+          }
         },
-        "required": ["gate", "pass", "score", "errors", "warnings", "decision_reason"]
+        "required": [
+          "gate",
+          "pass",
+          "score",
+          "errors",
+          "warnings",
+          "decision_reason"
+        ]
       },
       "template": ""
     },
@@ -136,7 +301,10 @@
       "is_gate": false,
       "lane": "lane_b",
       "pipeline_stage": "research",
-      "data_sources": ["fmp", "sec_edgar"],
+      "data_sources": [
+        "fmp",
+        "sec_edgar"
+      ],
       "llm_config": {
         "provider": "anthropic",
         "model": "claude-3-sonnet-20240229",
@@ -146,29 +314,96 @@
       "inputs_schema": {
         "type": "object",
         "properties": {
-          "ticker": { "type": "string" },
-          "profile": { "type": "object" },
-          "incomeAnnual": { "type": "array" },
-          "filings10K": { "type": "array" }
+          "ticker": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "object"
+          },
+          "incomeAnnual": {
+            "type": "array"
+          },
+          "filings10K": {
+            "type": "array"
+          }
         },
-        "required": ["ticker", "profile"]
+        "required": [
+          "ticker",
+          "profile"
+        ]
       },
       "output_schema": {
         "type": "object",
         "properties": {
-          "module": { "type": "string", "enum": ["BUSINESS_MODEL"] },
-          "summary": { "type": "string", "minLength": 100 },
-          "revenueStreams": { "type": "array", "items": { "type": "object" } },
-          "unitEconomics": { "type": "object" },
-          "customerConcentration": { "type": "object" },
-          "cyclicality": { "type": "string", "enum": ["low", "medium", "high"] },
-          "capitalIntensity": { "type": "string", "enum": ["low", "medium", "high"] },
-          "scalability": { "type": "string", "enum": ["low", "medium", "high"] },
-          "score": { "type": "number", "minimum": 1, "maximum": 10 },
-          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-          "evidence": { "type": "array", "items": { "type": "string" } }
+          "module": {
+            "type": "string",
+            "enum": [
+              "BUSINESS_MODEL"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 100
+          },
+          "revenueStreams": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "unitEconomics": {
+            "type": "object"
+          },
+          "customerConcentration": {
+            "type": "object"
+          },
+          "cyclicality": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "capitalIntensity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "scalability": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "score": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         },
-        "required": ["module", "summary", "score", "confidence"]
+        "required": [
+          "module",
+          "summary",
+          "score",
+          "confidence"
+        ]
       },
       "template": "[SYSTEM]\nYou are a senior business analyst specializing in understanding how companies create and capture value. Your analysis should be thorough, evidence-based, and focused on the fundamental economics of the business.\n[/SYSTEM]\n\n## Company: {{profile.companyName}} ({{ticker}})\n\n### Business Description\n{{profile.description}}\n\n### Financial Data (Last 3 Years)\n{{incomeAnnual}}\n\n### SEC Filings Excerpts\n{{filings10K}}\n\n---\n\n## Analysis Required\n\nProvide a comprehensive business model analysis covering:\n\n1. **Revenue Streams**: Break down revenue by segment, geography, customer type. Identify growth drivers.\n\n2. **Unit Economics**: Analyze gross margins, contribution margins, customer acquisition costs, lifetime value where applicable.\n\n3. **Customer Concentration**: Assess dependency on key customers or segments.\n\n4. **Cyclicality**: How sensitive is the business to economic cycles?\n\n5. **Capital Intensity**: What ongoing investment is required to maintain/grow the business?\n\n6. **Scalability**: Can the business grow without proportional cost increases?\n\n7. **Overall Assessment**: Score the business model quality (1-10) with confidence level.\n\nRespond in JSON format with your analysis."
     },
@@ -183,7 +418,10 @@
       "is_gate": false,
       "lane": "lane_b",
       "pipeline_stage": "research",
-      "data_sources": ["fmp", "polygon"],
+      "data_sources": [
+        "fmp",
+        "polygon"
+      ],
       "llm_config": {
         "provider": "openai",
         "model": "gpt-4o",
@@ -193,32 +431,93 @@
       "inputs_schema": {
         "type": "object",
         "properties": {
-          "ticker": { "type": "string" },
-          "profile": { "type": "object" },
-          "metrics": { "type": "object" },
-          "incomeAnnual": { "type": "array" },
-          "cashFlowAnnual": { "type": "array" },
-          "priceHistory": { "type": "object" }
+          "ticker": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "object"
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "incomeAnnual": {
+            "type": "array"
+          },
+          "cashFlowAnnual": {
+            "type": "array"
+          },
+          "priceHistory": {
+            "type": "object"
+          }
         },
-        "required": ["ticker", "profile", "metrics"]
+        "required": [
+          "ticker",
+          "profile",
+          "metrics"
+        ]
       },
       "output_schema": {
         "type": "object",
         "properties": {
-          "module": { "type": "string", "enum": ["VALUATION"] },
-          "summary": { "type": "string", "minLength": 100 },
-          "currentPrice": { "type": "number" },
-          "intrinsicValue": { "type": "number" },
-          "upside": { "type": "number" },
-          "methodologies": { "type": "array", "items": { "type": "object" } },
-          "comparables": { "type": "array", "items": { "type": "object" } },
-          "historicalMultiples": { "type": "object" },
-          "marginOfSafety": { "type": "number" },
-          "priceTargets": { "type": "object" },
-          "score": { "type": "number", "minimum": 1, "maximum": 10 },
-          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+          "module": {
+            "type": "string",
+            "enum": [
+              "VALUATION"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 100
+          },
+          "currentPrice": {
+            "type": "number"
+          },
+          "intrinsicValue": {
+            "type": "number"
+          },
+          "upside": {
+            "type": "number"
+          },
+          "methodologies": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "comparables": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "historicalMultiples": {
+            "type": "object"
+          },
+          "marginOfSafety": {
+            "type": "number"
+          },
+          "priceTargets": {
+            "type": "object"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
         },
-        "required": ["module", "summary", "intrinsicValue", "upside", "score", "confidence"]
+        "required": [
+          "module",
+          "summary",
+          "intrinsicValue",
+          "upside",
+          "score",
+          "confidence"
+        ]
       },
       "template": "[SYSTEM]\nYou are a senior equity analyst specializing in valuation. Your analysis should be rigorous, use multiple methodologies, and clearly articulate the assumptions and sensitivities.\n[/SYSTEM]\n\n## Company: {{profile.companyName}} ({{ticker}})\n\n### Current Valuation Metrics\n- Market Cap: ${{profile.marketCap}}B\n- EV/EBITDA: {{metrics.evToEbitda}}\n- P/E: {{metrics.pe}}\n- P/FCF: {{metrics.priceToFreeCashFlow}}\n- P/B: {{metrics.priceToBook}}\n\n### Historical Financials\n{{incomeAnnual}}\n\n### Cash Flow Data\n{{cashFlowAnnual}}\n\n### Price History\n{{priceHistory}}\n\n---\n\n## Valuation Analysis Required\n\n1. **DCF Analysis**: Build a simplified DCF with explicit assumptions for growth, margins, and discount rate.\n\n2. **Comparable Analysis**: Compare to relevant peers on key multiples.\n\n3. **Historical Analysis**: How does current valuation compare to historical ranges?\n\n4. **Sum-of-Parts**: If applicable, value different segments separately.\n\n5. **Price Targets**: Provide bull, base, and bear case price targets with probabilities.\n\n6. **Margin of Safety**: What discount to intrinsic value does the current price offer?\n\nRespond in JSON format with your analysis."
     },
@@ -233,7 +532,11 @@
       "is_gate": false,
       "lane": "lane_b",
       "pipeline_stage": "research",
-      "data_sources": ["fmp", "polygon", "news"],
+      "data_sources": [
+        "fmp",
+        "polygon",
+        "news"
+      ],
       "llm_config": {
         "provider": "anthropic",
         "model": "claude-3-sonnet-20240229",
@@ -243,31 +546,119 @@
       "inputs_schema": {
         "type": "object",
         "properties": {
-          "ticker": { "type": "string" },
-          "profile": { "type": "object" },
-          "metrics": { "type": "object" },
-          "balanceAnnual": { "type": "array" },
-          "news": { "type": "array" }
+          "ticker": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "object"
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "balanceAnnual": {
+            "type": "array"
+          },
+          "news": {
+            "type": "array"
+          }
         },
-        "required": ["ticker", "profile"]
+        "required": [
+          "ticker",
+          "profile"
+        ]
       },
       "output_schema": {
         "type": "object",
         "properties": {
-          "module": { "type": "string", "enum": ["RISK_ASSESSMENT"] },
-          "summary": { "type": "string", "minLength": 100 },
-          "keyRisks": { "type": "array", "items": { "type": "object" } },
-          "leverageRisk": { "type": "string", "enum": ["low", "medium", "high", "dominant"] },
-          "liquidityRisk": { "type": "string", "enum": ["low", "medium", "high", "dominant"] },
-          "regulatoryRisk": { "type": "string", "enum": ["low", "medium", "high", "dominant"] },
-          "competitiveRisk": { "type": "string", "enum": ["low", "medium", "high"] },
-          "executionRisk": { "type": "string", "enum": ["low", "medium", "high"] },
-          "stressScenarios": { "type": "array", "items": { "type": "object" } },
-          "killSwitches": { "type": "array", "items": { "type": "string" } },
-          "score": { "type": "number", "minimum": 1, "maximum": 10 },
-          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+          "module": {
+            "type": "string",
+            "enum": [
+              "RISK_ASSESSMENT"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 100
+          },
+          "keyRisks": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "leverageRisk": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "dominant"
+            ]
+          },
+          "liquidityRisk": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "dominant"
+            ]
+          },
+          "regulatoryRisk": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "dominant"
+            ]
+          },
+          "competitiveRisk": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "executionRisk": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "stressScenarios": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "killSwitches": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "score": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
         },
-        "required": ["module", "summary", "keyRisks", "score", "confidence"]
+        "required": [
+          "module",
+          "summary",
+          "keyRisks",
+          "score",
+          "confidence"
+        ]
       },
       "template": "[SYSTEM]\nYou are a risk analyst with a focus on identifying what could go wrong with an investment. Your job is to stress-test the thesis and identify potential kill switches.\n[/SYSTEM]\n\n## Company: {{profile.companyName}} ({{ticker}})\n\n### Financial Health\n- Net Debt/EBITDA: {{metrics.netDebtToEbitda}}\n- Current Ratio: {{metrics.currentRatio}}\n- Interest Coverage: {{metrics.interestCoverage}}\n\n### Balance Sheet Data\n{{balanceAnnual}}\n\n### Recent News\n{{news}}\n\n---\n\n## Risk Assessment Required\n\n1. **Key Risks**: Identify and rank the top 5 risks to the investment thesis.\n\n2. **Financial Risks**:\n   - Leverage Risk: Could debt become problematic?\n   - Liquidity Risk: Any near-term funding concerns?\n\n3. **Business Risks**:\n   - Regulatory Risk: Any regulatory threats?\n   - Competitive Risk: Threat of disruption or market share loss?\n   - Execution Risk: Management's ability to execute?\n\n4. **Stress Scenarios**: Model 2-3 adverse scenarios with probability and impact.\n\n5. **Kill Switches**: What would cause us to immediately exit the position?\n\n6. **Overall Risk Score**: 1 (very risky) to 10 (very safe).\n\nRespond in JSON format with your analysis."
     },
@@ -292,33 +683,100 @@
       "inputs_schema": {
         "type": "object",
         "properties": {
-          "ticker": { "type": "string" },
-          "businessModelAnalysis": { "type": "object" },
-          "valuationAnalysis": { "type": "object" },
-          "riskAssessment": { "type": "object" },
-          "industryMoatAnalysis": { "type": "object" },
-          "managementQualityAnalysis": { "type": "object" }
+          "ticker": {
+            "type": "string"
+          },
+          "businessModelAnalysis": {
+            "type": "object"
+          },
+          "valuationAnalysis": {
+            "type": "object"
+          },
+          "riskAssessment": {
+            "type": "object"
+          },
+          "industryMoatAnalysis": {
+            "type": "object"
+          },
+          "managementQualityAnalysis": {
+            "type": "object"
+          }
         },
-        "required": ["ticker"]
+        "required": [
+          "ticker"
+        ]
       },
       "output_schema": {
         "type": "object",
         "properties": {
-          "module": { "type": "string", "enum": ["SYNTHESIS"] },
-          "recommendation": { "type": "string", "enum": ["PROCEED", "WATCH", "PASS"] },
-          "conviction": { "type": "number", "minimum": 1, "maximum": 10 },
-          "thesis": { "type": "string", "minLength": 200 },
-          "bullCase": { "type": "string" },
-          "bearCase": { "type": "string" },
-          "baseCase": { "type": "string" },
-          "priceTargets": { "type": "object" },
-          "positionSizing": { "type": "string", "enum": ["full", "half", "starter"] },
-          "timeHorizon": { "type": "string" },
-          "keyMonitoringPoints": { "type": "array", "items": { "type": "string" } },
-          "dissent": { "type": "string" },
-          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+          "module": {
+            "type": "string",
+            "enum": [
+              "SYNTHESIS"
+            ]
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "PROCEED",
+              "WATCH",
+              "PASS"
+            ]
+          },
+          "conviction": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "thesis": {
+            "type": "string",
+            "minLength": 200
+          },
+          "bullCase": {
+            "type": "string"
+          },
+          "bearCase": {
+            "type": "string"
+          },
+          "baseCase": {
+            "type": "string"
+          },
+          "priceTargets": {
+            "type": "object"
+          },
+          "positionSizing": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half",
+              "starter"
+            ]
+          },
+          "timeHorizon": {
+            "type": "string"
+          },
+          "keyMonitoringPoints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dissent": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
         },
-        "required": ["module", "recommendation", "conviction", "thesis", "confidence"]
+        "required": [
+          "module",
+          "recommendation",
+          "conviction",
+          "thesis",
+          "confidence"
+        ]
       },
       "template": "[SYSTEM]\nYou are the Chief Investment Officer synthesizing research from your team into a final investment recommendation. Be decisive but acknowledge uncertainty. Your recommendation will be presented to the Investment Committee.\n[/SYSTEM]\n\n## Research Summary for {{ticker}}\n\n### Business Model Analysis\n{{businessModelAnalysis}}\n\n### Valuation Analysis\n{{valuationAnalysis}}\n\n### Risk Assessment\n{{riskAssessment}}\n\n### Industry & Moat Analysis\n{{industryMoatAnalysis}}\n\n### Management Quality\n{{managementQualityAnalysis}}\n\n---\n\n## Synthesis Required\n\nAs CIO, synthesize all research into a final recommendation:\n\n1. **Recommendation**: PROCEED (add to portfolio), WATCH (monitor for better entry), or PASS (not suitable)\n\n2. **Conviction**: 1-10 scale based on quality of opportunity and confidence in analysis\n\n3. **Investment Thesis**: A clear, falsifiable thesis that can be monitored over time\n\n4. **Scenario Analysis**:\n   - Bull Case: What goes right? Target price and probability.\n   - Base Case: Expected outcome. Target price and probability.\n   - Bear Case: What goes wrong? Target price and probability.\n\n5. **Position Sizing**: Full (2-4%), Half (1-2%), or Starter (0.5-1%)\n\n6. **Time Horizon**: Expected holding period\n\n7. **Key Monitoring Points**: What should we watch to validate/invalidate the thesis?\n\n8. **Dissent**: What's the strongest argument against this investment?\n\nRespond in JSON format with your synthesis."
     },
@@ -338,28 +796,76 @@
       "inputs_schema": {
         "type": "object",
         "properties": {
-          "style_tag": { "type": "string" },
-          "roic": { "type": "number" },
-          "pe": { "type": "number" },
-          "ev_to_ebitda": { "type": "number" },
-          "fcf_yield": { "type": "number" },
-          "revenue_growth": { "type": "number" },
-          "moat_score": { "type": "number" }
+          "style_tag": {
+            "type": "string"
+          },
+          "roic": {
+            "type": "number"
+          },
+          "pe": {
+            "type": "number"
+          },
+          "ev_to_ebitda": {
+            "type": "number"
+          },
+          "fcf_yield": {
+            "type": "number"
+          },
+          "revenue_growth": {
+            "type": "number"
+          },
+          "moat_score": {
+            "type": "number"
+          }
         },
-        "required": ["style_tag"]
+        "required": [
+          "style_tag"
+        ]
       },
       "output_schema": {
         "type": "object",
         "properties": {
-          "gate": { "type": "string", "enum": ["STYLE_FIT"] },
-          "pass": { "type": "boolean" },
-          "score": { "type": "number", "minimum": 0, "maximum": 1 },
-          "errors": { "type": "array", "items": { "type": "string" } },
-          "warnings": { "type": "array", "items": { "type": "string" } },
-          "metrics": { "type": "object" },
-          "decision_reason": { "type": "string" }
+          "gate": {
+            "type": "string",
+            "enum": [
+              "STYLE_FIT"
+            ]
+          },
+          "pass": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "decision_reason": {
+            "type": "string"
+          }
         },
-        "required": ["gate", "pass", "score", "errors", "warnings", "decision_reason"]
+        "required": [
+          "gate",
+          "pass",
+          "score",
+          "errors",
+          "warnings",
+          "decision_reason"
+        ]
       },
       "template": ""
     }

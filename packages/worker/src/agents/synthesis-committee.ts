@@ -18,6 +18,8 @@ export const SynthesisResultSchema = z.object({
   // Key components
   bull_case: z.string().describe('Best case scenario'),
   base_case: z.string().describe('Most likely scenario'),
+  target_price: z.number().optional().describe("Target price based on valuation"),
+  upside_percent: z.number().optional().describe("Expected upside percentage"),
   bear_case: z.string().describe('Worst case scenario'),
   
   // Risk assessment

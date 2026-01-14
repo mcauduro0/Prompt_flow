@@ -79,16 +79,53 @@ export class RedditClient {
 
   // Investment-focused subreddits
   private readonly INVESTMENT_SUBREDDITS = [
+    // High-volume retail trading communities
     'wallstreetbets',
     'stocks',
-    'investing',
     'stockmarket',
-    'options',
-    'valueinvesting',
-    'dividends',
-    'SecurityAnalysis',
-    'thetagang',
     'smallstreetbets',
+    
+    // Value investing and fundamental analysis
+    'valueinvesting',
+    'SecurityAnalysis',
+    'ValueInvesting',
+    'IntelligentInvestor',
+    
+    // General investing and portfolio management
+    'investing',
+    'portfolios',
+    'Bogleheads',
+    'financialindependence',
+    
+    // Income and dividend investing
+    'dividends',
+    'qyldgang',
+    'dividendgang',
+    
+    // Options and derivatives
+    'options',
+    'thetagang',
+    'vegagang',
+    
+    // Sector-specific communities
+    'weedstocks',
+    'biotech',
+    'pennystocks',
+    'spacs',
+    'RobinHoodPennyStocks',
+    
+    // ETF and index investing
+    'ETFs',
+    'etfinvesting',
+    
+    // International markets
+    'CanadianInvestor',
+    'UKInvesting',
+    'eupersonalfinance',
+    
+    // Crypto (for sentiment on crypto-related stocks)
+    'CryptoCurrency',
+    'Bitcoin',
   ];
 
   constructor(clientId?: string, clientSecret?: string, userAgent?: string) {
