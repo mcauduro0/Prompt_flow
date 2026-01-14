@@ -3,6 +3,20 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
+interface MonitoringPlanCatalyst {
+  catalyst: string;
+  timeframe: string;
+  probability: string;
+  impact: string;
+}
+
+interface MonitoringPlan {
+  key_metrics?: string[];
+  review_frequency?: string;
+  red_flags?: string[];
+  catalysts?: MonitoringPlanCatalyst[];
+}
+
 interface Packet {
   id: string;
   ticker: string;
@@ -13,6 +27,8 @@ interface Packet {
   style?: string;
   variant_perception?: string;
   historical_parallels?: string;
+  pre_mortem?: string;
+  monitoring_plan?: MonitoringPlan;
   modules?: Array<{ status?: string; summary?: string }>;
 }
 
@@ -140,6 +156,66 @@ export default function ResearchDetailPage() {
           <section className="bg-card border border-border rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Historical Parallels</h2>
             <p className="text-sm text-foreground">{packet.historical_parallels}</p>
+          </section>
+        )}
+
+        {packet.pre_mortem && (
+          <section className="bg-card border border-yellow-500/30 rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Pre-Mortem Analysis</h2>
+            <p className="text-sm text-foreground">{packet.pre_mortem}</p>
+          </section>
+        )}
+
+        {packet.monitoring_plan && (
+          <section className="bg-card border border-border rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Monitoring Plan</h2>
+            
+            {packet.monitoring_plan.review_frequency && (
+              <div className="mb-4">
+                <span className="text-sm text-muted-foreground">Review Frequency: </span>
+                <span className="text-sm font-medium capitalize">{packet.monitoring_plan.review_frequency}</span>
+              </div>
+            )}
+
+            {packet.monitoring_plan.key_metrics && packet.monitoring_plan.key_metrics.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold mb-2">Key Metrics to Monitor</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  {packet.monitoring_plan.key_metrics.map((metric, i) => (
+                    <li key={i} className="text-sm text-muted-foreground">{metric}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {packet.monitoring_plan.red_flags && packet.monitoring_plan.red_flags.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold mb-2 text-red-400">Red Flags</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  {packet.monitoring_plan.red_flags.map((flag, i) => (
+                    <li key={i} className="text-sm text-red-300">{flag}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {packet.monitoring_plan.catalysts && packet.monitoring_plan.catalysts.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Catalysts</h3>
+                <div className="space-y-3">
+                  {packet.monitoring_plan.catalysts.map((cat, i) => (
+                    <div key={i} className="p-3 bg-secondary/30 rounded-md">
+                      <p className="text-sm text-foreground mb-2">{cat.catalyst}</p>
+                      <div className="flex gap-4 text-xs text-muted-foreground">
+                        <span>Timeframe: {cat.timeframe}</span>
+                        <span>Probability: {cat.probability}</span>
+                        <span>Impact: {cat.impact}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
         )}
       </main>
