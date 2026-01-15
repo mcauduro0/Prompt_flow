@@ -2,7 +2,7 @@
  * Lane 0 - Main Runner / Orchestrator
  * 
  * Orquestrador principal do Lane 0 que:
- * 1. Coordena a execução dos ingestores (Substack e Reddit)
+ * 1. Coordena a execução dos ingestores (Substack, Reddit e FMP Screener)
  * 2. Normaliza e deduplica as ideias
  * 3. Publica o ledger diário
  * 4. Integra com o Lane A existente
@@ -13,6 +13,7 @@ import type { LLMClient } from '@arc/llm-client';
 import { Lane0StateManager } from './state-manager.js';
 import { SubstackIngestor, type RawIdea } from './substack-ingestor.js';
 import { RedditIngestor } from './reddit-ingestor.js';
+import { FMPIngestor } from './fmp-ingestor.js';
 import { IdeaNormalizer, type NormalizedIdea } from './idea-normalizer.js';
 import { LedgerPublisher, type DailyLedger, type LaneAInput } from './ledger-publisher.js';
 
@@ -20,6 +21,7 @@ import { LedgerPublisher, type DailyLedger, type LaneAInput } from './ledger-pub
 export interface Lane0Config {
   enableSubstack: boolean;
   enableReddit: boolean;
+  enableFMP: boolean;
   maxIdeasPerSource: number;
   maxIdeasToLaneA: number;
   minConfidenceForLaneA: 'HIGH' | 'MEDIUM' | 'LOW';
@@ -30,6 +32,7 @@ export interface Lane0Config {
 const DEFAULT_CONFIG: Lane0Config = {
   enableSubstack: true,
   enableReddit: true,
+  enableFMP: true,
   maxIdeasPerSource: 50,
   maxIdeasToLaneA: 200,
   minConfidenceForLaneA: 'MEDIUM',
@@ -44,6 +47,7 @@ export interface Lane0Result {
   stats: {
     substackIdeas: number;
     redditIdeas: number;
+    fmpIdeas: number;
     totalRawIdeas: number;
     normalizedIdeas: number;
     publishedToLaneA: number;
@@ -59,6 +63,7 @@ export class Lane0Runner {
   private llmClient: LLMClient;
   private substackIngestor: SubstackIngestor;
   private redditIngestor: RedditIngestor;
+  private fmpIngestor: FMPIngestor;
   private normalizer: IdeaNormalizer;
   private publisher: LedgerPublisher;
 
@@ -69,6 +74,7 @@ export class Lane0Runner {
     this.stateManager = new Lane0StateManager();
     this.substackIngestor = new SubstackIngestor(this.stateManager, llmClient);
     this.redditIngestor = new RedditIngestor(this.stateManager, llmClient);
+    this.fmpIngestor = new FMPIngestor(this.stateManager, llmClient);
     this.normalizer = new IdeaNormalizer();
     this.publisher = new LedgerPublisher(this.stateManager);
   }
@@ -79,7 +85,7 @@ export class Lane0Runner {
     let allRawIdeas: RawIdea[] = [];
 
     console.log('[Lane0Runner] Starting Lane 0 execution...');
-    console.log(`[Lane0Runner] Config: Substack=${this.config.enableSubstack}, Reddit=${this.config.enableReddit}`);
+    console.log(`[Lane0Runner] Config: Substack=${this.config.enableSubstack}, Reddit=${this.config.enableReddit}, FMP=${this.config.enableFMP}`);
 
     await this.stateManager.updateExecutionState({
       status: 'running',
@@ -109,6 +115,15 @@ export class Lane0Runner {
             })
           );
         }
+
+        if (this.config.enableFMP) {
+          ingestionPromises.push(
+            this.fmpIngestor.ingest().catch((err: Error) => {
+              errors.push(`FMP ingestion error: ${err.message}`);
+              return [];
+            })
+          );
+        }
         
         const results = await Promise.all(ingestionPromises);
         allRawIdeas = results.flat();
@@ -131,6 +146,16 @@ export class Lane0Runner {
           } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
             errors.push(`Reddit ingestion error: ${errorMessage}`);
+          }
+        }
+
+        if (this.config.enableFMP) {
+          try {
+            const fmpIdeas = await this.fmpIngestor.ingest();
+            allRawIdeas.push(...fmpIdeas);
+          } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            errors.push(`FMP ingestion error: ${errorMessage}`);
           }
         }
       }
@@ -171,6 +196,7 @@ export class Lane0Runner {
 
       const substackCount = allRawIdeas.filter(i => i.source.type === 'substack').length;
       const redditCount = allRawIdeas.filter(i => i.source.type === 'reddit').length;
+      const fmpCount = allRawIdeas.filter(i => (i.source.type as string) === 'fmp_screener').length;
 
       console.log('[Lane0Runner] Execution completed successfully');
 
@@ -181,6 +207,7 @@ export class Lane0Runner {
         stats: {
           substackIdeas: substackCount,
           redditIdeas: redditCount,
+          fmpIdeas: fmpCount,
           totalRawIdeas: allRawIdeas.length,
           normalizedIdeas: normalizedIdeas.length,
           publishedToLaneA: laneAInputs.length,
@@ -200,13 +227,18 @@ export class Lane0Runner {
         lastError: errorMessage,
       });
 
+      const substackCount = allRawIdeas.filter(i => i.source.type === 'substack').length;
+      const redditCount = allRawIdeas.filter(i => i.source.type === 'reddit').length;
+      const fmpCount = allRawIdeas.filter(i => (i.source.type as string) === 'fmp_screener').length;
+
       return {
         success: false,
         ledger: null,
         laneAInputs: [],
         stats: {
-          substackIdeas: 0,
-          redditIdeas: 0,
+          substackIdeas: substackCount,
+          redditIdeas: redditCount,
+          fmpIdeas: fmpCount,
           totalRawIdeas: allRawIdeas.length,
           normalizedIdeas: 0,
           publishedToLaneA: 0,
@@ -238,6 +270,11 @@ export class Lane0Runner {
   async runRedditOnly(): Promise<RawIdea[]> {
     console.log('[Lane0Runner] Running Reddit ingestion only...');
     return this.redditIngestor.ingest();
+  }
+
+  async runFMPOnly(): Promise<RawIdea[]> {
+    console.log('[Lane0Runner] Running FMP Screener ingestion only...');
+    return this.fmpIngestor.ingest();
   }
 
   async getExecutionState(): Promise<unknown> {
