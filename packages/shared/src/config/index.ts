@@ -60,7 +60,7 @@ export const appConfig = {
   // LLM Provider
   openai: {
     apiKey: getEnvVarOptional('OPENAI_API_KEY'),
-    model: getEnvVar('OPENAI_MODEL', 'gpt-4-turbo-preview'),
+    model: getEnvVar('OPENAI_MODEL', 'gpt-5.2'),
     baseUrl: getEnvVarOptional('OPENAI_API_BASE'),
   },
 

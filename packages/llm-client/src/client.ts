@@ -25,7 +25,7 @@ export function createLLMClient(config: LLMConfig): LLMClient {
 }
 
 /**
- * Create default LLM client (OpenAI gpt-4o)
+ * Create default LLM client (OpenAI gpt-5.2 - uses DEFAULT_MODELS from types.ts)
  */
 export function createDefaultClient(): LLMClient {
   return new OpenAIClient();
@@ -106,7 +106,7 @@ export class ResilientLLMClient implements LLMClient {
  */
 export function createResilientClient(): ResilientLLMClient {
   return new ResilientLLMClient({
-    primary: { provider: 'openai', model: 'gpt-4o' },
+    primary: { provider: 'openai', model: 'gpt-5.2' },
     fallback: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
     maxRetries: 3,
     retryDelayMs: 1000,
