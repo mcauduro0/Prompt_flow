@@ -3,9 +3,11 @@
  * 
  * Módulo responsável por:
  * 1. Buscar posts e comentários de subreddits de investimento
- * 2. Filtrar conteúdo de alta qualidade (upvotes, awards, etc.)
- * 3. Extrair ideias de investimento usando LLM com abordagem conservadora
+ * 2. Filtrar conteúdo de qualidade (upvotes, awards, etc.)
+ * 3. Extrair ideias de investimento usando LLM com abordagem MODERADA
  * 4. Retornar ideias brutas normalizadas
+ * 
+ * ATUALIZADO: Filtros menos conservadores para capturar mais ideias
  */
 
 import type { LLMClient, LLMRequest } from '@arc/llm-client';
@@ -13,19 +15,20 @@ import { Lane0StateManager } from './state-manager.js';
 import type { RawIdea } from './substack-ingestor.js';
 
 // Subreddits de investimento ordenados por qualidade/relevância
+// ATUALIZADO: Reduzido minUpvotes em ~50% para capturar mais conteúdo
 export const INVESTMENT_SUBREDDITS = [
-  { name: 'ValueInvesting', priority: 1, minUpvotes: 50 },
-  { name: 'SecurityAnalysis', priority: 1, minUpvotes: 30 },
-  { name: 'InvestmentClub', priority: 1, minUpvotes: 20 },
-  { name: 'stocks', priority: 2, minUpvotes: 100 },
-  { name: 'investing', priority: 2, minUpvotes: 100 },
-  { name: 'StockMarket', priority: 2, minUpvotes: 75 },
-  { name: 'dividends', priority: 2, minUpvotes: 50 },
-  { name: 'wallstreetbets', priority: 3, minUpvotes: 500 },
-  { name: 'options', priority: 3, minUpvotes: 100 },
-  { name: 'semiconductor', priority: 4, minUpvotes: 30 },
-  { name: 'energy_stocks', priority: 4, minUpvotes: 20 },
-  { name: 'biotech', priority: 4, minUpvotes: 30 },
+  { name: 'ValueInvesting', priority: 1, minUpvotes: 20 },
+  { name: 'SecurityAnalysis', priority: 1, minUpvotes: 15 },
+  { name: 'InvestmentClub', priority: 1, minUpvotes: 10 },
+  { name: 'stocks', priority: 2, minUpvotes: 50 },
+  { name: 'investing', priority: 2, minUpvotes: 50 },
+  { name: 'StockMarket', priority: 2, minUpvotes: 35 },
+  { name: 'dividends', priority: 2, minUpvotes: 25 },
+  { name: 'wallstreetbets', priority: 3, minUpvotes: 200 },
+  { name: 'options', priority: 3, minUpvotes: 50 },
+  { name: 'semiconductor', priority: 4, minUpvotes: 15 },
+  { name: 'energy_stocks', priority: 4, minUpvotes: 10 },
+  { name: 'biotech', priority: 4, minUpvotes: 15 },
 ];
 
 // Interface para post do Reddit
@@ -45,23 +48,31 @@ export interface RedditPost {
   isDD?: boolean;
 }
 
-// Prompt conservador para extração de ideias do Reddit
-const REDDIT_IDEA_EXTRACTION_PROMPT = `You are an expert investment analyst reviewing Reddit posts for potential investment ideas.
+// Prompt MODERADO para extração de ideias do Reddit
+// ATUALIZADO: Menos restritivo, aceita mais tipos de conteúdo
+const REDDIT_IDEA_EXTRACTION_PROMPT = `You are an investment analyst reviewing Reddit posts for potential investment ideas.
 
-IMPORTANT: Be VERY CONSERVATIVE in extracting ideas. Reddit contains a lot of noise, hype, and low-quality content.
+Your goal is to extract investment ideas that could be worth researching further. Be MODERATELY selective - we want quality ideas but don't want to miss good opportunities.
 
-Only extract an idea if ALL of the following criteria are met:
-1. There is a specific ticker mentioned with a clear investment thesis
-2. The thesis includes fundamental analysis (not just price targets or technical analysis)
-3. The post shows evidence of research (financial metrics, competitive analysis, etc.)
-4. The recommendation is not purely based on momentum, memes, or FOMO
+Extract an idea if ANY of the following criteria are met:
+1. A specific ticker is mentioned with an investment thesis (bullish or bearish)
+2. The post discusses company fundamentals, valuation, or competitive position
+3. The post mentions a stock as part of a portfolio, watchlist, or investment idea
+4. There is discussion of catalysts, earnings, or business developments
+5. The post provides sector/industry analysis with specific stock mentions
+
+You MAY extract ideas that:
+- Are part of a list of stocks or portfolio discussion
+- Mention stocks for 2025/2026 watchlists or predictions
+- Discuss turnaround stories or special situations
+- Include technical analysis IF combined with fundamental reasoning
+- Are questions that contain investment theses
 
 DO NOT extract ideas that are:
-- Pure speculation without fundamental backing
-- Based solely on short-term price movements
-- Pump-and-dump style posts
-- Options plays without underlying thesis
-- Posts that just ask questions without providing analysis
+- Pure pump-and-dump style posts with no substance
+- Meme stocks mentioned only as jokes
+- Posts asking basic questions without any analysis
+- Pure options plays without underlying thesis
 
 Subreddit: {{subreddit}}
 Post Score: {{score}} upvotes
@@ -80,9 +91,9 @@ Respond in JSON format:
       "ticker": "AAPL",
       "companyName": "Apple Inc.",
       "direction": "LONG",
-      "thesis": "Detailed thesis with fundamental backing",
+      "thesis": "Summary of the investment case",
       "confidence": "MEDIUM",
-      "qualityScore": 7,
+      "qualityScore": 5,
       "rawQuote": "Key quote from the post"
     }
   ],
@@ -90,10 +101,13 @@ Respond in JSON format:
 }
 
 Quality Score Guidelines:
-- 9-10: Exceptional DD with comprehensive analysis
-- 7-8: Good analysis with solid fundamentals
-- 5-6: Decent idea but missing some depth
-- Below 5: Do not extract
+- 8-10: Exceptional DD with comprehensive analysis
+- 6-7: Good analysis with solid reasoning
+- 4-5: Decent idea worth researching further
+- 3: Marginal idea, minimal analysis
+- Below 3: Do not extract
+
+Minimum quality score to extract: 4
 
 If no investment ideas meet the criteria, respond with: {"ideas": [], "rejectionReason": "explanation"}`;
 
@@ -173,8 +187,8 @@ export class RedditIngestor {
   async fetchSubredditPosts(
     subreddit: string, 
     sort: 'hot' | 'new' | 'top' = 'hot',
-    limit: number = 25,
-    timeframe: 'day' | 'week' = 'day'
+    limit: number = 50, // ATUALIZADO: Aumentado de 25 para 50
+    timeframe: 'day' | 'week' = 'week' // ATUALIZADO: Aumentado de 'day' para 'week'
   ): Promise<RedditPost[]> {
     const posts: RedditPost[] = [];
     
@@ -229,13 +243,22 @@ export class RedditIngestor {
 
   /**
    * Filtra posts por qualidade
+   * ATUALIZADO: Filtros menos conservadores
    */
   private filterHighQualityPosts(posts: RedditPost[], subredditConfig: typeof INVESTMENT_SUBREDDITS[0]): RedditPost[] {
     return posts.filter(post => {
-      if (post.score < subredditConfig.minUpvotes) return false;
-      if (post.selftext.length < 200) return false;
+      // Sempre aceitar posts marcados como DD
       if (post.isDD) return true;
-      if (post.numComments < 5) return false;
+      
+      // Verificar upvotes mínimos
+      if (post.score < subredditConfig.minUpvotes) return false;
+      
+      // ATUALIZADO: Reduzido de 200 para 100 caracteres
+      if (post.selftext.length < 100) return false;
+      
+      // ATUALIZADO: Reduzido de 5 para 2 comentários
+      if (post.numComments < 2) return false;
+      
       return true;
     });
   }
@@ -263,7 +286,7 @@ export class RedditIngestor {
     try {
       const request: LLMRequest = {
         messages: [
-          { role: 'system', content: 'You are a conservative investment analyst. Only extract high-quality investment ideas with fundamental backing.' },
+          { role: 'system', content: 'You are an investment analyst. Extract investment ideas from Reddit content. Be moderately selective - capture quality ideas without being overly restrictive.' },
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.2,
@@ -285,7 +308,8 @@ export class RedditIngestor {
       
       if (result.ideas && Array.isArray(result.ideas)) {
         for (const idea of result.ideas) {
-          if (idea.ticker && idea.thesis && (idea.qualityScore || 0) >= 6) {
+          // ATUALIZADO: Reduzido qualityScore mínimo de 6 para 4
+          if (idea.ticker && idea.thesis && (idea.qualityScore || 0) >= 4) {
             ideas.push({
               ticker: idea.ticker.toUpperCase(),
               companyName: idea.companyName,
@@ -340,8 +364,8 @@ export class RedditIngestor {
   }
 
   private mapQualityToConfidence(qualityScore: number): 'HIGH' | 'MEDIUM' | 'LOW' {
-    if (qualityScore >= 8) return 'HIGH';
-    if (qualityScore >= 6) return 'MEDIUM';
+    if (qualityScore >= 7) return 'HIGH';
+    if (qualityScore >= 5) return 'MEDIUM';
     return 'LOW';
   }
 
@@ -349,7 +373,7 @@ export class RedditIngestor {
    * Executa ingestão completa do Reddit
    */
   async ingest(): Promise<RawIdea[]> {
-    console.log('[RedditIngestor] Starting Reddit ingestion...');
+    console.log('[RedditIngestor] Starting Reddit ingestion (MODERATE filtering)...');
     
     const allIdeas: RawIdea[] = [];
     
@@ -357,11 +381,13 @@ export class RedditIngestor {
       console.log(`[RedditIngestor] Processing r/${subredditConfig.name}...`);
       
       try {
-        const hotPosts = await this.fetchSubredditPosts(subredditConfig.name, 'hot', 25);
-        const topPosts = await this.fetchSubredditPosts(subredditConfig.name, 'top', 25, 'day');
+        // ATUALIZADO: Buscar mais posts e de período maior
+        const hotPosts = await this.fetchSubredditPosts(subredditConfig.name, 'hot', 50);
+        const topPosts = await this.fetchSubredditPosts(subredditConfig.name, 'top', 50, 'week');
+        const newPosts = await this.fetchSubredditPosts(subredditConfig.name, 'new', 25);
         
         const allPosts = [...hotPosts];
-        for (const post of topPosts) {
+        for (const post of [...topPosts, ...newPosts]) {
           if (!allPosts.find(p => p.id === post.id)) {
             allPosts.push(post);
           }
@@ -369,7 +395,7 @@ export class RedditIngestor {
         
         const qualityPosts = this.filterHighQualityPosts(allPosts, subredditConfig);
         
-        console.log(`[RedditIngestor] r/${subredditConfig.name}: ${allPosts.length} posts, ${qualityPosts.length} high-quality`);
+        console.log(`[RedditIngestor] r/${subredditConfig.name}: ${allPosts.length} posts, ${qualityPosts.length} passed filters`);
         
         for (const post of qualityPosts) {
           const ideas = await this.extractIdeasFromPost(post);

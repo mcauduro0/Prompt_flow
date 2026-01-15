@@ -6,12 +6,14 @@
  * 2. Buscar posts recentes das newsletters assinadas
  * 3. Extrair ideias de investimento usando LLM
  * 4. Retornar ideias brutas normalizadas
+ * 
+ * ATUALIZADO: Prompt menos conservador para aceitar listas, portfolios e watchlists
  */
 
 import type { LLMClient, LLMRequest } from '@arc/llm-client';
 import { Lane0StateManager } from './state-manager.js';
 
-// Lista de newsletters de investimento do Substack (33 fontes)
+// Lista de newsletters de investimento do Substack (31 fontes)
 export const INVESTMENT_NEWSLETTERS = [
   // Tier 1 - Core Value Investing & Quality
   { slug: 'deepvaluecapitalbykyler', name: 'Deep Value Capital by Kyler', priority: 1, url: 'https://deepvaluecapitalbykyler.substack.com/' },
@@ -92,15 +94,35 @@ export interface SubstackPost {
   content: string;
 }
 
-// Prompt para extração de ideias
-const IDEA_EXTRACTION_PROMPT = `You are an expert investment analyst tasked with extracting actionable investment ideas from newsletter content.
+// Prompt para extração de ideias - ATUALIZADO para ser menos conservador
+const IDEA_EXTRACTION_PROMPT = `You are an expert investment analyst tasked with extracting investment ideas from newsletter content.
 
-IMPORTANT RULES:
-- Only extract ideas where there is a clear investment thesis or recommendation
-- Do NOT extract generic market commentary without specific stock mentions
-- Do NOT extract ideas that are purely educational without actionable insights
-- If no clear investment ideas are present, return an empty array
-- Be conservative - only extract ideas with genuine investment merit
+Your goal is to capture ALL potential investment ideas mentioned in the content. Be INCLUSIVE rather than exclusive.
+
+EXTRACT ideas in these scenarios:
+1. Explicit stock recommendations with thesis
+2. Stocks mentioned in portfolio updates or holdings
+3. Stocks in watchlists or "stocks to watch" sections
+4. 2025/2026 predictions, outlooks, or stock picks
+5. Stocks mentioned as interesting opportunities
+6. Stocks discussed with any fundamental or valuation commentary
+7. Stocks in "best ideas" or "top picks" lists
+8. Turnaround stories or special situations
+9. Sector plays with specific stock mentions
+10. Stocks the author is researching or considering
+
+For PORTFOLIO/WATCHLIST posts:
+- Extract EACH stock mentioned as a separate idea
+- Use the context to infer the thesis (e.g., "Part of 2026 portfolio - selected for value characteristics")
+- Set confidence to MEDIUM for list-based mentions without detailed thesis
+
+For DETAILED ANALYSIS posts:
+- Extract the main thesis and set confidence to HIGH
+
+DO NOT extract:
+- Generic market commentary without specific stocks
+- Pure educational content without stock mentions
+- Stocks mentioned only as negative examples (unless it's a short thesis)
 
 Newsletter: {{newsletter}}
 Author: {{author}}
@@ -112,9 +134,9 @@ Content:
 For each idea, identify:
 1. The ticker symbol (if mentioned or can be inferred)
 2. The company name
-3. The direction (LONG for bullish, SHORT for bearish, NEUTRAL for informational)
-4. A concise thesis summarizing the investment case
-5. Your confidence level based on how explicit the recommendation is
+3. The direction (LONG for bullish, SHORT for bearish, NEUTRAL for informational/watchlist)
+4. A concise thesis summarizing why this stock is mentioned
+5. Your confidence level (HIGH for detailed analysis, MEDIUM for list mentions, LOW for brief mentions)
 
 Respond in JSON format:
 {
@@ -129,6 +151,9 @@ Respond in JSON format:
     }
   ]
 }
+
+IMPORTANT: For portfolio/watchlist posts, extract ALL stocks mentioned, even if the thesis is brief.
+If the title mentions "2026 portfolio", "2026 watchlist", "ideas for 2026", "top picks", etc., make sure to extract every stock mentioned.
 
 If no investment ideas are found, respond with: {"ideas": []}`;
 
@@ -151,6 +176,7 @@ export class SubstackIngestor {
 
   /**
    * Busca posts recentes de uma newsletter via RSS
+   * ATUALIZADO: Aumentado de 5 para 10 posts por newsletter
    */
   async fetchNewsletterPosts(newsletter: typeof INVESTMENT_NEWSLETTERS[0]): Promise<SubstackPost[]> {
     const posts: SubstackPost[] = [];
@@ -174,7 +200,8 @@ export class SubstackIngestor {
       // Parse RSS XML simples
       const items = xml.match(/<item>([\s\S]*?)<\/item>/g) || [];
       
-      for (const item of items.slice(0, 5)) { // Últimos 5 posts
+      // ATUALIZADO: Aumentado de 5 para 10 posts
+      for (const item of items.slice(0, 10)) {
         const title = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] || 
                      item.match(/<title>(.*?)<\/title>/)?.[1] || '';
         const link = item.match(/<link>(.*?)<\/link>/)?.[1] || '';
@@ -226,7 +253,7 @@ export class SubstackIngestor {
     try {
       const request: LLMRequest = {
         messages: [
-          { role: 'system', content: 'You are an expert investment analyst. Extract investment ideas from newsletter content.' },
+          { role: 'system', content: 'You are an expert investment analyst. Extract ALL investment ideas from newsletter content, including those from portfolios, watchlists, and stock lists. Be inclusive rather than exclusive.' },
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.3,
@@ -264,8 +291,9 @@ export class SubstackIngestor {
       const processedIds = currentCursor?.processedIds || [];
       processedIds.push(post.id);
       
-      if (processedIds.length > 100) {
-        processedIds.splice(0, processedIds.length - 100);
+      // ATUALIZADO: Aumentado limite de 100 para 200 IDs
+      if (processedIds.length > 200) {
+        processedIds.splice(0, processedIds.length - 200);
       }
 
       await this.stateManager.updateCursor('substack', post.newsletter, {
@@ -293,7 +321,7 @@ export class SubstackIngestor {
    * Executa ingestão completa do Substack
    */
   async ingest(): Promise<RawIdea[]> {
-    console.log('[SubstackIngestor] Starting Substack ingestion...');
+    console.log('[SubstackIngestor] Starting Substack ingestion (INCLUSIVE mode)...');
     
     const allIdeas: RawIdea[] = [];
     
