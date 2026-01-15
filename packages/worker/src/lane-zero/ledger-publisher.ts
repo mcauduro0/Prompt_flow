@@ -211,7 +211,7 @@ export class LedgerPublisher {
     console.log(`[LedgerPublisher] Ledger saved to ${ledgerPath}`);
   }
 
-  toLaneAInputs(ledger: DailyLedger, maxIdeas: number = 20): LaneAInput[] {
+  toLaneAInputs(ledger: DailyLedger, maxIdeas: number = 200): LaneAInput[] {
     const inputs: LaneAInput[] = [];
     const topIdeas = ledger.ideas.slice(0, maxIdeas);
 
@@ -233,7 +233,7 @@ export class LedgerPublisher {
     return inputs;
   }
 
-  async publishToLaneA(ledger: DailyLedger, maxIdeas: number = 20): Promise<LaneAInput[]> {
+  async publishToLaneA(ledger: DailyLedger, maxIdeas: number = 200): Promise<LaneAInput[]> {
     console.log(`[LedgerPublisher] Publishing ${Math.min(ledger.ideas.length, maxIdeas)} ideas to Lane A...`);
     
     const inputs = this.toLaneAInputs(ledger, maxIdeas);

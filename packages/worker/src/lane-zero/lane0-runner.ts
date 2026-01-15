@@ -31,7 +31,7 @@ const DEFAULT_CONFIG: Lane0Config = {
   enableSubstack: true,
   enableReddit: true,
   maxIdeasPerSource: 50,
-  maxIdeasToLaneA: 20,
+  maxIdeasToLaneA: 200,
   minConfidenceForLaneA: 'MEDIUM',
   parallelIngestion: true,
   dryRun: false,
