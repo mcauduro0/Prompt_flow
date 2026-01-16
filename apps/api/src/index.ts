@@ -16,6 +16,7 @@ import { telemetryRouter } from './routes/telemetry.js';
 import { promptsRouter } from './routes/prompts.js';
 import { portfolioRouter } from './routes/portfolio.js';
 import { systemRouter } from './routes/system.js';
+import { icMemosRouter } from './routes/ic-memos.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -41,6 +42,7 @@ app.use('/api/telemetry', telemetryRouter);
 app.use('/api/prompts', promptsRouter);
 app.use('/api/portfolio', portfolioRouter);
 app.use('/api/system', systemRouter);
+app.use('/api/ic-memos', icMemosRouter);
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

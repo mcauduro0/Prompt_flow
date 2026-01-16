@@ -12,3 +12,4 @@ export * from './runs.repository.js';
 export * from './security-master.repository.js';
 export * from './memory.repository.js';
 export * from './qa-reports.repository.js';
+export * from './ic-memos.repository.js';

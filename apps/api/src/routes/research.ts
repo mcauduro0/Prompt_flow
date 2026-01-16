@@ -3,7 +3,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { researchPacketsRepository, evidenceRepository, runsRepository } from '@arc/database';
+import { researchPacketsRepository, evidenceRepository, runsRepository, icMemosRepository } from '@arc/database';
 import { randomUUID } from 'crypto';
 
 export const researchRouter: Router = Router();
@@ -122,17 +122,29 @@ researchRouter.get('/packets/recent', async (req: Request, res: Response) => {
 researchRouter.get('/packets', async (req: Request, res: Response) => {
   try {
     const rawPackets = await researchPacketsRepository.getRecentPackets(30);
-    const packets = rawPackets.map(transformPacketForFrontend);
+    
+    // Enrich packets with IC memo status
+    const packetsWithICStatus = await Promise.all(
+      rawPackets.map(async (rawPacket) => {
+        const transformed = transformPacketForFrontend(rawPacket);
+        const icMemo = await icMemosRepository.getByPacketId(rawPacket.packetId);
+        return {
+          ...transformed,
+          ic_memo_status: icMemo?.status || null,
+          ic_memo_id: icMemo?.memoId || null,
+        };
+      })
+    );
     
     // Calculate stats
-    const completedPackets = packets.filter((p: any) => p.is_complete);
-    const inProgressPackets = packets.filter((p: any) => !p.is_complete);
+    const completedPackets = packetsWithICStatus.filter((p: any) => p.is_complete);
+    const inProgressPackets = packetsWithICStatus.filter((p: any) => !p.is_complete);
     
     res.json({ 
-      packets, 
-      count: packets.length,
+      packets: packetsWithICStatus, 
+      count: packetsWithICStatus.length,
       stats: {
-        total: packets.length,
+        total: packetsWithICStatus.length,
         completed: completedPackets.length,
         in_progress: inProgressPackets.length
       }

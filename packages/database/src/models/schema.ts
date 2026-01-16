@@ -36,6 +36,10 @@ export const gateResultEnum = pgEnum('gate_result', ['pass', 'fail']);
 
 export const recommendationEnum = pgEnum('recommendation', ['watch', 'deep_dive_more', 'starter_position', 'pass']);
 
+export const icMemoStatusEnum = pgEnum('ic_memo_status', ['pending', 'generating', 'complete', 'failed']);
+
+export const icMemoRecommendationEnum = pgEnum('ic_memo_recommendation', ['buy', 'invest', 'increase', 'hold', 'reduce', 'wait', 'reject']);
+
 // ============================================================================
 // SECURITY MASTER
 // ============================================================================
@@ -344,6 +348,139 @@ export const watchlist = pgTable('watchlist', {
 }));
 
 // ============================================================================
+// IC MEMOS (Lane C - Investment Committee Memos)
+// ============================================================================
+
+export const icMemos = pgTable('ic_memos', {
+  memoId: uuid('memo_id').primaryKey().defaultRandom(),
+  packetId: uuid('packet_id').references(() => researchPackets.packetId).notNull(),
+  ideaId: uuid('idea_id').references(() => ideas.ideaId).notNull(),
+  ticker: text('ticker').notNull(),
+  companyName: text('company_name'),
+  asOf: date('as_of').notNull(),
+  styleTag: styleTagEnum('style_tag').notNull(),
+  
+  // IC Memo Content (structured JSON following the IC Memo template)
+  memoContent: jsonb('memo_content').$type<{
+    executive_summary: {
+      opportunity: string;
+      why_now: string;
+      risk_reward_asymmetry: string;
+      decision_required: string;
+    };
+    investment_thesis: {
+      central_thesis: string;
+      value_creation_mechanism: string;
+      sustainability: string;
+      structural_vs_cyclical: string;
+    };
+    business_analysis: {
+      how_company_makes_money: string;
+      competitive_advantages: string[];
+      competitive_weaknesses: string[];
+      industry_structure: string;
+      competitive_dynamics: string;
+      barriers_to_entry: string;
+      pricing_power: string;
+      disruption_risks: string;
+    };
+    financial_quality: {
+      revenue_quality: string;
+      margin_analysis: string;
+      capital_intensity: string;
+      return_on_capital: string;
+      accounting_distortions: string[];
+      earnings_quality_risks: string[];
+      growth_capital_dynamics: string;
+    };
+    valuation: {
+      methodology: string;
+      key_assumptions: string[];
+      sensitivities: string[];
+      value_range: {
+        bear: number;
+        base: number;
+        bull: number;
+      };
+      expected_return: string;
+      opportunity_cost: string;
+    };
+    risks: {
+      material_risks: Array<{
+        risk: string;
+        manifestation: string;
+        impact: string;
+        early_signals: string[];
+      }>;
+      thesis_error_risks: string[];
+      asymmetric_risks: string[];
+    };
+    variant_perception: {
+      consensus_view: string;
+      our_view: string;
+      why_market_wrong: string;
+      confirming_facts: string[];
+      invalidating_facts: string[];
+    };
+    catalysts: {
+      value_unlocking_events: Array<{
+        event: string;
+        timeline: string;
+        controllable: boolean;
+      }>;
+      expected_horizon: string;
+    };
+    portfolio_fit: {
+      portfolio_role: string;
+      correlation: string;
+      concentration_impact: string;
+      liquidity: string;
+      drawdown_impact: string;
+      sizing_rationale: string;
+      suggested_position_size: string;
+    };
+    decision: {
+      recommendation: 'buy' | 'invest' | 'increase' | 'hold' | 'reduce' | 'wait' | 'reject';
+      revisit_conditions: string[];
+      change_of_mind_triggers: string[];
+    };
+  }>(),
+  
+  // Supporting analyses executed during Lane C
+  supportingAnalyses: jsonb('supporting_analyses').$type<{
+    variant_perception_analysis?: any;
+    portfolio_fit_analysis?: any;
+    catalyst_timeline?: any;
+    downside_scenarios?: any;
+    management_deep_dive?: any;
+    competitive_matrix?: any;
+  }>(),
+  
+  // Final recommendation and conviction
+  recommendation: icMemoRecommendationEnum('recommendation'),
+  conviction: integer('conviction'), // 1-10
+  
+  // Status tracking
+  status: icMemoStatusEnum('status').default('pending').notNull(),
+  generationProgress: integer('generation_progress').default(0).notNull(), // 0-100
+  errorMessage: text('error_message'),
+  
+  // Approval tracking
+  approvedAt: timestamp('approved_at'), // When packet was approved for IC
+  approvedBy: text('approved_by'),
+  
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at'),
+}, (table) => ({
+  packetIdIdx: index('ic_memos_packet_id_idx').on(table.packetId),
+  ideaIdIdx: index('ic_memos_idea_id_idx').on(table.ideaId),
+  tickerIdx: index('ic_memos_ticker_idx').on(table.ticker),
+  statusIdx: index('ic_memos_status_idx').on(table.status),
+}));
+
+// ============================================================================
 // QA REPORTS
 // ============================================================================
 
@@ -402,3 +539,6 @@ export type NewPromptTemplate = typeof promptTemplates.$inferInsert;
 
 export type Watchlist = typeof watchlist.$inferSelect;
 export type NewWatchlist = typeof watchlist.$inferInsert;
+
+export type ICMemo = typeof icMemos.$inferSelect;
+export type NewICMemo = typeof icMemos.$inferInsert;
