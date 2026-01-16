@@ -1,9 +1,8 @@
 /**
  * ARC Investment Factory - Ideas Routes
  */
-
 import { Router, Request, Response } from 'express';
-import { ideasRepository } from '@arc/database';
+import { ideasRepository, researchPacketsRepository } from '@arc/database';
 
 export const ideasRouter: Router = Router();
 
@@ -17,7 +16,57 @@ ideasRouter.get('/', async (req: Request, res: Response) => {
     if (status === 'inbox') {
       ideas = await ideasRepository.getByStatus('new', limit);
     } else if (status === 'promoted') {
-      ideas = await ideasRepository.getByStatus('promoted', limit);
+      const rawIdeas = await ideasRepository.getByStatus('promoted', limit);
+      
+      // For promoted ideas, check if they have completed research packets
+      // and add research_progress and research_status fields
+      ideas = await Promise.all(
+        rawIdeas.map(async (idea: any) => {
+          try {
+            const packet = await researchPacketsRepository.getByIdeaId(idea.ideaId);
+            if (packet) {
+              // Check if packet has a valid decision brief with recommendation
+              const decisionBrief = (packet as any).decisionBrief || {};
+              const hasValidRecommendation = decisionBrief.recommendation && 
+                ['strong_buy', 'buy', 'hold', 'sell', 'strong_sell'].includes(decisionBrief.recommendation);
+              const hasSynthesisFailed = decisionBrief.thesis && decisionBrief.thesis.includes('Synthesis failed');
+              const hasThesis = decisionBrief.thesis && !hasSynthesisFailed;
+              
+              if (hasValidRecommendation && hasThesis) {
+                return {
+                  ...idea,
+                  research_status: 'completed',
+                  research_progress: 100,
+                  has_research_packet: true,
+                };
+              } else {
+                // Packet exists but synthesis not complete
+                return {
+                  ...idea,
+                  research_status: 'in_progress',
+                  research_progress: 80,
+                  has_research_packet: true,
+                };
+              }
+            }
+            // No packet yet
+            return {
+              ...idea,
+              research_status: 'queued',
+              research_progress: 0,
+              has_research_packet: false,
+            };
+          } catch (err) {
+            // If error checking packet, assume queued
+            return {
+              ...idea,
+              research_status: 'queued',
+              research_progress: 0,
+              has_research_packet: false,
+            };
+          }
+        })
+      );
     } else if (status === 'rejected') {
       ideas = await ideasRepository.getByStatus('rejected', limit);
     } else {
@@ -33,6 +82,8 @@ ideasRouter.get('/', async (req: Request, res: Response) => {
       one_liner: i.oneLiner ?? i.one_liner ?? '',
       novelty_tag: i.noveltyTag ?? i.novelty_tag ?? 'new',
       gate_results: i.gateResults ?? i.gate_results ?? {},
+      research_status: i.research_status ?? 'queued',
+      research_progress: i.research_progress ?? 0,
     }));
     
     res.json({ ideas: transformed, count: transformed.length });
@@ -60,15 +111,20 @@ ideasRouter.get('/inbox', async (req: Request, res: Response) => {
       byDate[dateStr] = (byDate[dateStr] || 0) + 1;
     });
     
+    // Transform to UI format
+    const transformed = ideas.map((i: any) => ({
+      ...i,
+      conviction_score: i.convictionScore ?? i.conviction_score ?? 0,
+      company_name: i.companyName ?? i.company_name ?? '',
+      one_liner: i.oneLiner ?? i.one_liner ?? '',
+      novelty_tag: i.noveltyTag ?? i.novelty_tag ?? 'new',
+      gate_results: i.gateResults ?? i.gate_results ?? {},
+    }));
+    
     res.json({ 
-      ideas, 
-      count: ideas.length,
-      stats: {
-        pending: stats['new'] || 0,
-        promoted: stats['promoted'] || 0,
-        rejected: stats['rejected'] || 0,
-        monitoring: stats['monitoring'] || 0,
-      },
+      ideas: transformed, 
+      count: transformed.length,
+      stats,
       byDate,
     });
   } catch (error) {
@@ -76,19 +132,7 @@ ideasRouter.get('/inbox', async (req: Request, res: Response) => {
   }
 });
 
-// Get ideas for a specific date (legacy endpoint, kept for compatibility)
-ideasRouter.get('/inbox/date/:date', async (req: Request, res: Response) => {
-  try {
-    const asOf = req.params.date;
-    const limit = parseInt(req.query.limit as string) || 120;
-    const ideas = await ideasRepository.getIdeaInbox(asOf, limit);
-    res.json({ ideas, asOf, count: ideas.length });
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-});
-
-// Get idea by ID
+// GET /api/ideas/:ideaId - Get single idea with full details
 ideasRouter.get('/:ideaId', async (req: Request, res: Response) => {
   try {
     const idea = await ideasRepository.getById(req.params.ideaId);
@@ -97,38 +141,35 @@ ideasRouter.get('/:ideaId', async (req: Request, res: Response) => {
       return;
     }
     
-    // Parse gate results from database format to UI format
+    // Parse gate results from stored JSON
     const dbGateResults = (idea as any).gateResults || {};
-    const gateResults = {
-      gate_0: dbGateResults.gate_0_data_sufficiency === 'pass',
-      gate_1: dbGateResults.gate_1_coherence === 'pass',
-      gate_2: dbGateResults.gate_2_edge_claim === 'pass',
-      gate_3: dbGateResults.gate_3_downside_shape === 'pass',
-      gate_4: dbGateResults.gate_4_style_fit === 'pass',
-      // Include raw results for debugging
-      raw: dbGateResults,
-      // Flag if gates have been executed
-      executed: Object.keys(dbGateResults).length > 0,
-    };
     
-    // Calculate conviction score from score object if available
-    const scoreObj = (idea as any).score || {};
-    const convictionScore = scoreObj.total ?? 
-      (idea as any).convictionScore ?? 
-      (idea as any).conviction_score ?? 
-      0;
+    // Transform gate results to expected format
+    const gateResults: Record<string, { passed: boolean; reason: string }> = {};
+    for (const [gateName, result] of Object.entries(dbGateResults)) {
+      if (typeof result === 'object' && result !== null) {
+        gateResults[gateName] = {
+          passed: (result as any).passed ?? false,
+          reason: (result as any).reason ?? '',
+        };
+      }
+    }
     
-    // Transform to UI format with proper field mappings
+    // Parse score breakdown
+    const scoreObj = (idea as any).scoreBreakdown || {};
+    const convictionScore = (idea as any).convictionScore ?? 0;
+    
+    // Transform to UI format with all fields
     const transformed = {
-      ...idea,
-      // Core identification
+      id: idea.ideaId,
+      idea_id: idea.ideaId,
       ticker: idea.ticker,
       company_name: (idea as any).companyName || '',
-      style: (idea as any).styleTag || 'unknown',
       
-      // Investment thesis content
-      headline: (idea as any).oneSentenceHypothesis || '',
-      one_liner: (idea as any).mechanism || '',
+      // Thesis and analysis
+      one_liner: (idea as any).oneLiner || '',
+      thesis: (idea as any).thesis || '',
+      mechanism: (idea as any).mechanism || '',
       
       // Scoring
       conviction_score: convictionScore,
