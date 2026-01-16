@@ -191,7 +191,7 @@ function QueueCard({ item, index }: QueueCardProps) {
           <p className="text-sm text-muted-foreground">
             {item.started_at 
               ? `Started ${formatRelativeTime(item.started_at)}`
-              : item.status === "queued" 
+              : item.status === "complete" ? "Research complete" : item.status === "queued" 
                 ? "Queued for review"
                 : "Processing..."
             }
