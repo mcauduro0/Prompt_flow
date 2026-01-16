@@ -25,8 +25,9 @@ function transformPacketForFrontend(dbPacket: any) {
   }
   
   // Determine if packet is complete (has decision brief with valid recommendation)
+  const validRecommendations = ['strong_buy', 'buy', 'hold', 'sell', 'strong_sell'];
   const isComplete = decisionBrief.recommendation && 
-                     decisionBrief.recommendation !== 'hold' && 
+                     validRecommendations.includes(decisionBrief.recommendation) && 
                      decisionBrief.thesis && 
                      !decisionBrief.thesis.includes('Synthesis failed');
   
