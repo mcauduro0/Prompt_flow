@@ -60,12 +60,13 @@ interface Lane0Ledger {
   publishedToLaneA: boolean;
 }
 
-// Configuração
-interface IntegrationConfig {
+// Configuração da integração
+export interface IntegrationConfig {
   maxIdeasToProcess: number;
   enrichWithFMP: boolean;
   enrichWithPolygon: boolean;
   dryRun: boolean;
+  ledgerPathOverride?: string;
 }
 
 const DEFAULT_CONFIG: IntegrationConfig = {
@@ -100,9 +101,9 @@ function findLatestLedgerPath(): string | null {
 /**
  * Lê o ledger mais recente do Lane 0
  */
-async function readLane0Ledger(): Promise<Lane0Ledger | null> {
+async function readLane0Ledger(pathOverride?: string): Promise<Lane0Ledger | null> {
   try {
-    const ledgerPath = findLatestLedgerPath();
+    const ledgerPath = pathOverride || findLatestLedgerPath();
     if (!ledgerPath) {
       console.log('[Integration] Lane 0 ledger not found');
       return null;
@@ -266,7 +267,7 @@ export async function processLane0ToDatabaseIntegration(
   try {
     // Step 1: Read Lane 0 ledger
     console.log('[Integration] Step 1: Reading Lane 0 ledger...');
-    const ledger = await readLane0Ledger();
+    const ledger = await readLane0Ledger(cfg.ledgerPathOverride);
     
     if (!ledger) {
       throw new Error('Lane 0 ledger not found or empty');

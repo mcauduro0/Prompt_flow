@@ -43,6 +43,7 @@ import {
 } from '../agents/index.js';
 import { evaluateAllGates, type GateResults } from '../gates/index.js';
 import { runSynthesis, type SynthesisResult } from '../agents/synthesis-committee.js';
+import { telemetry } from '@arc/database';
 
 export interface LaneBConfig {
   dryRun?: boolean;
@@ -188,16 +189,34 @@ async function runDeepResearch(
     // Business Model Agent
     console.log(`[Lane B] Running Business Model Agent for ${ticker}...`);
     const businessModelAgent = createBusinessModelAgent(llm, aggregator);
+    const bmStart = Date.now();
     const businessModelResult = await businessModelAgent.run(agentContext);
+    await telemetry.logAgentPerformance({
+      packetId,
+      ticker,
+      agentName: 'business_model',
+      success: businessModelResult.success,
+      latencyMs: Date.now() - bmStart,
+      errorMessage: businessModelResult.errors?.[0],
+    });
     if (businessModelResult.success) {
       modules.businessModel = businessModelResult.data;
       agentContext.previousModules = { ...agentContext.previousModules, businessModel: businessModelResult.data };
     }
 
     // Industry & Moat Agent
-    console.log(`[Lane B] Running Industry Moat Agent for ${ticker}...`);
+    console.log(`[Lane B] Running Industry & Moat Agent for ${ticker}...`);
     const industryMoatAgent = createIndustryMoatAgent(llm, aggregator);
+    const imStart = Date.now();
     const industryMoatResult = await industryMoatAgent.run(agentContext);
+    await telemetry.logAgentPerformance({
+      packetId,
+      ticker,
+      agentName: 'industry_moat',
+      success: industryMoatResult.success,
+      latencyMs: Date.now() - imStart,
+      errorMessage: industryMoatResult.errors?.[0],
+    });
     if (industryMoatResult.success) {
       modules.industryMoat = industryMoatResult.data;
       agentContext.previousModules = { ...agentContext.previousModules, industryMoat: industryMoatResult.data };
@@ -206,7 +225,16 @@ async function runDeepResearch(
     // Valuation Agent
     console.log(`[Lane B] Running Valuation Agent for ${ticker}...`);
     const valuationAgent = createValuationAgent(llm, aggregator);
+    const valStart = Date.now();
     const valuationResult = await valuationAgent.run(agentContext);
+    await telemetry.logAgentPerformance({
+      packetId,
+      ticker,
+      agentName: 'valuation',
+      success: valuationResult.success,
+      latencyMs: Date.now() - valStart,
+      errorMessage: valuationResult.errors?.[0],
+    });
     if (valuationResult.success) {
       modules.valuation = valuationResult.data;
       agentContext.previousModules = { ...agentContext.previousModules, valuation: valuationResult.data };
@@ -215,7 +243,16 @@ async function runDeepResearch(
     // Financial Forensics Agent
     console.log(`[Lane B] Running Financial Forensics Agent for ${ticker}...`);
     const financialForensicsAgent = createFinancialForensicsAgent(llm, aggregator);
+    const ffStart = Date.now();
     const financialForensicsResult = await financialForensicsAgent.run(agentContext);
+    await telemetry.logAgentPerformance({
+      packetId,
+      ticker,
+      agentName: 'financial_forensics',
+      success: financialForensicsResult.success,
+      latencyMs: Date.now() - ffStart,
+      errorMessage: financialForensicsResult.errors?.[0],
+    });
     if (financialForensicsResult.success) {
       modules.financialForensics = financialForensicsResult.data;
       agentContext.previousModules = { ...agentContext.previousModules, financialForensics: financialForensicsResult.data };
@@ -224,7 +261,16 @@ async function runDeepResearch(
     // Capital Allocation Agent
     console.log(`[Lane B] Running Capital Allocation Agent for ${ticker}...`);
     const capitalAllocationAgent = createCapitalAllocationAgent(llm, aggregator);
+    const caStart = Date.now();
     const capitalAllocationResult = await capitalAllocationAgent.run(agentContext);
+    await telemetry.logAgentPerformance({
+      packetId,
+      ticker,
+      agentName: 'capital_allocation',
+      success: capitalAllocationResult.success,
+      latencyMs: Date.now() - caStart,
+      errorMessage: capitalAllocationResult.errors?.[0],
+    });
     if (capitalAllocationResult.success) {
       modules.capitalAllocation = capitalAllocationResult.data;
       agentContext.previousModules = { ...agentContext.previousModules, capitalAllocation: capitalAllocationResult.data };
@@ -233,7 +279,16 @@ async function runDeepResearch(
     // Management Quality Agent
     console.log(`[Lane B] Running Management Quality Agent for ${ticker}...`);
     const managementQualityAgent = createManagementQualityAgent(llm, aggregator);
+    const mqStart = Date.now();
     const managementQualityResult = await managementQualityAgent.run(agentContext);
+    await telemetry.logAgentPerformance({
+      packetId,
+      ticker,
+      agentName: 'management_quality',
+      success: managementQualityResult.success,
+      latencyMs: Date.now() - mqStart,
+      errorMessage: managementQualityResult.errors?.[0],
+    });
     if (managementQualityResult.success) {
       modules.managementQuality = managementQualityResult.data;
       agentContext.previousModules = { ...agentContext.previousModules, managementQuality: managementQualityResult.data };
@@ -242,7 +297,16 @@ async function runDeepResearch(
     // Risk & Stress Agent
     console.log(`[Lane B] Running Risk & Stress Agent for ${ticker}...`);
     const riskStressAgent = createRiskStressAgent(llm, aggregator);
+    const rsStart = Date.now();
     const riskStressResult = await riskStressAgent.run(agentContext);
+    await telemetry.logAgentPerformance({
+      packetId,
+      ticker,
+      agentName: 'risk_stress',
+      success: riskStressResult.success,
+      latencyMs: Date.now() - rsStart,
+      errorMessage: riskStressResult.errors?.[0],
+    });
     if (riskStressResult.success) {
       modules.riskStress = riskStressResult.data;
       agentContext.previousModules = { ...agentContext.previousModules, riskStress: riskStressResult.data };
@@ -450,10 +514,7 @@ export async function runLaneB(config: LaneBConfig = {}): Promise<LaneBResult> {
     }
 
     // Determine how many packets to process
-    const maxPackets = Math.min(
-      config.maxPackets ?? LANE_B_DAILY_LIMIT,
-      weeklyRemaining
-    );
+    const maxPackets = config.maxPackets !== undefined ? config.maxPackets : Math.min(LANE_B_DAILY_LIMIT, weeklyRemaining);
 
     // Select ideas for research
     console.log(`[Lane B] Selecting up to ${maxPackets} ideas for research...`);

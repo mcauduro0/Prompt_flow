@@ -29,6 +29,7 @@
  */
 
 import { z } from 'zod';
+import { telemetry } from '@arc/database';
 
 // ============================================================================
 // GATE DEFINITIONS (LOCKED)
@@ -284,6 +285,7 @@ export type RiskFlags = z.infer<typeof RiskFlagsSchema>;
 // ============================================================================
 
 interface IdeaForGating {
+  id?: string;
   ticker: string;
   style_tag: string;
   one_sentence_hypothesis: string;
@@ -836,6 +838,24 @@ export function evaluateAllGates(idea: IdeaForGating): GateResults {
   const gate_2 = evaluateGate2(idea);
   const gate_3 = evaluateGate3(idea);
   const gate_4 = evaluateGate4(idea);
+
+  // Log gate results to telemetry for QA Framework v2.0
+  const logGateResults = async () => {
+    const gates = [gate_0, gate_1, gate_2, gate_3, gate_4];
+    for (const gate of gates) {
+      await telemetry.logGateResult({
+        ideaId: idea.id || 'unknown',
+        ticker: idea.ticker,
+        gateId: gate.gate_id,
+        gateName: gate.gate_name,
+        passed: gate.passed,
+        score: gate.score,
+        failureReasons: gate.details.checks_failed ? { checks_failed: gate.details.checks_failed } : undefined,
+        binaryOverride: gate.details.binary_override,
+      });
+    }
+  };
+  logGateResults().catch(err => console.error('[Gates] Telemetry error:', err));
 
   const gates = [gate_0, gate_1, gate_2, gate_3, gate_4];
   const all_passed = gates.every((g) => g.passed);

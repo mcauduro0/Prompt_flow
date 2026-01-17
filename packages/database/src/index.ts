@@ -6,3 +6,4 @@
 export * from './models/schema.js';
 export * from './client.js';
 export * from './repositories/index.js';
+export * from './telemetry/index.js';

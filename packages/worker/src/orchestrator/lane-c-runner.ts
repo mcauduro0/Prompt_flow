@@ -15,6 +15,7 @@ import {
 } from '@arc/database';
 import { createResilientClient, type LLMClient, type LLMRequest } from '@arc/llm-client';
 import { createDataAggregator, type AggregatedCompanyData } from '@arc/retriever';
+import { telemetry } from '@arc/database';
 
 // Supporting prompt definitions (hardcoded to avoid schema validation issues)
 const SUPPORTING_PROMPT_TEMPLATES: Record<string, string> = {
@@ -504,9 +505,11 @@ async function executeSupportingPrompt(
   researchSummary: string,
   liveData: LiveMarketData,
   macroData: MacroData,
-  llm: LLMClient
+  llm: LLMClient,
+  memoId?: string
 ): Promise<SupportingAnalysis> {
   console.log(`[Lane C] Executing supporting prompt: ${promptName} for ${ticker}`);
+  const startTime = Date.now();
   
   const template = SUPPORTING_PROMPT_TEMPLATES[promptName];
   if (!template) {
@@ -550,6 +553,17 @@ async function executeSupportingPrompt(
     const parseResult = parseJSONRobust(response.content);
 
     if (parseResult.success) {
+      // Log telemetry for successful prompt
+      if (memoId) {
+        await telemetry.logSupportingPrompt({
+          memoId,
+          ticker,
+          promptName,
+          success: true,
+          latencyMs: Date.now() - startTime,
+          confidence: parseResult.data?.confidence,
+        });
+      }
       return {
         promptName,
         result: parseResult.data,
@@ -557,6 +571,17 @@ async function executeSupportingPrompt(
       };
     } else {
       console.warn(`[Lane C] Failed to parse ${promptName} response:`, parseResult.error);
+      // Log telemetry for failed parse
+      if (memoId) {
+        await telemetry.logSupportingPrompt({
+          memoId,
+          ticker,
+          promptName,
+          success: false,
+          latencyMs: Date.now() - startTime,
+          errorMessage: parseResult.error,
+        });
+      }
       return {
         promptName,
         result: { _raw: response.content, _error: parseResult.error },
@@ -566,6 +591,17 @@ async function executeSupportingPrompt(
     }
   } catch (error) {
     console.error(`[Lane C] Error executing ${promptName}:`, error);
+    // Log telemetry for error
+    if (memoId) {
+      await telemetry.logSupportingPrompt({
+        memoId,
+        ticker,
+        promptName,
+        success: false,
+        latencyMs: Date.now() - startTime,
+        errorMessage: (error as Error).message,
+      });
+    }
     return {
       promptName,
       result: null,

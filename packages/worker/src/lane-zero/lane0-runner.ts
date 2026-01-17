@@ -10,6 +10,7 @@
  */
 
 import type { LLMClient } from '@arc/llm-client';
+import { telemetry } from '@arc/database';
 import { Lane0StateManager } from './state-manager.js';
 import { SubstackIngestor, type RawIdea } from './substack-ingestor.js';
 import { RedditIngestor } from './reddit-ingestor.js';
@@ -199,6 +200,24 @@ export class Lane0Runner {
       const fmpCount = allRawIdeas.filter(i => (i.source.type as string) === 'fmp_screener').length;
 
       console.log('[Lane0Runner] Execution completed successfully');
+
+      // Log telemetry for QA Framework v2.0
+      await telemetry.logLane0Ingestion('substack', substackCount, true, { ledgerId: ledger.id });
+      await telemetry.logLane0Ingestion('reddit', redditCount, true, { ledgerId: ledger.id });
+      await telemetry.logLane0Ingestion('fmp_screener', fmpCount, true, { ledgerId: ledger.id });
+      await telemetry.logEvent({
+        eventType: 'lane0_run',
+        lane: 'lane0',
+        metricName: 'run_completed',
+        metricValue: Date.now() - startTime,
+        metadata: {
+          totalRawIdeas: allRawIdeas.length,
+          normalizedIdeas: normalizedIdeas.length,
+          publishedToLaneA: laneAInputs.length,
+          deduplicationRate: allRawIdeas.length > 0 ? 
+            ((allRawIdeas.length - normalizedIdeas.length) / allRawIdeas.length * 100).toFixed(2) : 0,
+        },
+      });
 
       return {
         success: true,
