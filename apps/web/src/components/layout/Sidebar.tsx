@@ -45,7 +45,7 @@ const navItems: NavItem[] = [
   { path: "/system", label: "System", icon: Server, section: "system" },
   
   // Other
-  { path: "/qa", label: "QA", icon: Shield, section: "other" },
+  { path: "/qa-v2", label: "QA v2", icon: Shield, section: "other" },
   { path: "/memory", label: "Memory", icon: Search, section: "other" },
   { path: "/settings", label: "Settings", icon: Settings, section: "other" },
 ];
