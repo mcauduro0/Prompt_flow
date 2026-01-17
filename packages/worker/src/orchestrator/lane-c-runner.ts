@@ -1,10 +1,10 @@
 /**
  * ARC Investment Factory - Lane C IC Memo Runner
  * 
- * Pipeline: select_pending_memos → fetch_research_packet → run_supporting_prompts → generate_ic_memo → persist
+ * Pipeline: select_pending_memos → fetch_research_packet → fetch_live_data → run_supporting_prompts → generate_ic_memo → persist
  * 
  * This runner orchestrates the IC Memo generation process for approved research packets.
- * It executes supporting prompts to enrich the research and generates a comprehensive IC Memo.
+ * It fetches live data from APIs (Polygon, FMP, FRED) and executes supporting prompts to enrich the research.
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -20,15 +20,24 @@ import { createDataAggregator, type AggregatedCompanyData } from '@arc/retriever
 const SUPPORTING_PROMPT_TEMPLATES: Record<string, string> = {
   'Variant Perception': `You are an expert investment analyst specializing in identifying variant perceptions.
 
-Analyze the following research on {{ticker}} ({{company_name}}) and identify:
+Analyze the following research on [[ticker]] ([[company_name]]) and identify:
 1. What is the consensus view on this company?
 2. What is our differentiated view?
 3. Why might the market be wrong?
 4. What facts would confirm our view?
 5. What facts would invalidate our view?
 
+CURRENT MARKET DATA (as of [[data_date]]):
+- Current Price: $[[current_price]]
+- Market Cap: $[[market_cap]]
+- P/E Ratio: [[pe_ratio]]
+- 52-Week Range: $[[price_low_52w]] - $[[price_high_52w]]
+
+MACRO ENVIRONMENT:
+[[macro_data]]
+
 Research Data:
-{{research_summary}}
+[[research_summary]]
 
 Respond in JSON format:
 {
@@ -40,15 +49,21 @@ Respond in JSON format:
   "confidence": 1-10
 }`,
 
-  'Bull Bear Analysis': `You are an expert investment analyst. Analyze the following research on {{ticker}} ({{company_name}}) and provide:
+  'Bull Bear Analysis': `You are an expert investment analyst. Analyze the following research on [[ticker]] ([[company_name]]) and provide:
 
 1. Bull Case: The most optimistic but realistic scenario
 2. Bear Case: The most pessimistic but realistic scenario
 3. Base Case: The most likely scenario
 4. Key debates and uncertainties
 
+CURRENT MARKET DATA (as of [[data_date]]):
+- Current Price: $[[current_price]]
+- Market Cap: $[[market_cap]]
+- P/E Ratio: [[pe_ratio]]
+- EV/EBITDA: [[ev_ebitda]]
+
 Research Data:
-{{research_summary}}
+[[research_summary]]
 
 Respond in JSON format:
 {
@@ -73,17 +88,23 @@ Respond in JSON format:
   "key_debates": ["array of key debates"]
 }`,
 
-  'Position Sizing': `You are an expert portfolio manager. Based on the following research on {{ticker}} ({{company_name}}), recommend an appropriate position size.
+  'Position Sizing': `You are an expert portfolio manager. Based on the following research on [[ticker]] ([[company_name]]), recommend an appropriate position size.
 
 Consider:
-1. Conviction level
-2. Risk/reward asymmetry
-3. Liquidity
+1. Conviction level based on the analysis
+2. Risk/reward asymmetry from current price of $[[current_price]]
+3. Liquidity (average daily volume, market cap)
 4. Portfolio concentration
 5. Correlation with existing holdings
 
+CURRENT MARKET DATA (as of [[data_date]]):
+- Current Price: $[[current_price]]
+- Market Cap: $[[market_cap]]
+- Average Volume: [[avg_volume]]
+- Beta: [[beta]]
+
 Research Data:
-{{research_summary}}
+[[research_summary]]
 
 Respond in JSON format:
 {
@@ -95,91 +116,117 @@ Respond in JSON format:
   "risk_adjusted_size": "string"
 }`,
 
-  'Pre Mortem Analysis': `You are an expert risk analyst. Conduct a pre-mortem analysis for an investment in {{ticker}} ({{company_name}}).
+  'Pre Mortem Analysis': `You are an expert risk analyst. Conduct a pre-mortem analysis for an investment in [[ticker]] ([[company_name]]).
 
 Imagine the investment has failed completely. What went wrong?
 
+CURRENT MARKET DATA (as of [[data_date]]):
+- Current Price: $[[current_price]]
+- Market Cap: $[[market_cap]]
+
+MACRO ENVIRONMENT:
+[[macro_data]]
+
 Research Data:
-{{research_summary}}
+[[research_summary]]
 
 Respond in JSON format:
 {
   "failure_scenarios": [
     {
       "scenario": "string",
-      "probability": 0-100,
-      "early_warning_signs": ["array"],
+      "probability": "high/medium/low",
+      "warning_signs": ["array"],
       "mitigation": "string"
     }
   ],
   "most_likely_failure_mode": "string",
-  "blind_spots": ["array of potential blind spots"],
-  "key_assumptions_to_monitor": ["array"]
+  "early_warning_indicators": ["array"],
+  "kill_switch_triggers": ["array"]
 }`,
 
-  'Exit Strategy': `You are an expert portfolio manager. Define exit strategies for an investment in {{ticker}} ({{company_name}}).
+  'Exit Strategy': `You are an expert portfolio manager. Define exit strategies for an investment in [[ticker]] ([[company_name]]).
+
+CURRENT MARKET DATA (as of [[data_date]]):
+- Current Price: $[[current_price]]
+- 52-Week High: $[[price_high_52w]]
+- 52-Week Low: $[[price_low_52w]]
 
 Research Data:
-{{research_summary}}
+[[research_summary]]
 
 Respond in JSON format:
 {
-  "profit_taking_strategy": {
-    "target_prices": [number],
-    "scaling_out_plan": "string",
-    "thesis_completion_triggers": ["array"]
-  },
-  "stop_loss_strategy": {
-    "price_based_stop": "string",
-    "thesis_invalidation_triggers": ["array"],
-    "time_based_review": "string"
-  },
-  "rebalancing_triggers": ["array"],
-  "holding_period_expectation": "string"
+  "profit_taking_targets": [
+    {
+      "target_price": number,
+      "percentage_to_sell": number,
+      "rationale": "string"
+    }
+  ],
+  "stop_loss_levels": [
+    {
+      "price": number,
+      "type": "hard/trailing/mental",
+      "rationale": "string"
+    }
+  ],
+  "thesis_invalidation_triggers": ["array"],
+  "time_based_review": "string",
+  "rebalancing_rules": "string"
 }`,
 
-  'Catalyst Identification': `You are an expert investment analyst. Identify potential catalysts for {{ticker}} ({{company_name}}).
+  'Catalyst Identification': `You are an expert event-driven analyst. Identify potential catalysts for [[ticker]] ([[company_name]]).
+
+CURRENT MARKET DATA (as of [[data_date]]):
+- Current Price: $[[current_price]]
+- Next Earnings: [[next_earnings_date]]
+
+MACRO ENVIRONMENT:
+[[macro_data]]
 
 Research Data:
-{{research_summary}}
+[[research_summary]]
 
 Respond in JSON format:
 {
   "near_term_catalysts": [
     {
-      "event": "string",
-      "timeline": "string",
-      "impact": "positive/negative/uncertain",
-      "probability": 0-100
+      "catalyst": "string",
+      "expected_timing": "string",
+      "potential_impact": "high/medium/low",
+      "probability": "high/medium/low"
     }
   ],
   "medium_term_catalysts": [
     {
-      "event": "string",
-      "timeline": "string",
-      "impact": "positive/negative/uncertain",
-      "probability": 0-100
+      "catalyst": "string",
+      "expected_timing": "string",
+      "potential_impact": "high/medium/low",
+      "probability": "high/medium/low"
     }
   ],
-  "long_term_catalysts": [
-    {
-      "event": "string",
-      "timeline": "string",
-      "impact": "positive/negative/uncertain",
-      "probability": 0-100
-    }
-  ],
-  "catalyst_calendar": "string summary"
+  "long_term_catalysts": ["array"],
+  "negative_catalysts_to_watch": ["array"],
+  "catalyst_calendar": "string"
 }`,
 
-  'Risk Assessment': `You are an expert risk analyst. Provide a comprehensive risk assessment for {{ticker}} ({{company_name}}).
+  'Risk Assessment': `You are an expert risk analyst. Provide a comprehensive risk assessment for [[ticker]] ([[company_name]]).
+
+CURRENT MARKET DATA (as of [[data_date]]):
+- Current Price: $[[current_price]]
+- Beta: [[beta]]
+- Debt/Equity: [[debt_equity]]
+
+MACRO ENVIRONMENT:
+[[macro_data]]
 
 Research Data:
-{{research_summary}}
+[[research_summary]]
 
 Respond in JSON format:
 {
-  "business_risks": [
+  "company_specific_risks": [
     {
       "risk": "string",
       "severity": "high/medium/low",
@@ -187,7 +234,7 @@ Respond in JSON format:
       "mitigation": "string"
     }
   ],
-  "financial_risks": [
+  "industry_risks": [
     {
       "risk": "string",
       "severity": "high/medium/low",
@@ -195,7 +242,7 @@ Respond in JSON format:
       "mitigation": "string"
     }
   ],
-  "market_risks": [
+  "macro_risks": [
     {
       "risk": "string",
       "severity": "high/medium/low",
@@ -234,6 +281,150 @@ interface SupportingAnalysis {
   result: any;
   success: boolean;
   error?: string;
+}
+
+interface LiveMarketData {
+  currentPrice: number | null;
+  marketCap: number | null;
+  peRatio: number | null;
+  evEbitda: number | null;
+  beta: number | null;
+  debtEquity: number | null;
+  avgVolume: number | null;
+  priceHigh52w: number | null;
+  priceLow52w: number | null;
+  nextEarningsDate: string | null;
+  dataDate: string;
+}
+
+interface MacroData {
+  gdpGrowth: number | null;
+  unemployment: number | null;
+  inflation: number | null;
+  fedFundsRate: number | null;
+  tenYearYield: number | null;
+  vix: number | null;
+}
+
+/**
+ * Fetch live market data from APIs
+ */
+async function fetchLiveMarketData(ticker: string): Promise<LiveMarketData> {
+  console.log(`[Lane C] Fetching live market data for ${ticker}`);
+  
+  const result: LiveMarketData = {
+    currentPrice: null,
+    marketCap: null,
+    peRatio: null,
+    evEbitda: null,
+    beta: null,
+    debtEquity: null,
+    avgVolume: null,
+    priceHigh52w: null,
+    priceLow52w: null,
+    nextEarningsDate: null,
+    dataDate: new Date().toISOString().split('T')[0],
+  };
+
+  try {
+    const aggregator = createDataAggregator({
+      fmpApiKey: process.env.FMP_API_KEY,
+      polygonApiKey: process.env.POLYGON_API_KEY,
+    });
+
+    const companyData = await aggregator.getCompanyData(ticker, {
+      includeFinancials: true,
+      includePriceHistory: false,
+      includeNews: false,
+      includeFilings: false,
+      includeMacro: false,
+    });
+
+    if (companyData.latestPrice) {
+      result.currentPrice = companyData.latestPrice.close;
+      result.priceHigh52w = companyData.latestPrice.high;
+      result.priceLow52w = companyData.latestPrice.low;
+    }
+
+    if (companyData.profile) {
+      result.marketCap = companyData.profile.marketCap || null;
+    }
+
+    if (companyData.metrics) {
+      result.peRatio = companyData.metrics.pe || null;
+      result.evEbitda = companyData.metrics.evToEbitda || null;
+      result.debtEquity = companyData.metrics.netDebtToEbitda || null;
+    }
+
+    console.log(`[Lane C] Live data fetched: price=$${result.currentPrice}, mktCap=$${result.marketCap}`);
+  } catch (error) {
+    console.error(`[Lane C] Error fetching live market data for ${ticker}:`, error);
+  }
+
+  return result;
+}
+
+/**
+ * Fetch macro economic data from FRED
+ */
+async function fetchMacroData(): Promise<MacroData> {
+  console.log(`[Lane C] Fetching macro data from FRED`);
+  
+  const result: MacroData = {
+    gdpGrowth: null,
+    unemployment: null,
+    inflation: null,
+    fedFundsRate: null,
+    tenYearYield: null,
+    vix: null,
+  };
+
+  try {
+    const aggregator = createDataAggregator({
+      fmpApiKey: process.env.FMP_API_KEY,
+      polygonApiKey: process.env.POLYGON_API_KEY,
+    });
+
+    // Try to get macro indicators
+    const companyData = await aggregator.getCompanyData('SPY', {
+      includeFinancials: false,
+      includePriceHistory: false,
+      includeNews: false,
+      includeFilings: false,
+      includeMacro: true,
+    });
+
+    if (companyData.macroIndicators) {
+      result.gdpGrowth = companyData.macroIndicators.gdp_growth || null;
+      result.unemployment = companyData.macroIndicators.unemployment_rate || null;
+      result.inflation = companyData.macroIndicators.inflation_cpi || null;
+      result.fedFundsRate = companyData.macroIndicators.fed_funds_rate || null;
+      result.tenYearYield = companyData.macroIndicators.treasury_10y || null;
+      result.vix = companyData.macroIndicators.vix || null;
+    }
+
+    console.log(`[Lane C] Macro data fetched: GDP=${result.gdpGrowth}%, Unemployment=${result.unemployment}%`);
+  } catch (error) {
+    console.error(`[Lane C] Error fetching macro data:`, error);
+  }
+
+  return result;
+}
+
+/**
+ * Format macro data for prompts
+ */
+function formatMacroData(macro: MacroData): string {
+  const lines: string[] = [];
+  
+  if (macro.gdpGrowth !== null) lines.push(`- GDP Growth: ${macro.gdpGrowth}%`);
+  if (macro.unemployment !== null) lines.push(`- Unemployment Rate: ${macro.unemployment}%`);
+  if (macro.inflation !== null) lines.push(`- Inflation (CPI YoY): ${macro.inflation}%`);
+  if (macro.fedFundsRate !== null) lines.push(`- Fed Funds Rate: ${macro.fedFundsRate}%`);
+  if (macro.tenYearYield !== null) lines.push(`- 10-Year Treasury Yield: ${macro.tenYearYield}%`);
+  if (macro.vix !== null) lines.push(`- VIX: ${macro.vix}`);
+  
+  return lines.length > 0 ? lines.join('\n') : 'Macro data unavailable';
 }
 
 /**
@@ -283,9 +474,6 @@ function parseJSONRobust(content: string): { success: boolean; data: any; error?
         return '';
       });
       
-      // 5. Fix unquoted string values (common issue)
-      // This is tricky, so we'll be conservative
-      
       try {
         const data = JSON.parse(jsonStr);
         return { success: true, data };
@@ -307,13 +495,15 @@ function parseJSONRobust(content: string): { success: boolean; data: any; error?
 }
 
 /**
- * Execute a supporting prompt
+ * Execute a supporting prompt with live data
  */
 async function executeSupportingPrompt(
   promptName: string,
   ticker: string,
   companyName: string,
   researchSummary: string,
+  liveData: LiveMarketData,
+  macroData: MacroData,
   llm: LLMClient
 ): Promise<SupportingAnalysis> {
   console.log(`[Lane C] Executing supporting prompt: ${promptName} for ${ticker}`);
@@ -330,11 +520,23 @@ async function executeSupportingPrompt(
   }
 
   try {
-    // Fill in the template
+    // Fill in the template with live data
     const filledPrompt = template
-      .replace(/\{\{ticker\}\}/g, ticker)
-      .replace(/\{\{company_name\}\}/g, companyName)
-      .replace(/\{\{research_summary\}\}/g, researchSummary);
+      .replace(/\[\[ticker\]\]/g, ticker)
+      .replace(/\[\[company_name\]\]/g, companyName)
+      .replace(/\[\[research_summary\]\]/g, researchSummary)
+      .replace(/\[\[current_price\]\]/g, liveData.currentPrice?.toFixed(2) || 'N/A')
+      .replace(/\[\[market_cap\]\]/g, liveData.marketCap ? `${(liveData.marketCap / 1e9).toFixed(2)}B` : 'N/A')
+      .replace(/\[\[pe_ratio\]\]/g, liveData.peRatio?.toFixed(2) || 'N/A')
+      .replace(/\[\[ev_ebitda\]\]/g, liveData.evEbitda?.toFixed(2) || 'N/A')
+      .replace(/\[\[beta\]\]/g, liveData.beta?.toFixed(2) || 'N/A')
+      .replace(/\[\[debt_equity\]\]/g, liveData.debtEquity?.toFixed(2) || 'N/A')
+      .replace(/\[\[avg_volume\]\]/g, liveData.avgVolume ? `${(liveData.avgVolume / 1e6).toFixed(2)}M` : 'N/A')
+      .replace(/\[\[price_high_52w\]\]/g, liveData.priceHigh52w?.toFixed(2) || 'N/A')
+      .replace(/\[\[price_low_52w\]\]/g, liveData.priceLow52w?.toFixed(2) || 'N/A')
+      .replace(/\[\[next_earnings_date\]\]/g, liveData.nextEarningsDate || 'TBD')
+      .replace(/\[\[data_date\]\]/g, liveData.dataDate)
+      .replace(/\[\[macro_data\]\]/g, formatMacroData(macroData));
 
     const request: LLMRequest = {
       messages: [
@@ -354,16 +556,16 @@ async function executeSupportingPrompt(
         success: true,
       };
     } else {
-      // Return raw content if parsing fails
+      console.warn(`[Lane C] Failed to parse ${promptName} response:`, parseResult.error);
       return {
         promptName,
-        result: { _raw_content: response.content },
-        success: true, // Still mark as success since we got a response
+        result: { _raw: response.content, _error: parseResult.error },
+        success: false,
         error: parseResult.error,
       };
     }
   } catch (error) {
-    console.error(`[Lane C] Error executing prompt ${promptName}:`, error);
+    console.error(`[Lane C] Error executing ${promptName}:`, error);
     return {
       promptName,
       result: null,
@@ -423,6 +625,72 @@ function prepareResearchSummary(packet: any, idea: any): string {
 }
 
 /**
+ * Calculate dynamic conviction score based on analysis
+ */
+function calculateConviction(
+  memoContent: any,
+  supportingAnalyses: SupportingAnalysis[],
+  liveData: LiveMarketData
+): number {
+  let conviction = 50; // Base conviction
+  
+  // 1. Analyze variant perception confidence
+  const variantPerception = supportingAnalyses.find(a => a.promptName === 'Variant Perception');
+  if (variantPerception?.success && variantPerception.result?.confidence) {
+    const vpConfidence = Number(variantPerception.result.confidence);
+    if (!isNaN(vpConfidence)) {
+      conviction += (vpConfidence - 5) * 3; // -15 to +15 adjustment
+    }
+  }
+  
+  // 2. Analyze bull/bear probability skew
+  const bullBear = supportingAnalyses.find(a => a.promptName === 'Bull Bear Analysis');
+  if (bullBear?.success && bullBear.result) {
+    const bullProb = Number(bullBear.result.bull_case?.probability) || 25;
+    const bearProb = Number(bullBear.result.bear_case?.probability) || 25;
+    const skew = bullProb - bearProb;
+    conviction += skew * 0.2; // -10 to +10 adjustment
+  }
+  
+  // 3. Analyze valuation upside/downside
+  if (memoContent?.valuation?.value_range && liveData.currentPrice) {
+    const { bear, base, bull } = memoContent.valuation.value_range;
+    const currentPrice = liveData.currentPrice;
+    
+    if (bear && base && bull && currentPrice > 0) {
+      const upside = ((base - currentPrice) / currentPrice) * 100;
+      const downside = ((currentPrice - bear) / currentPrice) * 100;
+      const ratio = upside / Math.max(downside, 1);
+      
+      if (ratio > 2) conviction += 10;
+      else if (ratio > 1.5) conviction += 5;
+      else if (ratio < 0.5) conviction -= 10;
+      else if (ratio < 0.75) conviction -= 5;
+    }
+  }
+  
+  // 4. Analyze risk assessment
+  const riskAssessment = supportingAnalyses.find(a => a.promptName === 'Risk Assessment');
+  if (riskAssessment?.success && riskAssessment.result?.overall_risk_rating) {
+    const rating = riskAssessment.result.overall_risk_rating.toLowerCase();
+    if (rating === 'low') conviction += 5;
+    else if (rating === 'high') conviction -= 10;
+  }
+  
+  // 5. Analyze pre-mortem severity
+  const preMortem = supportingAnalyses.find(a => a.promptName === 'Pre Mortem Analysis');
+  if (preMortem?.success && preMortem.result?.failure_scenarios) {
+    const highProbFailures = preMortem.result.failure_scenarios.filter(
+      (s: any) => s.probability === 'high'
+    ).length;
+    conviction -= highProbFailures * 5;
+  }
+  
+  // Clamp conviction to 10-95 range
+  return Math.max(10, Math.min(95, Math.round(conviction)));
+}
+
+/**
  * Generate the final IC Memo
  */
 async function generateICMemo(
@@ -431,6 +699,8 @@ async function generateICMemo(
   styleTag: string,
   researchSummary: string,
   supportingAnalyses: SupportingAnalysis[],
+  liveData: LiveMarketData,
+  macroData: MacroData,
   llm: LLMClient
 ): Promise<any> {
   console.log(`[Lane C] Generating final IC Memo for ${ticker}`);
@@ -448,11 +718,91 @@ The IC Memo must be:
 2. Clear and concise
 3. Actionable with specific recommendations
 4. Honest about uncertainties and risks
+5. Based on CURRENT market data provided
 
-Style Tag: ${styleTag}
-This influences the investment approach and criteria.`;
+CURRENT MARKET DATA (as of ${liveData.dataDate}):
+- Current Price: $${liveData.currentPrice?.toFixed(2) || 'N/A'}
+- Market Cap: $${liveData.marketCap ? (liveData.marketCap / 1e9).toFixed(2) + 'B' : 'N/A'}
+- P/E Ratio: ${liveData.peRatio?.toFixed(2) || 'N/A'}
+- EV/EBITDA: ${liveData.evEbitda?.toFixed(2) || 'N/A'}
+- Beta: ${liveData.beta?.toFixed(2) || 'N/A'}
 
-  const userPrompt = `Generate a comprehensive IC Memo for ${ticker} (${companyName}).
+MACRO ENVIRONMENT:
+${formatMacroData(macroData)}
+
+Generate the IC Memo in the following JSON structure:
+{
+  "executive_summary": {
+    "opportunity": "string - what is the investment opportunity",
+    "why_now": "string - why is this the right time",
+    "risk_reward_asymmetry": "string - what is the risk/reward profile",
+    "decision_required": "string - what decision is needed from IC"
+  },
+  "investment_thesis": {
+    "central_thesis": "string",
+    "value_creation_mechanism": "string",
+    "sustainability": "string",
+    "structural_vs_cyclical": "string"
+  },
+  "business_analysis": {
+    "business_model": "string",
+    "competitive_advantages": ["array"],
+    "competitive_weaknesses": ["array"],
+    "industry_structure": "string"
+  },
+  "financial_quality": {
+    "revenue_quality": "string",
+    "margin_analysis": "string",
+    "capital_intensity": "string",
+    "roic_analysis": "string"
+  },
+  "valuation": {
+    "methodology": "string",
+    "key_assumptions": ["array"],
+    "value_range": {
+      "bear": number,
+      "base": number,
+      "bull": number
+    },
+    "sensitivities": ["array"],
+    "expected_return": "string",
+    "opportunity_cost": "string"
+  },
+  "risks": {
+    "material_risks": [{"risk": "string", "mitigation": "string", "early_signals": ["array"]}],
+    "thesis_error_risks": ["array"],
+    "asymmetric_risks": ["array"]
+  },
+  "variant_perception": {
+    "consensus_view": "string",
+    "our_view": "string",
+    "why_market_wrong": "string"
+  },
+  "catalysts": {
+    "value_unlocking_events": [{"event": "string", "timing": "string", "probability": "string"}],
+    "expected_horizon": "string"
+  },
+  "portfolio_fit": {
+    "portfolio_role": "string",
+    "correlation_assessment": "string",
+    "sizing_rationale": "string"
+  },
+  "decision": {
+    "recommendation": "strong_buy|buy|hold|reduce|sell|strong_sell",
+    "conviction_rationale": "string - explain why this conviction level",
+    "revisit_conditions": ["array"],
+    "change_of_mind_triggers": ["array"]
+  }
+}
+
+IMPORTANT: 
+- The valuation value_range MUST use realistic price targets based on the current price of $${liveData.currentPrice?.toFixed(2) || 'N/A'}
+- Bear case should typically be 20-40% below current price
+- Bull case should typically be 30-80% above current price
+- Base case should be your expected fair value
+- The recommendation should be justified by the risk/reward from current price`;
+
+  const userPrompt = `Generate an IC Memo for ${ticker} (${companyName}) - Style: ${styleTag}
 
 ## Research Summary
 ${researchSummary}
@@ -460,132 +810,66 @@ ${researchSummary}
 ## Supporting Analyses
 ${supportingData}
 
-Generate a complete IC Memo in the following JSON structure. Be thorough and specific.
+Generate the complete IC Memo in JSON format.`;
 
-{
-  "executive_summary": {
-    "opportunity": "string - One paragraph describing the investment opportunity",
-    "why_now": "string - Why is this the right time to invest?",
-    "risk_reward_asymmetry": "string - What makes the risk/reward attractive?",
-    "decision_required": "string - What decision is being requested?"
-  },
-  "investment_thesis": {
-    "central_thesis": "string - The core investment thesis in 2-3 sentences",
-    "value_creation_mechanism": "string - How will value be created?",
-    "sustainability": "string - Why is this sustainable?",
-    "structural_vs_cyclical": "string - Is this structural or cyclical?"
-  },
-  "business_analysis": {
-    "how_company_makes_money": "string - Clear explanation of the business model",
-    "competitive_advantages": ["array of competitive advantages"],
-    "competitive_weaknesses": ["array of competitive weaknesses"],
-    "industry_structure": "string - Industry dynamics",
-    "competitive_dynamics": "string - Competitive landscape",
-    "barriers_to_entry": "string - Barriers to entry",
-    "pricing_power": "string - Pricing power assessment",
-    "disruption_risks": "string - Technology/disruption risks"
-  },
-  "financial_quality": {
-    "revenue_quality": "string - Assessment of revenue quality",
-    "margin_analysis": "string - Margin trends and sustainability",
-    "capital_intensity": "string - Capital requirements",
-    "return_on_capital": "string - ROIC/ROE analysis",
-    "accounting_distortions": ["array of accounting concerns"],
-    "earnings_quality_risks": ["array of earnings quality risks"],
-    "growth_capital_dynamics": "string - Growth vs capital needs"
-  },
-  "valuation": {
-    "methodology": "string - Valuation methodology used",
-    "key_assumptions": ["array of key assumptions"],
-    "value_range": {
-      "bear": 100,
-      "base": 150,
-      "bull": 200
-    },
-    "sensitivities": ["array of key sensitivities"],
-    "expected_return": "string - Expected return analysis",
-    "opportunity_cost": "string - Opportunity cost consideration"
-  },
-  "risks": {
-    "material_risks": [
-      {
-        "risk": "string - Description of the risk",
-        "manifestation": "string - How it would manifest",
-        "impact": "string - Potential impact",
-        "early_signals": ["array of early warning signals"]
-      }
-    ],
-    "thesis_error_risks": ["array of ways the thesis could be wrong"],
-    "asymmetric_risks": ["array of asymmetric risks"]
-  },
-  "variant_perception": {
-    "consensus_view": "string - What does the market think?",
-    "our_view": "string - Our differentiated view",
-    "why_market_wrong": "string - Why the market may be wrong",
-    "confirming_facts": ["array of confirming facts"],
-    "invalidating_facts": ["array of facts that would invalidate thesis"]
-  },
-  "catalysts": {
-    "value_unlocking_events": [
-      {
-        "event": "string - Description of catalyst",
-        "timeline": "string - Expected timing",
-        "controllable": true
-      }
-    ],
-    "expected_horizon": "string - Investment horizon"
-  },
-  "portfolio_fit": {
-    "portfolio_role": "string - Role in portfolio",
-    "correlation": "string - Correlation with other holdings",
-    "concentration_impact": "string - Impact on concentration",
-    "liquidity": "string - Liquidity assessment",
-    "drawdown_impact": "string - Impact on portfolio drawdowns",
-    "sizing_rationale": "string - Rationale for position size",
-    "suggested_position_size": "string - Recommended position size"
-  },
-  "decision": {
-    "recommendation": "strong_buy|buy|hold|sell|strong_sell",
-    "revisit_conditions": ["array of conditions to revisit"],
-    "change_of_mind_triggers": ["array of triggers to change view"]
-  }
-}
+  try {
+    const request: LLMRequest = {
+      messages: [
+        { role: 'system', content: IC_MEMO_SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.2,
+      maxTokens: 8000,
+    };
 
-IMPORTANT: 
-- Respond ONLY with the structured JSON, no additional text before or after.
-- Use numeric values for value_range (bear, base, bull), not strings.
-- Use true/false for booleans (controllable), not strings like "partially".
-- If something is partially controllable, use true and explain in the event field.
-- Do not use trailing commas.
-- Ensure all string values are properly quoted.`;
+    const response = await llm.complete(request);
+    const parseResult = parseJSONRobust(response.content);
 
-  const request: LLMRequest = {
-    messages: [
-      { role: 'system', content: IC_MEMO_SYSTEM_PROMPT },
-      { role: 'user', content: userPrompt },
-    ],
-    temperature: 0.2,
-    maxTokens: 8000,
-  };
-  const response = await llm.complete(request);
-
-  // Parse the JSON response using robust parser
-  const parseResult = parseJSONRobust(response.content);
-  
-  if (parseResult.success) {
-    return parseResult.data;
-  } else {
-    console.error('Failed to parse IC Memo JSON:', parseResult.error);
-    // Return a structured error response with the raw content
+    if (parseResult.success) {
+      // Add live data to the memo
+      parseResult.data._live_data = {
+        current_price: liveData.currentPrice,
+        market_cap: liveData.marketCap,
+        pe_ratio: liveData.peRatio,
+        data_date: liveData.dataDate,
+      };
+      parseResult.data._macro_data = macroData;
+      return parseResult.data;
+    } else {
+      console.warn(`[Lane C] Failed to parse IC Memo response:`, parseResult.error);
+      return {
+        executive_summary: {
+          opportunity: 'Failed to generate - see raw content',
+          why_now: '',
+          risk_reward_asymmetry: '',
+          decision_required: 'Manual review required',
+        },
+        _raw_content: response.content,
+        _parse_error: parseResult.error,
+        _live_data: {
+          current_price: liveData.currentPrice,
+          market_cap: liveData.marketCap,
+          pe_ratio: liveData.peRatio,
+          data_date: liveData.dataDate,
+        },
+      };
+    }
+  } catch (error) {
+    console.error(`[Lane C] Error generating IC Memo:`, error);
     return {
       executive_summary: {
-        opportunity: 'Failed to generate - see raw content',
+        opportunity: 'Error generating memo',
         why_now: '',
         risk_reward_asymmetry: '',
         decision_required: 'Manual review required',
       },
-      _raw_content: response.content,
-      _parse_error: parseResult.error,
+      _error: (error as Error).message,
+      _live_data: {
+        current_price: liveData.currentPrice,
+        market_cap: liveData.marketCap,
+        pe_ratio: liveData.peRatio,
+        data_date: liveData.dataDate,
+      },
     };
   }
 }
@@ -615,15 +899,24 @@ async function processICMemo(
     const companyName = idea?.companyName || ticker;
     const styleTag = packet.styleTag || 'quality_compounder';
 
-    await icMemosRepository.updateProgress(memoId, 10);
+    await icMemosRepository.updateProgress(memoId, 8);
+
+    // Fetch live market data from APIs
+    console.log(`[Lane C] Fetching live data for ${ticker}...`);
+    const liveData = await fetchLiveMarketData(ticker);
+    await icMemosRepository.updateProgress(memoId, 12);
+
+    // Fetch macro data
+    const macroData = await fetchMacroData();
+    await icMemosRepository.updateProgress(memoId, 15);
 
     // Prepare research summary
     const researchSummary = prepareResearchSummary(packet, idea);
 
-    // Execute supporting prompts
+    // Execute supporting prompts with live data
     const supportingAnalyses: SupportingAnalysis[] = [];
     const promptNames = Object.keys(SUPPORTING_PROMPT_TEMPLATES);
-    const progressPerPrompt = 60 / promptNames.length;
+    const progressPerPrompt = 55 / promptNames.length;
 
     for (let i = 0; i < promptNames.length; i++) {
       const promptName = promptNames[i];
@@ -632,43 +925,39 @@ async function processICMemo(
         ticker,
         companyName,
         researchSummary,
+        liveData,
+        macroData,
         llm
       );
       supportingAnalyses.push(analysis);
-      await icMemosRepository.updateProgress(memoId, Math.round(10 + (i + 1) * progressPerPrompt));
+      await icMemosRepository.updateProgress(memoId, Math.round(15 + (i + 1) * progressPerPrompt));
     }
 
     await icMemosRepository.updateProgress(memoId, 75);
 
-    // Generate the final IC Memo
+    // Generate the final IC Memo with live data
     const memoContent = await generateICMemo(
       ticker,
       companyName,
       styleTag,
       researchSummary,
       supportingAnalyses,
+      liveData,
+      macroData,
       llm
     );
 
-    await icMemosRepository.updateProgress(memoId, 95);
+    await icMemosRepository.updateProgress(memoId, 90);
 
     // Extract recommendation from the memo
     const recommendation = memoContent?.decision?.recommendation || 'hold';
     
-    // Calculate conviction based on recommendation
-    const convictionMap: Record<string, number> = {
-      'strong_buy': 90,
-      'buy': 80,
-      'invest': 75,
-      'increase': 70,
-      'hold': 50,
-      'reduce': 30,
-      'wait': 40,
-      'sell': 25,
-      'strong_sell': 15,
-      'reject': 20,
-    };
-    const conviction = convictionMap[recommendation.toLowerCase()] || 50;
+    // Calculate dynamic conviction based on analysis
+    const conviction = calculateConviction(memoContent, supportingAnalyses, liveData);
+    
+    console.log(`[Lane C] Calculated conviction for ${ticker}: ${conviction} (recommendation: ${recommendation})`);
+
+    await icMemosRepository.updateProgress(memoId, 95);
 
     // Save the completed memo
     const supportingAnalysesObj = supportingAnalyses.reduce((acc, a) => {
@@ -689,7 +978,7 @@ async function processICMemo(
       conviction
     );
 
-    console.log(`[Lane C] IC Memo completed for ${ticker}`);
+    console.log(`[Lane C] IC Memo completed for ${ticker} with conviction ${conviction}`);
     return { success: true };
   } catch (error) {
     console.error(`[Lane C] Error processing IC Memo for ${ticker}:`, error);
@@ -782,17 +1071,15 @@ export async function runLaneC(config: LaneCConfig = {}): Promise<LaneCResult> {
     }
 
     result.success = result.memosFailed === 0;
-    result.duration_ms = Date.now() - startTime;
-
-    console.log(`[Lane C] Run completed: ${result.memosCompleted} completed, ${result.memosFailed} failed`);
-    return result;
   } catch (error) {
     console.error('[Lane C] Fatal error:', error);
     result.success = false;
     result.errors.push((error as Error).message);
-    result.duration_ms = Date.now() - startTime;
-    return result;
   }
-}
 
-export default runLaneC;
+  result.duration_ms = Date.now() - startTime;
+  console.log(`[Lane C] Run completed in ${result.duration_ms}ms`);
+  console.log(`[Lane C] Results: ${result.memosCompleted} completed, ${result.memosFailed} failed`);
+
+  return result;
+}
