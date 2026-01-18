@@ -1,8 +1,8 @@
 /**
  * ARC Investment Factory - OpenAI Provider
  * OpenAI API client implementation
+ * Updated to use max_completion_tokens for GPT-5.x compatibility
  */
-
 import OpenAI from 'openai';
 import type { LLMClient, LLMConfig, LLMRequest, LLMResponse } from '../types.js';
 import { DEFAULT_MODELS } from '../types.js';
@@ -23,20 +23,43 @@ export class OpenAIClient implements LLMClient {
     this.defaultTemperature = config.temperature ?? 0.7;
   }
 
+  /**
+   * Check if the model requires max_completion_tokens instead of max_tokens
+   * GPT-5.x and newer models use max_completion_tokens
+   */
+  private useMaxCompletionTokens(): boolean {
+    const model = this.model.toLowerCase();
+    // GPT-5.x, o1, o3 models require max_completion_tokens
+    return model.startsWith('gpt-5') || 
+           model.startsWith('o1') || 
+           model.startsWith('o3') ||
+           model.includes('gpt-5');
+  }
+
   async complete(request: LLMRequest): Promise<LLMResponse> {
     const messages = request.messages.map((m) => ({
       role: m.role as 'system' | 'user' | 'assistant',
       content: m.content,
     }));
 
-    const response = await this.client.chat.completions.create({
+    const maxTokensValue = request.maxTokens ?? this.defaultMaxTokens;
+    
+    // Build request params based on model compatibility
+    const requestParams: OpenAI.Chat.ChatCompletionCreateParams = {
       model: this.model,
       messages,
-      max_tokens: request.maxTokens ?? this.defaultMaxTokens,
       temperature: request.temperature ?? this.defaultTemperature,
       response_format: request.jsonMode ? { type: 'json_object' } : undefined,
-    });
+    };
 
+    // Use max_completion_tokens for GPT-5.x and newer models
+    if (this.useMaxCompletionTokens()) {
+      requestParams.max_completion_tokens = maxTokensValue;
+    } else {
+      requestParams.max_tokens = maxTokensValue;
+    }
+
+    const response = await this.client.chat.completions.create(requestParams);
     const choice = response.choices[0];
     
     return {
