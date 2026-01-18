@@ -2,13 +2,14 @@
  * ARC Investment Factory - Job Scheduler
  * Timezone: America/Sao_Paulo
  * 
- * Updated: 2026-01-18 v3
+ * Updated: 2026-01-18 v4
  * - All lanes run daily (Mon-Sun)
  * - Sequential schedule: Lane 0 → Lane A → Lane B → Lane C
  * - Added Lane C (IC Bundle) daily generation
  * - Manual trigger support for all lanes
  * - FIXED: Conflict detection between manual and scheduled runs
  * - FIXED: Proper startedAt timestamp tracking
+ * - ADDED: Automatic cleanup of stale runs on startup
  */
 
 import { CronJob } from 'cron';
@@ -81,11 +82,68 @@ export class JobScheduler {
     console.log(`[Scheduler] Lane ${lane} marked as idle (was: ${previousState?.type || 'unknown'})`);
   }
 
+  /**
+   * Clean up stale runs that were left in running/pending state
+   * This happens when the worker is restarted during processing
+   */
+  async cleanupStaleRuns(): Promise<void> {
+    console.log('[Scheduler] Checking for stale runs to cleanup...');
+    
+    const staleRunTypes = [
+      'manual_lane_0_trigger',
+      'manual_lane_a_trigger',
+      'manual_lane_b_trigger',
+      'manual_lane_b_batch_trigger',
+      'manual_lane_c_trigger',
+      'lane_b_research',
+      'daily_discovery',
+      'ic_bundle',
+    ];
+    
+    let totalCleaned = 0;
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    
+    for (const runType of staleRunTypes) {
+      try {
+        const runs = await runsRepository.getByType(runType, 50);
+        const staleRuns = runs.filter(r => 
+          (r.status === 'running' || r.status === 'pending') &&
+          new Date(r.runDate) < oneHourAgo
+        );
+        
+        for (const run of staleRuns) {
+          try {
+            await runsRepository.updateStatus(
+              run.runId, 
+              'failed', 
+              'Cleaned up stale run - worker was restarted'
+            );
+            totalCleaned++;
+            console.log(`[Scheduler] Cleaned up stale run: ${run.runId} (${runType})`);
+          } catch (err) {
+            console.error(`[Scheduler] Failed to cleanup run ${run.runId}:`, err);
+          }
+        }
+      } catch (err) {
+        console.error(`[Scheduler] Error checking stale runs for ${runType}:`, err);
+      }
+    }
+    
+    if (totalCleaned > 0) {
+      console.log(`[Scheduler] Cleaned up ${totalCleaned} stale runs`);
+    } else {
+      console.log('[Scheduler] No stale runs found');
+    }
+  }
+
   async start(): Promise<void> {
     if (this.isRunning) return;
     
     console.log(`[Scheduler] Starting with timezone: ${SYSTEM_TIMEZONE}`);
     console.log(`[Scheduler] All lanes run daily (Mon-Sun)`);
+    
+    // Clean up any stale runs from previous worker session
+    await this.cleanupStaleRuns();
     
     // Check for manual triggers on startup
     await this.checkManualTriggers();
