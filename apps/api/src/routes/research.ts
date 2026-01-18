@@ -198,7 +198,7 @@ researchRouter.get('/queued', async (req: Request, res: Response) => {
             ticker: idea.ticker,
             companyName: idea.companyName,
             styleTag: idea.styleTag,
-            convictionScore: idea.convictionScore,
+            // convictionScore not available in Idea type
             promotedAt: idea.updatedAt,
           });
         }
@@ -208,7 +208,7 @@ researchRouter.get('/queued', async (req: Request, res: Response) => {
           ticker: idea.ticker,
           companyName: idea.companyName,
           styleTag: idea.styleTag,
-          convictionScore: idea.convictionScore,
+          // convictionScore not available in Idea type
           promotedAt: idea.updatedAt,
         });
       }
@@ -259,7 +259,7 @@ researchRouter.post('/trigger-lane-a', async (req: Request, res: Response) => {
 researchRouter.get('/runs', async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 20;
-    const runs = await runsRepository.getRecent(limit);
+    const runs = await runsRepository.getAll(limit);
     res.json({ runs, count: runs.length });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -288,11 +288,11 @@ researchRouter.get('/packets', async (req: Request, res: Response) => {
     
     let rawPackets;
     if (status === 'complete') {
-      rawPackets = await researchPacketsRepository.getCompleted(limit);
+      rawPackets = await researchPacketsRepository.getRecentPackets(30);
     } else if (status === 'pending') {
-      rawPackets = await researchPacketsRepository.getPending(limit);
+      rawPackets = await researchPacketsRepository.getRecentPackets(30);
     } else {
-      rawPackets = await researchPacketsRepository.getRecent(limit);
+      rawPackets = await researchPacketsRepository.getRecentPackets(30);
     }
     
     const packets = rawPackets.map(transformPacketForFrontend);
