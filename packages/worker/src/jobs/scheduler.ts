@@ -90,14 +90,20 @@ export class JobScheduler {
     console.log('[Scheduler] Checking for stale runs to cleanup...');
     
     const staleRunTypes = [
+      // Lane 0 types
       'manual_lane_0_trigger',
+      'lane0_integration',
+      // Lane A types
       'manual_lane_a_trigger',
+      'daily_discovery',
+      // Lane B types
       'manual_lane_b_trigger',
       'manual_lane_b_batch_trigger',
-      'manual_lane_c_trigger',
       'lane_b_research',
-      'daily_discovery',
+      // Lane C types
+      'manual_lane_c_trigger',
       'ic_bundle',
+      'ic_bundle_generation',
     ];
     
     let totalCleaned = 0;
