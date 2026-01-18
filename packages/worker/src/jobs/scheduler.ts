@@ -3,13 +3,14 @@
  * Timezone: America/Sao_Paulo
  * 
  * Updated to include Lane 0 (Substack + Reddit ingestion)
+ * Updated to include manual Lane B triggers
  */
 import { CronJob } from 'cron';
 import {
   SYSTEM_TIMEZONE,
   SCHEDULES,
 } from '@arc/shared';
-import { runsRepository } from '@arc/database';
+import { runsRepository, ideasRepository } from '@arc/database';
 import { runDailyDiscovery } from '../orchestrator/daily-discovery.js';
 import { runLaneB } from '../orchestrator/lane-b-runner.js';
 import { generateICBundle } from '../orchestrator/ic-bundle.js';
@@ -211,6 +212,42 @@ export class JobScheduler {
         } catch (error) {
           await runsRepository.updateStatus(run.runId, 'failed', (error as Error).message);
           console.error(`[Scheduler] Manual Lane 0 failed: ${run.runId}`, error);
+        }
+      }
+
+      // Check for pending manual Lane B triggers
+      const laneB_Runs = await runsRepository.getByType('manual_lane_b_trigger', 10);
+      const pendingLaneBRuns = laneB_Runs.filter(r => r.status === 'pending');
+
+      for (const run of pendingLaneBRuns) {
+        console.log(`[Scheduler] Found manual Lane B trigger: ${run.runId}`);
+        
+        await runsRepository.updateStatus(run.runId, 'running');
+        
+        try {
+          const payload = run.payload as { ideaIds?: string[]; maxPackets?: number } | null;
+          const ideaIds = payload?.ideaIds || [];
+          const maxPackets = payload?.maxPackets || 5;
+          
+          console.log(`[Scheduler] Processing Lane B for ${ideaIds.length} ideas (max: ${maxPackets})`);
+          
+          // Run Lane B with specific idea IDs
+          const result = await runLaneB({
+            ideaIds: ideaIds.slice(0, maxPackets),
+            maxPackets,
+          });
+          
+          await runsRepository.updateStatus(run.runId, 'completed');
+          await runsRepository.updatePayload(run.runId, {
+            ...payload,
+            result,
+            completedAt: new Date().toISOString(),
+          });
+          
+          console.log(`[Scheduler] Manual Lane B completed: ${run.runId}`, result);
+        } catch (error) {
+          await runsRepository.updateStatus(run.runId, 'failed', (error as Error).message);
+          console.error(`[Scheduler] Manual Lane B failed: ${run.runId}`, error);
         }
       }
     } catch (error) {
