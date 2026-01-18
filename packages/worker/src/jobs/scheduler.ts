@@ -468,23 +468,18 @@ export class JobScheduler {
       }
 
       // ========================================
-      // Lane C Manual Triggers
+      // Lane C Manual Triggers (Individual IC Memo with ROIC)
       // ========================================
       const laneCRuns = await runsRepository.getByType('manual_lane_c_trigger', 10);
       const pendingLaneCRuns = laneCRuns.filter(r => r.status === 'pending');
       
       for (const run of pendingLaneCRuns) {
-        // Check if lane is already running (manual or scheduled)
-        if (this.isLaneRunning('lane_c')) {
-          console.log(`[Scheduler] Skipping manual Lane C trigger ${run.runId} - lane already running`);
-          continue;
-        }
+        // Note: We don't block Lane C for individual memo processing
+        // Multiple memos can be processed in parallel
         
         console.log(`[Scheduler] Found manual Lane C trigger: ${run.runId}`);
         const startedAt = new Date().toISOString();
         
-        // Mark lane as running and update DB
-        this.markLaneRunning('lane_c', run.runId, 'manual');
         await runsRepository.updateStatus(run.runId, 'running');
         await runsRepository.updatePayload(run.runId, {
           ...(run.payload as object || {}),
@@ -492,27 +487,50 @@ export class JobScheduler {
         });
         
         try {
-          const payload = run.payload as { dryRun?: boolean } | null;
-          const result = await generateICBundle({
-            dryRun: payload?.dryRun ?? false,
-          });
+          const payload = run.payload as { memoId?: string; packetId?: string; ticker?: string; includeROIC?: boolean } | null;
+          const memoId = payload?.memoId;
+          const packetId = payload?.packetId;
+          const includeROIC = payload?.includeROIC !== false;
           
-          const completedAt = new Date().toISOString();
-          await runsRepository.updateStatus(run.runId, 'completed');
-          await runsRepository.updatePayload(run.runId, {
-            ...(payload as object || {}),
-            startedAt,
-            completedAt,
-            durationMs: new Date(completedAt).getTime() - new Date(startedAt).getTime(),
-            result,
-          });
-          
-          console.log(`[Scheduler] Manual Lane C completed: ${run.runId}`, result);
+          if (memoId && packetId) {
+            console.log(`[Scheduler] Processing IC Memo ${memoId} for ${payload?.ticker || 'unknown'} with ROIC: ${includeROIC}`);
+            
+            // Import and run Lane C runner for individual memo
+            const { processICMemoSingle } = await import('../orchestrator/lane-c-runner.js');
+            const result = await processICMemoSingle(memoId, packetId, includeROIC);
+            
+            const completedAt = new Date().toISOString();
+            await runsRepository.updateStatus(run.runId, 'completed');
+            await runsRepository.updatePayload(run.runId, {
+              ...(payload as object || {}),
+              startedAt,
+              completedAt,
+              durationMs: new Date(completedAt).getTime() - new Date(startedAt).getTime(),
+              result,
+            });
+            
+            console.log(`[Scheduler] IC Memo ${memoId} completed with ROIC Decomposition`);
+          } else {
+            // Fallback to bundle generation if no specific memo
+            const result = await generateICBundle({
+              dryRun: false,
+            });
+            
+            const completedAt = new Date().toISOString();
+            await runsRepository.updateStatus(run.runId, 'completed');
+            await runsRepository.updatePayload(run.runId, {
+              ...(payload as object || {}),
+              startedAt,
+              completedAt,
+              durationMs: new Date(completedAt).getTime() - new Date(startedAt).getTime(),
+              result,
+            });
+            
+            console.log(`[Scheduler] Manual Lane C bundle completed: ${run.runId}`);
+          }
         } catch (error) {
           await runsRepository.updateStatus(run.runId, 'failed', (error as Error).message);
           console.error(`[Scheduler] Manual Lane C failed: ${run.runId}`, error);
-        } finally {
-          this.markLaneIdle('lane_c');
         }
       }
 
