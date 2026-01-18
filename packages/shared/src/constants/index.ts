@@ -4,6 +4,8 @@
  * 
  * These constants define the operational boundaries of the system.
  * All values are derived from the Operating Parameters specification.
+ * 
+ * Updated: 2026-01-18 - New limits and daily schedule (Mon-Sun)
  */
 
 // ============================================================================
@@ -23,11 +25,20 @@ export const HOLDING_HORIZON = '1_3_years' as const;
 export const SYSTEM_TIMEZONE = 'America/Sao_Paulo';
 
 // ============================================================================
-// LANE A PARAMETERS - LOCKED
+// LANE 0 PARAMETERS
+// ============================================================================
+
+/** Lane 0: Substack + Reddit Ingestion */
+export const LANE_0_DAILY_LIMIT = 100;
+export const LANE_0_MAX_IDEAS_PER_SOURCE = 50;
+export const LANE_0_MAX_IDEAS_TO_LANE_A = 50;
+
+// ============================================================================
+// LANE A PARAMETERS - UPDATED
 // ============================================================================
 
 /** Daily target for Idea Inbox */
-export const LANE_A_DAILY_TARGET = 120;
+export const LANE_A_DAILY_TARGET = 200;
 
 /** Daily cap - max tickers to enrich */
 export const LANE_A_DAILY_CAP = 200;
@@ -46,17 +57,17 @@ export const LANE_A_TIME_PER_IDEA_MAX = 6;
 export const LANE_A_DAILY_LIMIT = LANE_A_DAILY_TARGET;
 
 // ============================================================================
-// LANE B PARAMETERS - LOCKED
+// LANE B PARAMETERS - UPDATED
 // ============================================================================
 
-/** Daily promotions target: 2-3 */
-export const LANE_B_DAILY_PROMOTIONS_TARGET = 3;
+/** Daily promotions target: 3-5 */
+export const LANE_B_DAILY_PROMOTIONS_TARGET = 10;
 
-/** Daily promotions hard cap: 4 */
-export const LANE_B_DAILY_PROMOTIONS_MAX = 4;
+/** Daily promotions hard cap: 50 */
+export const LANE_B_DAILY_PROMOTIONS_MAX = 50;
 
-/** Weekly deep packets hard cap: 10 */
-export const LANE_B_WEEKLY_DEEP_PACKETS = 10;
+/** Weekly deep packets hard cap: 200 */
+export const LANE_B_WEEKLY_DEEP_PACKETS = 200;
 
 /** Max concurrent research jobs */
 export const LANE_B_MAX_CONCURRENCY = 3;
@@ -68,6 +79,14 @@ export const LANE_B_TIME_PER_NAME_MAX = 120;
 // Backward compatibility
 export const LANE_B_DAILY_LIMIT = LANE_B_DAILY_PROMOTIONS_MAX;
 export const LANE_B_WEEKLY_LIMIT = LANE_B_WEEKLY_DEEP_PACKETS;
+
+// ============================================================================
+// LANE C PARAMETERS (IC Bundle)
+// ============================================================================
+
+/** Lane C: IC Bundle generation */
+export const LANE_C_MAX_PACKETS_PER_BUNDLE = 10;
+export const LANE_C_MIN_CONVICTION_FOR_BUNDLE = 6;
 
 // ============================================================================
 // NOVELTY WINDOWS - LOCKED
@@ -83,20 +102,28 @@ export const NOVELTY_PENALTY_WINDOW_DAYS = 30;
 export const NOVELTY_DECAY_DAYS = NOVELTY_NEW_TICKER_DAYS;
 
 // ============================================================================
-// SCHEDULE CONFIGURATION - LOCKED
+// SCHEDULE CONFIGURATION - UPDATED (Mon-Sun)
 // ============================================================================
 
 export const SCHEDULES = {
-  // Lane A: Daily Discovery - 06:00 Sao Paulo, weekdays only
-  LANE_A_CRON: '0 6 * * 1-5',
+  // Lane 0: Substack + Reddit Ingestion - 05:00 Sao Paulo, daily
+  LANE_0_CRON: '0 5 * * *',
+  LANE_0_HOUR: 5,
+  
+  // Lane A: Daily Discovery - 06:00 Sao Paulo, daily
+  LANE_A_CRON: '0 6 * * *',
   LANE_A_HOUR: 6,
   
-  // Lane B: Deep Research - 08:00 Sao Paulo, weekdays only
-  LANE_B_CRON: '0 8 * * 1-5',
+  // Lane B: Deep Research - 08:00 Sao Paulo, daily
+  LANE_B_CRON: '0 8 * * *',
   LANE_B_HOUR: 8,
   
-  // IC Bundle: Weekly - 09:00 Sao Paulo, Fridays only
-  IC_BUNDLE_CRON: '0 9 * * 5',
+  // Lane C: IC Bundle - 10:00 Sao Paulo, daily
+  LANE_C_CRON: '0 10 * * *',
+  LANE_C_HOUR: 10,
+  
+  // QA Report: 18:00 Sao Paulo, Fridays only
+  QA_REPORT_CRON: '0 18 * * 5',
   
   // Monthly Process Audit - 10:00 Sao Paulo, first weekday of month
   MONTHLY_AUDIT_CRON: '0 10 1-7 * 1-5',
@@ -110,6 +137,9 @@ export const OPERATING_PARAMETERS = {
   ASSET_CLASS,
   HOLDING_HORIZON,
   DEFAULT_OPTIMIZATION,
+  LANE_0_DAILY_LIMIT,
+  LANE_0_MAX_IDEAS_PER_SOURCE,
+  LANE_0_MAX_IDEAS_TO_LANE_A,
   LANE_A_DAILY_TARGET,
   LANE_A_DAILY_CAP,
   LANE_A_LLM_ENRICHMENT_CAP,
@@ -118,6 +148,8 @@ export const OPERATING_PARAMETERS = {
   LANE_B_DAILY_PROMOTIONS_MAX,
   LANE_B_WEEKLY_DEEP_PACKETS,
   LANE_B_MAX_CONCURRENCY,
+  LANE_C_MAX_PACKETS_PER_BUNDLE,
+  LANE_C_MIN_CONVICTION_FOR_BUNDLE,
   LANE_A_TIME_PER_IDEA_MIN,
   LANE_A_TIME_PER_IDEA_MAX,
   LANE_B_TIME_PER_NAME_MIN,

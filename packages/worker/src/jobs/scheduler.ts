@@ -2,13 +2,19 @@
  * ARC Investment Factory - Job Scheduler
  * Timezone: America/Sao_Paulo
  * 
- * Updated to include Lane 0 (Substack + Reddit ingestion)
- * Updated to include manual Lane B triggers
+ * Updated: 2026-01-18
+ * - All lanes run daily (Mon-Sun)
+ * - Sequential schedule: Lane 0 → Lane A → Lane B → Lane C
+ * - Added Lane C (IC Bundle) daily generation
+ * - Manual trigger support for all lanes
  */
+
 import { CronJob } from 'cron';
 import {
   SYSTEM_TIMEZONE,
   SCHEDULES,
+  LANE_B_DAILY_LIMIT,
+  LANE_B_WEEKLY_LIMIT,
 } from '@arc/shared';
 import { runsRepository, ideasRepository } from '@arc/database';
 import { runDailyDiscovery } from '../orchestrator/daily-discovery.js';
@@ -17,12 +23,6 @@ import { generateICBundle } from '../orchestrator/ic-bundle.js';
 import { runWeeklyQAReport } from './weekly-qa-report.js';
 import { Lane0Runner } from '../lane-zero/lane0-runner.js';
 import { createDefaultClient } from '@arc/llm-client';
-
-function isWeekday(): boolean {
-  const now = new Date();
-  const day = now.getDay();
-  return day >= 1 && day <= 5;
-}
 
 export class JobScheduler {
   private jobs: CronJob[] = [];
@@ -33,15 +33,15 @@ export class JobScheduler {
     if (this.isRunning) return;
     
     console.log(`[Scheduler] Starting with timezone: ${SYSTEM_TIMEZONE}`);
-
+    console.log(`[Scheduler] All lanes run daily (Mon-Sun)`);
+    
     // Check for manual triggers on startup
     await this.checkManualTriggers();
 
-    // Lane 0: Substack + Reddit Ingestion - 05:00 weekdays (before Lane A)
+    // Lane 0: Substack + Reddit Ingestion - 05:00 daily
     this.jobs.push(new CronJob(
-      '0 5 * * 1-5',
+      SCHEDULES.LANE_0_CRON,
       async () => {
-        if (!isWeekday()) return;
         console.log('[Scheduler] Running Lane 0 Ingestion (Substack + Reddit)');
         await this.runLane0();
       },
@@ -50,11 +50,10 @@ export class JobScheduler {
       SYSTEM_TIMEZONE
     ));
 
-    // Lane A: Daily Discovery - 06:00 weekdays
+    // Lane A: Daily Discovery - 06:00 daily
     this.jobs.push(new CronJob(
       SCHEDULES.LANE_A_CRON,
       async () => {
-        if (!isWeekday()) return;
         console.log('[Scheduler] Running Lane A Discovery');
         await runDailyDiscovery();
       },
@@ -63,11 +62,10 @@ export class JobScheduler {
       SYSTEM_TIMEZONE
     ));
 
-    // Lane B: Deep Research - 08:00 weekdays
+    // Lane B: Deep Research - 08:00 daily
     this.jobs.push(new CronJob(
       SCHEDULES.LANE_B_CRON,
       async () => {
-        if (!isWeekday()) return;
         console.log('[Scheduler] Running Lane B Research');
         await runLaneB();
       },
@@ -76,24 +74,24 @@ export class JobScheduler {
       SYSTEM_TIMEZONE
     ));
 
-    // QA Report: Friday 18:00
+    // Lane C: IC Bundle - 10:00 daily
     this.jobs.push(new CronJob(
-      '0 18 * * 5',
+      SCHEDULES.LANE_C_CRON,
       async () => {
-        console.log('[Scheduler] Running Weekly QA Report');
-        await runWeeklyQAReport();
+        console.log('[Scheduler] Running Lane C IC Bundle');
+        await generateICBundle();
       },
       null,
       true,
       SYSTEM_TIMEZONE
     ));
 
-    // IC Bundle: Friday 19:00
+    // QA Report: Friday 18:00
     this.jobs.push(new CronJob(
-      '0 19 * * 5',
+      SCHEDULES.QA_REPORT_CRON,
       async () => {
-        console.log('[Scheduler] Running IC Bundle');
-        await generateICBundle();
+        console.log('[Scheduler] Running Weekly QA Report');
+        await runWeeklyQAReport();
       },
       null,
       true,
@@ -107,9 +105,11 @@ export class JobScheduler {
 
     this.isRunning = true;
     console.log('[Scheduler] All jobs scheduled');
-    console.log('[Scheduler] Lane 0: 05:00 (Substack + Reddit)');
-    console.log('[Scheduler] Lane A: 06:00 (Daily Discovery)');
-    console.log('[Scheduler] Lane B: 08:00 (Deep Research)');
+    console.log('[Scheduler] Lane 0: 05:00 daily (Substack + Reddit)');
+    console.log('[Scheduler] Lane A: 06:00 daily (Daily Discovery)');
+    console.log('[Scheduler] Lane B: 08:00 daily (Deep Research)');
+    console.log('[Scheduler] Lane C: 10:00 daily (IC Bundle)');
+    console.log('[Scheduler] QA Report: 18:00 Friday');
   }
 
   /**
@@ -129,7 +129,7 @@ export class JobScheduler {
         enableSubstack: true,
         enableReddit: true,
         maxIdeasPerSource: 50,
-        maxIdeasToLaneA: 20,
+        maxIdeasToLaneA: 50,
         minConfidenceForLaneA: 'MEDIUM',
         parallelIngestion: true,
         dryRun: false,
@@ -160,44 +160,14 @@ export class JobScheduler {
 
   async checkManualTriggers(): Promise<void> {
     try {
-      // Check for pending manual Lane A triggers
-      const runs = await runsRepository.getByType('manual_lane_a_trigger', 10);
-      const pendingRuns = runs.filter(r => r.status === 'running');
-
-      for (const run of pendingRuns) {
-        console.log(`[Scheduler] Found manual Lane A trigger: ${run.runId}`);
-        
-        // Update status to processing
-        await runsRepository.updateStatus(run.runId, 'running');
-        
-        try {
-          const payload = run.payload as { dryRun?: boolean; maxIdeas?: number } | null;
-          const result = await runDailyDiscovery({
-            dryRun: payload?.dryRun ?? false,
-            maxIdeas: payload?.maxIdeas ?? 10,
-          });
-          
-          await runsRepository.updateStatus(run.runId, 'completed');
-          await runsRepository.updatePayload(run.runId, {
-            ...payload,
-            result,
-            completedAt: new Date().toISOString(),
-          });
-          
-          console.log(`[Scheduler] Manual Lane A completed: ${run.runId}`, result);
-        } catch (error) {
-          await runsRepository.updateStatus(run.runId, 'failed', (error as Error).message);
-          console.error(`[Scheduler] Manual Lane A failed: ${run.runId}`, error);
-        }
-      }
-
       // Check for pending manual Lane 0 triggers
       const lane0Runs = await runsRepository.getByType('manual_lane_0_trigger', 10);
-      const pendingLane0Runs = lane0Runs.filter(r => r.status === 'running');
-
+      const pendingLane0Runs = lane0Runs.filter(r => r.status === 'pending' || r.status === 'running');
+      
       for (const run of pendingLane0Runs) {
-        console.log(`[Scheduler] Found manual Lane 0 trigger: ${run.runId}`);
+        if (run.status === 'running') continue; // Skip already running
         
+        console.log(`[Scheduler] Found manual Lane 0 trigger: ${run.runId}`);
         await runsRepository.updateStatus(run.runId, 'running');
         
         try {
@@ -215,19 +185,49 @@ export class JobScheduler {
         }
       }
 
+      // Check for pending manual Lane A triggers
+      const runs = await runsRepository.getByType('manual_lane_a_trigger', 10);
+      const pendingRuns = runs.filter(r => r.status === 'pending' || r.status === 'running');
+      
+      for (const run of pendingRuns) {
+        if (run.status === 'running') continue; // Skip already running
+        
+        console.log(`[Scheduler] Found manual Lane A trigger: ${run.runId}`);
+        await runsRepository.updateStatus(run.runId, 'running');
+        
+        try {
+          const payload = run.payload as { dryRun?: boolean; maxIdeas?: number } | null;
+          const result = await runDailyDiscovery({
+            dryRun: payload?.dryRun ?? false,
+            maxIdeas: payload?.maxIdeas ?? 200,
+          });
+          
+          await runsRepository.updateStatus(run.runId, 'completed');
+          await runsRepository.updatePayload(run.runId, {
+            ...payload,
+            result,
+            completedAt: new Date().toISOString(),
+          });
+          
+          console.log(`[Scheduler] Manual Lane A completed: ${run.runId}`, result);
+        } catch (error) {
+          await runsRepository.updateStatus(run.runId, 'failed', (error as Error).message);
+          console.error(`[Scheduler] Manual Lane A failed: ${run.runId}`, error);
+        }
+      }
+
       // Check for pending manual Lane B triggers
       const laneB_Runs = await runsRepository.getByType('manual_lane_b_trigger', 10);
       const pendingLaneBRuns = laneB_Runs.filter(r => r.status === 'pending');
-
+      
       for (const run of pendingLaneBRuns) {
         console.log(`[Scheduler] Found manual Lane B trigger: ${run.runId}`);
-        
         await runsRepository.updateStatus(run.runId, 'running');
         
         try {
           const payload = run.payload as { ideaIds?: string[]; maxPackets?: number } | null;
           const ideaIds = payload?.ideaIds || [];
-          const maxPackets = payload?.maxPackets || 5;
+          const maxPackets = payload?.maxPackets || LANE_B_DAILY_LIMIT;
           
           console.log(`[Scheduler] Processing Lane B for ${ideaIds.length} ideas (max: ${maxPackets})`);
           
@@ -250,6 +250,35 @@ export class JobScheduler {
           console.error(`[Scheduler] Manual Lane B failed: ${run.runId}`, error);
         }
       }
+
+      // Check for pending manual Lane C (IC Bundle) triggers
+      const laneC_Runs = await runsRepository.getByType('manual_lane_c_trigger', 10);
+      const pendingLaneCRuns = laneC_Runs.filter(r => r.status === 'pending');
+      
+      for (const run of pendingLaneCRuns) {
+        console.log(`[Scheduler] Found manual Lane C trigger: ${run.runId}`);
+        await runsRepository.updateStatus(run.runId, 'running');
+        
+        try {
+          const payload = run.payload as { dryRun?: boolean } | null;
+          const result = await generateICBundle({
+            dryRun: payload?.dryRun ?? false,
+          });
+          
+          await runsRepository.updateStatus(run.runId, 'completed');
+          await runsRepository.updatePayload(run.runId, {
+            ...payload,
+            result,
+            completedAt: new Date().toISOString(),
+          });
+          
+          console.log(`[Scheduler] Manual Lane C completed: ${run.runId}`, result);
+        } catch (error) {
+          await runsRepository.updateStatus(run.runId, 'failed', (error as Error).message);
+          console.error(`[Scheduler] Manual Lane C failed: ${run.runId}`, error);
+        }
+      }
+
     } catch (error) {
       console.error('[Scheduler] Error checking manual triggers:', error);
     }
