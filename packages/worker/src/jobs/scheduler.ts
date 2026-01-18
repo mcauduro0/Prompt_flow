@@ -497,7 +497,7 @@ export class JobScheduler {
             
             // Import and run Lane C runner for individual memo
             const { processICMemoSingle } = await import('../orchestrator/lane-c-runner.js');
-            const result = await processICMemoSingle(memoId, packetId, includeROIC);
+            const result = await processICMemoSingle(memoId);
             
             const completedAt = new Date().toISOString();
             await runsRepository.updateStatus(run.runId, 'completed');
