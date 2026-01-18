@@ -29,8 +29,8 @@ export const SYSTEM_TIMEZONE = 'America/Sao_Paulo';
 // ============================================================================
 
 /** Lane 0: Substack + Reddit Ingestion */
-export const LANE_0_DAILY_LIMIT = 100;
-export const LANE_0_MAX_IDEAS_PER_SOURCE = 50;
+export const LANE_0_DAILY_LIMIT = 200;
+export const LANE_0_MAX_IDEAS_PER_SOURCE = 100;
 export const LANE_0_MAX_IDEAS_TO_LANE_A = 50;
 
 // ============================================================================

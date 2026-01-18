@@ -5,8 +5,8 @@ import { Lock, Layers, Clock, Shield, Zap, Calendar } from 'lucide-react';
 
 const lockedParams = [
   // Lane 0
-  { category: "Lane 0", name: "Daily Limit", value: "100 ideas", description: "Max ideas from Substack + Reddit per day" },
-  { category: "Lane 0", name: "Max Per Source", value: "50 ideas", description: "Max ideas per source (Substack/Reddit)" },
+  { category: "Lane 0", name: "Daily Limit", value: "200 ideas", description: "Max ideas from Substack + Reddit per day" },
+  { category: "Lane 0", name: "Max Per Source", value: "100 ideas", description: "Max ideas per source (Substack/Reddit)" },
   { category: "Lane 0", name: "Schedule", value: "05:00 daily", description: "Lane 0 run time (São Paulo)" },
   
   // Lane A
