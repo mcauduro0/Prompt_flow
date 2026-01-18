@@ -310,12 +310,22 @@ systemRouter.get('/lane-status', async (req: Request, res: Response) => {
       // Get last completed run (manual or scheduled)
       let lastRun = null;
       if (lastManual && scheduledRun) {
-        lastRun = new Date(lastManual.completedAt || lastManual.runDate) > new Date(scheduledRun.completedAt || scheduledRun.runDate)
+        // Use completedAt from payload if available
+        const manualPayload = lastManual.payload as { completedAt?: string } | null;
+        const scheduledPayload = scheduledRun.payload as { completedAt?: string } | null;
+        const manualCompletedAt = manualPayload?.completedAt || lastManual.completedAt || lastManual.runDate;
+        const scheduledCompletedAt = scheduledPayload?.completedAt || scheduledRun.completedAt || scheduledRun.runDate;
+        
+        lastRun = new Date(manualCompletedAt) > new Date(scheduledCompletedAt)
           ? lastManual
           : scheduledRun;
       } else {
         lastRun = lastManual || scheduledRun;
       }
+      
+      // Extract completedAt from payload if available
+      const lastRunPayload = lastRun?.payload as { completedAt?: string } | null;
+      const lastRunCompletedAt = lastRunPayload?.completedAt || lastRun?.completedAt;
       
       return {
         lane: laneName,
@@ -324,7 +334,7 @@ systemRouter.get('/lane-status', async (req: Request, res: Response) => {
         lastRun: lastRun ? {
           runId: lastRun.runId,
           status: lastRun.status,
-          completedAt: lastRun.completedAt,
+          completedAt: lastRunCompletedAt,
           type: lastRun.runType?.includes('manual') ? 'manual' : 'scheduled',
         } : null,
       };
@@ -395,17 +405,23 @@ systemRouter.get('/recent-runs', async (req: Request, res: Response) => {
         description = 'IC Bundle';
       }
       
+      // Use startedAt from payload if available, otherwise fall back to runDate
+      const payload = run.payload as { startedAt?: string; completedAt?: string; durationMs?: number } | null;
+      const startedAt = payload?.startedAt || run.runDate;
+      const completedAt = payload?.completedAt || run.completedAt;
+      const durationMs = payload?.durationMs || (completedAt && startedAt
+        ? new Date(completedAt).getTime() - new Date(startedAt).getTime()
+        : null);
+      
       return {
         runId: run.runId,
         lane,
         description,
         type: run.runType.includes('manual') ? 'manual' : 'scheduled',
         status: run.status,
-        startedAt: run.runDate,
-        completedAt: run.completedAt,
-        durationMs: run.completedAt 
-          ? new Date(run.completedAt).getTime() - new Date(run.runDate).getTime()
-          : null,
+        startedAt,
+        completedAt,
+        durationMs,
         payload: run.payload,
         error: run.errorMessage,
       };
