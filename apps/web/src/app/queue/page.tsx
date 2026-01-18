@@ -60,6 +60,7 @@ export default function QueuePage() {
           }
           return {
             ...i,
+            id: i.ideaId, // Map ideaId to id for consistency
             status,
             research_progress: i.research_progress || 0,
           };
