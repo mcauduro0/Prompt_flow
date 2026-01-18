@@ -6,8 +6,8 @@
  * - All completed research packets from the week
  * - Summary statistics and highlights
  * - Prioritized list of ideas for IC review
+ * - ROIC Decomposition analysis (NEW)
  */
-
 import { v4 as uuidv4 } from 'uuid';
 import { SYSTEM_TIMEZONE, LANE_B_WEEKLY_LIMIT } from '@arc/shared';
 import {
@@ -16,17 +16,21 @@ import {
   runsRepository,
 } from '@arc/database';
 import { createResilientClient } from '@arc/llm-client';
+import { runROICDecompositionForICMemo, type ROICDecompositionResult, type ROICDecomposition } from './roic-decomposition-runner.js';
 
 export interface ICBundleConfig {
   dryRun?: boolean;
   lookbackDays?: number;
   forceIncludePacketIds?: string[];
+  includeROICDecomposition?: boolean;
+  roicDecompositionConcurrency?: number;
 }
 
 export interface ICBundleResult {
   success: boolean;
   bundleId: string;
   packetsIncluded: number;
+  roicAnalysesCompleted: number;
   errors: string[];
   duration_ms: number;
   bundle?: ICBundle;
@@ -42,6 +46,7 @@ export interface ICBundle {
     bySector: Record<string, number>;
     avgConviction: number;
     passedAllGates: number;
+    roicAnalysesCompleted: number;
   };
   highlights: Array<{
     ticker: string;
@@ -50,6 +55,7 @@ export interface ICBundle {
     headline: string;
     conviction: number;
     keyInsight: string;
+    roicDurabilityScore?: number;
   }>;
   packets: Array<{
     packetId: string;
@@ -62,11 +68,21 @@ export interface ICBundle {
     fairValueRange?: { low: number; base: number; high: number };
     keyRisks: string[];
     catalysts: string[];
+    roicDecomposition?: ROICDecompositionSummary;
   }>;
   executiveSummary: string;
 }
 
-// Type for the packet JSON structure
+export interface ROICDecompositionSummary {
+  grossMarginQualityScore?: number;
+  grossMarginDurabilityScore?: number;
+  grossMarginClassification?: string;
+  capitalEfficiencyClassification?: string;
+  roicDurabilityScore?: number;
+  numberOneThingToWatch?: string;
+  completed: boolean;
+}
+
 interface PacketData {
   modules?: {
     business?: { summary?: string; sector?: string };
@@ -85,11 +101,9 @@ interface PacketData {
     first_failed_gate?: number | null;
   };
   status?: string;
+  roicDecomposition?: any;
 }
 
-/**
- * Get the start of the current week (Monday)
- */
 function getWeekStart(date: Date = new Date()): Date {
   const d = new Date(date);
   const day = d.getDay();
@@ -99,116 +113,164 @@ function getWeekStart(date: Date = new Date()): Date {
   return d;
 }
 
-/**
- * Generate executive summary using LLM
- */
+function extractHighlights(
+  packets: any[],
+  ideas: Map<string, any>,
+  roicResults: Map<string, ROICDecompositionSummary>
+): ICBundle['highlights'] {
+  const highlights: ICBundle['highlights'] = [];
+  
+  for (const packet of packets) {
+    const idea = ideas.get(packet.ideaId);
+    const packetData = packet.packet as PacketData;
+    
+    if (!idea || !packetData?.modules?.synthesis) continue;
+    
+    const synthesis = packetData.modules.synthesis;
+    const conviction = synthesis.conviction_score || 5;
+    
+    if (conviction >= 6) {
+      const roicData = roicResults.get(packet.packetId);
+      
+      highlights.push({
+        ticker: packet.ticker,
+        companyName: idea.companyName || packet.ticker,
+        styleTag: packet.styleTag || 'unknown',
+        headline: synthesis.one_liner || `${packet.ticker} investment opportunity`,
+        conviction,
+        keyInsight: synthesis.key_insight || packetData.modules.business?.summary?.slice(0, 200) || '',
+        roicDurabilityScore: roicData?.roicDurabilityScore,
+      });
+    }
+  }
+  
+  return highlights.sort((a, b) => b.conviction - a.conviction).slice(0, 10);
+}
+
 async function generateExecutiveSummary(
   packets: any[],
   highlights: ICBundle['highlights']
 ): Promise<string> {
-  if (packets.length === 0) {
-    return 'No research packets completed this week.';
-  }
+  const llmClient = createResilientClient();
+  
+  const highlightsSummary = highlights.map(h => 
+    `- ${h.ticker} (${h.companyName}): ${h.headline} [Conviction: ${h.conviction}/10${h.roicDurabilityScore ? `, ROIC Durability: ${h.roicDurabilityScore}/10` : ''}]`
+  ).join('\n');
+  
+  const prompt = `Generate a concise executive summary for the Investment Committee weekly bundle.
 
-  const llm = createResilientClient();
+Total packets reviewed: ${packets.length}
+High conviction highlights:
+${highlightsSummary}
 
-  const prompt = `You are a senior investment analyst preparing the weekly Investment Committee brief.
-
-This week, the research team completed ${packets.length} deep research packets.
-
-Top highlights:
-${highlights.map(h => `- ${h.ticker} (${h.styleTag}): ${h.headline}`).join('\n')}
-
-Write a concise 2-3 paragraph executive summary for the Investment Committee that:
+Write a 2-3 paragraph executive summary that:
 1. Summarizes the key themes and opportunities identified this week
-2. Highlights any notable risks or concerns across the portfolio
-3. Provides a recommendation on which ideas deserve priority discussion
+2. Highlights the most compelling investment ideas with ROIC quality insights
+3. Notes any concerns or areas requiring further analysis
 
-Keep it professional, data-driven, and actionable. Maximum 300 words.`;
+Keep it professional and actionable.`;
 
   try {
-    const response = await llm.complete({
+    const response = await llmClient.complete({
       messages: [{ role: 'user', content: prompt }],
+      maxTokens: 1000,
       temperature: 0.5,
-      maxTokens: 500,
     });
     return response.content;
   } catch (error) {
     console.error('[IC Bundle] Failed to generate executive summary:', error);
-    return `This week's research covered ${packets.length} companies across various sectors. Please review the individual packets for detailed analysis.`;
+    return `This week's IC Bundle contains ${packets.length} research packets. ${highlights.length} ideas met the high conviction threshold for detailed review.`;
   }
 }
 
-/**
- * Extract highlights from packets
- */
-function extractHighlights(
+async function runROICForPacket(
+  packet: any
+): Promise<ROICDecompositionSummary | null> {
+  try {
+    console.log(`[IC Bundle] Running ROIC Decomposition for ${packet.ticker}...`);
+    
+    const result = await runROICDecompositionForICMemo(
+      packet.ticker,
+      packet.ideaId,
+      packet.packetId
+    );
+    
+    if (result.success && result.data) {
+      const summary: ROICDecompositionSummary = {
+        completed: true,
+        grossMarginQualityScore: result.data.gross_margin_analysis?.scores?.gross_margin_quality_score,
+        grossMarginDurabilityScore: result.data.gross_margin_analysis?.scores?.gross_margin_durability_score,
+        grossMarginClassification: result.data.gross_margin_analysis?.scores?.classification,
+        capitalEfficiencyClassification: result.data.capital_efficiency_analysis?.executive_summary?.classification,
+        roicDurabilityScore: result.data.roic_stress_test?.scores?.overall_roic_durability_score,
+        numberOneThingToWatch: result.data.roic_stress_test?.number_one_thing_to_watch,
+      };
+      
+      console.log(`[IC Bundle] ROIC Decomposition completed for ${packet.ticker}: Durability Score ${summary.roicDurabilityScore}/10`);
+      return summary;
+    } else {
+      console.error(`[IC Bundle] ROIC Decomposition failed for ${packet.ticker}:`, result.errors);
+      return { completed: false };
+    }
+  } catch (error) {
+    console.error(`[IC Bundle] ROIC Decomposition error for ${packet.ticker}:`, error);
+    return { completed: false };
+  }
+}
+
+async function runROICDecompositionBatch(
   packets: any[],
-  ideas: Map<string, any>
-): ICBundle['highlights'] {
-  const highlights: ICBundle['highlights'] = [];
-
-  for (const packet of packets) {
-    const idea = ideas.get(packet.ideaId);
-    if (!idea) continue;
-
-    // Parse packet data
+  concurrency: number = 3
+): Promise<Map<string, ROICDecompositionSummary>> {
+  const results = new Map<string, ROICDecompositionSummary>();
+  
+  const highConvictionPackets = packets.filter(packet => {
     const packetData = packet.packet as PacketData;
-
-    // Calculate conviction score based on gate results and valuation
-    let conviction = 5; // Base score
-    if (packetData?.gateResults?.all_passed) conviction += 2;
-    if (packetData?.modules?.valuation?.fair_value_range) {
-      const upside = packetData.modules.valuation.fair_value_range.base / 
-        (packetData.modules.valuation.current_price || 1) - 1;
-      if (upside > 0.3) conviction += 2;
-      else if (upside > 0.15) conviction += 1;
+    const conviction = packetData?.modules?.synthesis?.conviction_score || 0;
+    return conviction >= 6;
+  });
+  
+  console.log(`[IC Bundle] Running ROIC Decomposition for ${highConvictionPackets.length} high-conviction packets (concurrency: ${concurrency})`);
+  
+  for (let i = 0; i < highConvictionPackets.length; i += concurrency) {
+    const batch = highConvictionPackets.slice(i, i + concurrency);
+    const batchPromises = batch.map(packet => 
+      runROICForPacket(packet)
+        .then(result => ({ packetId: packet.packetId, result }))
+    );
+    
+    const batchResults = await Promise.all(batchPromises);
+    
+    for (const { packetId, result } of batchResults) {
+      if (result) {
+        results.set(packetId, result);
+      }
     }
-
-    // Extract key insight
-    let keyInsight = '';
-    if (packetData?.modules?.business?.summary) {
-      keyInsight = packetData.modules.business.summary.slice(0, 200);
-    } else if (packetData?.modules?.industry_moat?.summary) {
-      keyInsight = packetData.modules.industry_moat.summary.slice(0, 200);
-    }
-
-    highlights.push({
-      ticker: packet.ticker,
-      companyName: idea.companyName || packet.ticker,
-      styleTag: idea.styleTag,
-      headline: idea.oneSentenceHypothesis || 'Deep research completed',
-      conviction: Math.min(10, conviction),
-      keyInsight,
-    });
   }
-
-  // Sort by conviction and take top 5
-  return highlights
-    .sort((a, b) => b.conviction - a.conviction)
-    .slice(0, 5);
+  
+  return results;
 }
 
-/**
- * Generate the IC Bundle
- */
-export async function generateICBundle(config: ICBundleConfig = {}): Promise<ICBundleResult> {
+export async function generateICBundle(
+  config: ICBundleConfig = {}
+): Promise<ICBundleResult> {
   const startTime = Date.now();
   const bundleId = uuidv4();
   const errors: string[] = [];
-
+  let roicAnalysesCompleted = 0;
+  
   console.log(`[IC Bundle] Generating bundle ${bundleId} at ${new Date().toISOString()}`);
   console.log(`[IC Bundle] Timezone: ${SYSTEM_TIMEZONE}`);
   console.log(`[IC Bundle] Weekly capacity: ${LANE_B_WEEKLY_LIMIT}`);
-
-  // Create run record
+  console.log(`[IC Bundle] ROIC Decomposition enabled: ${config.includeROICDecomposition !== false}`);
+  
   await runsRepository.create({
     runId: bundleId,
     runType: 'ic_bundle_generation',
     runDate: new Date(),
     status: 'running',
   });
-
+  
   if (config.dryRun) {
     console.log('[IC Bundle] Dry run - skipping actual processing');
     await runsRepository.updateStatus(bundleId, 'completed');
@@ -216,70 +278,70 @@ export async function generateICBundle(config: ICBundleConfig = {}): Promise<ICB
       success: true,
       bundleId,
       packetsIncluded: 0,
+      roicAnalysesCompleted: 0,
       errors: [],
       duration_ms: Date.now() - startTime,
     };
   }
-
+  
   try {
-    // Get lookback period
     const lookbackDays = config.lookbackDays ?? 7;
     const weekStart = getWeekStart();
     const weekOf = weekStart.toISOString().split('T')[0];
-
     console.log(`[IC Bundle] Looking back ${lookbackDays} days from ${weekOf}`);
-
-    // Fetch recent research packets
+    
     const packets = await researchPacketsRepository.getRecentPackets(lookbackDays);
     console.log(`[IC Bundle] Found ${packets.length} packets`);
-
-    // Include any forced packets
+    
     if (config.forceIncludePacketIds?.length) {
       for (const packetId of config.forceIncludePacketIds) {
         const packet = await researchPacketsRepository.getById(packetId);
-        if (packet && !packets.find(p => p.packetId === packetId)) {
+        if (packet && !packets.find((p: any) => p.packetId === packetId)) {
           packets.push(packet);
         }
       }
     }
-
-    // Fetch associated ideas
-    const ideaIds = [...new Set(packets.map(p => p.ideaId))];
+    
+    const ideaIds = [...new Set(packets.map((p: any) => p.ideaId))];
     const ideas = new Map<string, any>();
     for (const ideaId of ideaIds) {
       const idea = await ideasRepository.getById(ideaId);
       if (idea) ideas.set(ideaId, idea);
     }
-
-    // Calculate summary statistics
+    
+    let roicResults = new Map<string, ROICDecompositionSummary>();
+    if (config.includeROICDecomposition !== false) {
+      const concurrency = config.roicDecompositionConcurrency ?? 3;
+      roicResults = await runROICDecompositionBatch(packets, concurrency);
+      roicAnalysesCompleted = [...roicResults.values()].filter(r => r.completed).length;
+      console.log(`[IC Bundle] ROIC Decomposition completed for ${roicAnalysesCompleted} packets`);
+    }
+    
     const byStyle: Record<string, number> = {};
     const bySector: Record<string, number> = {};
     let passedAllGates = 0;
-
+    
     for (const packet of packets) {
       const idea = ideas.get(packet.ideaId);
       const packetData = packet.packet as PacketData;
       
       if (idea) {
         byStyle[idea.styleTag] = (byStyle[idea.styleTag] || 0) + 1;
-        // Sector would come from the profile in the packet
         const sector = packetData?.modules?.business?.sector || 'Unknown';
         bySector[sector] = (bySector[sector] || 0) + 1;
       }
       if (packetData?.gateResults?.all_passed) passedAllGates++;
     }
-
-    // Extract highlights
-    const highlights = extractHighlights(packets, ideas);
-
-    // Generate executive summary
+    
+    const highlights = extractHighlights(packets, ideas, roicResults);
+    
     console.log('[IC Bundle] Generating executive summary...');
     const executiveSummary = await generateExecutiveSummary(packets, highlights);
-
-    // Build packet summaries
-    const packetSummaries = packets.map(packet => {
+    
+    const packetSummaries = packets.map((packet: any) => {
       const idea = ideas.get(packet.ideaId);
       const packetData = packet.packet as PacketData;
+      const roicData = roicResults.get(packet.packetId);
       
       return {
         packetId: packet.packetId,
@@ -292,10 +354,10 @@ export async function generateICBundle(config: ICBundleConfig = {}): Promise<ICB
         fairValueRange: packetData?.modules?.valuation?.fair_value_range,
         keyRisks: packetData?.modules?.risk?.key_risks || [],
         catalysts: packetData?.modules?.valuation?.key_drivers || [],
+        roicDecomposition: roicData,
       };
     });
-
-    // Build the bundle
+    
     const bundle: ICBundle = {
       bundleId,
       generatedAt: new Date().toISOString(),
@@ -306,28 +368,31 @@ export async function generateICBundle(config: ICBundleConfig = {}): Promise<ICB
         bySector,
         avgConviction: highlights.reduce((sum, h) => sum + h.conviction, 0) / (highlights.length || 1),
         passedAllGates,
+        roicAnalysesCompleted,
       },
       highlights,
       packets: packetSummaries,
       executiveSummary,
     };
-
-    // Update run record with bundle data
+    
     await runsRepository.updateStatus(bundleId, 'completed');
     await runsRepository.updatePayload(bundleId, {
       bundle,
       packetsIncluded: packets.length,
+      roicAnalysesCompleted,
       duration_ms: Date.now() - startTime,
     });
-
+    
     console.log(`[IC Bundle] Bundle generated successfully`);
     console.log(`[IC Bundle] Packets included: ${packets.length}`);
     console.log(`[IC Bundle] Passed all gates: ${passedAllGates}`);
-
+    console.log(`[IC Bundle] ROIC analyses completed: ${roicAnalysesCompleted}`);
+    
     return {
       success: true,
       bundleId,
       packetsIncluded: packets.length,
+      roicAnalysesCompleted,
       errors,
       duration_ms: Date.now() - startTime,
       bundle,
@@ -335,15 +400,14 @@ export async function generateICBundle(config: ICBundleConfig = {}): Promise<ICB
   } catch (error) {
     const errorMessage = (error as Error).message;
     errors.push(errorMessage);
-
     await runsRepository.updateStatus(bundleId, 'failed', errorMessage);
-
     console.error('[IC Bundle] Generation failed:', errorMessage);
-
+    
     return {
       success: false,
       bundleId,
       packetsIncluded: 0,
+      roicAnalysesCompleted: 0,
       errors,
       duration_ms: Date.now() - startTime,
     };
