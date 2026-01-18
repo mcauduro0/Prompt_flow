@@ -13,6 +13,96 @@ import {
   icMemosRepository,
 } from '@arc/database';
 
+// ============================================================================
+// Types and Interfaces
+// ============================================================================
+
+export interface Lane0Metrics {
+  totalIngested: number;
+  bySource: Record<string, { count: number; duplicates: number }>;
+  duplicateRate: number;
+  sourceDiversity: number;
+  score: number;
+}
+
+export interface LaneAMetrics {
+  runsCompleted: number;
+  runsFailed: number;
+  ideasGenerated: number;
+  ideasPromoted: number;
+  promotionRate: number;
+  gateStats: {
+    byGate: Record<string, { total: number; passed: number; passRate: number }>;
+    overallPassRate: number;
+    commonFailures: string[];
+  };
+  score: number;
+}
+
+export interface LaneBMetrics {
+  runsCompleted: number;
+  runsFailed: number;
+  packetsGenerated: number;
+  packetsCompleted: number;
+  agentStats: {
+    byAgent: Record<string, { total: number; success: number; avgLatency: number; avgQuality: number }>;
+    overallSuccessRate: number;
+  };
+  score: number;
+}
+
+export interface LaneCMetrics {
+  memosGenerated: number;
+  memosCompleted: number;
+  supportingPromptStats: {
+    byPrompt: Record<string, { total: number; success: number; avgLatency: number; avgConfidence: number }>;
+    overallSuccessRate: number;
+  };
+  score: number;
+}
+
+export interface InfrastructureMetrics {
+  dataSourceHealth: {
+    bySource: Record<string, { total: number; success: number; avgLatency: number; rateLimitHits: number; successRate: number }>;
+    overallHealth: number;
+  };
+  llmHealth: {
+    byProvider: Record<string, { total: number; success: number; avgLatency: number; totalTokens: number; fallbacks: number; successRate: number }>;
+    overallHealth: number;
+  };
+  score: number;
+}
+
+export interface FunnelMetrics {
+  lane0ToLaneA: number;
+  laneAToLaneB: number;
+  laneBToLaneC: number;
+  overallConversion: number;
+  bottlenecks: string[];
+  score: number;
+}
+
+export interface TrendData {
+  current: number;
+  previous: number;
+  change: number;
+  changePercent: number;
+  trend: 'improving' | 'stable' | 'declining';
+}
+
+export interface HistoricalComparison {
+  lane0Trend: TrendData;
+  laneATrend: TrendData;
+  laneBTrend: TrendData;
+  laneCTrend: TrendData;
+  overallTrend: TrendData;
+  weekOverWeek: Array<{ week: string; score: number }>;
+}
+
+// ============================================================================
+// MetricsCalculator Class
+// ============================================================================
+
 export class MetricsCalculator {
   private startDate: Date;
   private endDate: Date;
