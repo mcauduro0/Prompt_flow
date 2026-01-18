@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { RefreshCw, Download, AlertTriangle, CheckCircle, Info, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, FileText } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// API calls use relative URLs via Next.js rewrites
 
 interface TrendData {
   current: number;
@@ -90,7 +90,7 @@ export default function QADashboardV2Page() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${API_BASE}/api/qa-v2/latest`);
+      const res = await fetch(`/api/qa-v2/latest`);
       const data = await res.json();
       if (data.success && data.report) {
         setReport(data.report);
@@ -108,7 +108,7 @@ export default function QADashboardV2Page() {
     try {
       setGenerating(true);
       setError(null);
-      const res = await fetch(`${API_BASE}/api/qa-v2/generate`, { method: 'POST' });
+      const res = await fetch(`/api/qa-v2/generate`, { method: 'POST' });
       const data = await res.json();
       if (data.success && data.report) {
         setReport(data.report);
@@ -124,7 +124,7 @@ export default function QADashboardV2Page() {
 
   const downloadPdf = () => {
     if (report) {
-      window.open(`${API_BASE}/api/qa-v2/${report.reportId}/pdf`, '_blank');
+      window.open(`/api/qa-v2/${report.reportId}/pdf`, '_blank');
     }
   };
 

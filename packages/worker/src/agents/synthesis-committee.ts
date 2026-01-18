@@ -5,7 +5,6 @@
  * It acts as a virtual investment committee, weighing all evidence and producing
  * a coherent recommendation with conviction level and risk assessment.
  */
-
 import { z } from 'zod';
 import { createResilientClient, type LLMClient } from '@arc/llm-client';
 
@@ -85,14 +84,11 @@ export interface SynthesisInput {
 }
 
 const SYNTHESIS_SYSTEM_PROMPT = `You are the Chief Investment Officer of a fundamental-focused hedge fund, chairing the Investment Committee.
+Your role is to synthesize all research modules into a final investment recommendation.
 
-Your role is to synthesize all research modules into a final investment recommendation. You must:
-
-1. WEIGH ALL EVIDENCE objectively - don't let one strong module override concerns from others
-2. IDENTIFY CONTRADICTIONS between modules and resolve them
-3. ASSESS CONVICTION based on the quality and consistency of evidence
-4. CONSIDER POSITION SIZING based on conviction and risk
-5. DEFINE CLEAR EXIT TRIGGERS for both upside and downside
+IMPORTANT: You MUST provide your response as a SINGLE JSON OBJECT.
+All text fields (thesis, bull_case, base_case, bear_case) MUST be plain strings, NOT objects.
+All required fields MUST be present.
 
 Key principles:
 - Quality of business matters more than cheapness
@@ -108,9 +104,7 @@ Output ONLY valid JSON matching the SynthesisResult schema.`;
  */
 function buildSynthesisPrompt(input: SynthesisInput): string {
   const sections: string[] = [];
-
   sections.push(`# Investment Synthesis Request
-
 **Company:** ${input.companyName} (${input.ticker})
 **Style:** ${input.styleTag}
 **Original Hypothesis:** ${input.originalHypothesis}
@@ -122,43 +116,36 @@ function buildSynthesisPrompt(input: SynthesisInput): string {
 ${JSON.stringify(input.modules.business, null, 2)}
 `);
   }
-
   if (input.modules.industryMoat) {
     sections.push(`## Industry & Moat Analysis
 ${JSON.stringify(input.modules.industryMoat, null, 2)}
 `);
   }
-
   if (input.modules.financials) {
     sections.push(`## Financial Forensics
 ${JSON.stringify(input.modules.financials, null, 2)}
 `);
   }
-
   if (input.modules.capitalAllocation) {
     sections.push(`## Capital Allocation
 ${JSON.stringify(input.modules.capitalAllocation, null, 2)}
 `);
   }
-
   if (input.modules.management) {
     sections.push(`## Management Quality
 ${JSON.stringify(input.modules.management, null, 2)}
 `);
   }
-
   if (input.modules.valuation) {
     sections.push(`## Valuation Analysis
 ${JSON.stringify(input.modules.valuation, null, 2)}
 `);
   }
-
   if (input.modules.risk) {
     sections.push(`## Risk Assessment
 ${JSON.stringify(input.modules.risk, null, 2)}
 `);
   }
-
   if (input.gateResults) {
     sections.push(`## Gate Results
 ${JSON.stringify(input.gateResults, null, 2)}
@@ -167,17 +154,10 @@ ${JSON.stringify(input.gateResults, null, 2)}
 
   sections.push(`
 ## Your Task
-
 Synthesize all the above research into a comprehensive investment recommendation.
-
-Consider:
-1. Is the thesis coherent across all modules?
-2. What are the key risks and how severe are they?
-3. What conviction level is warranted by the evidence?
-4. What position size is appropriate?
-5. What are the key monitoring metrics?
-
 Provide your synthesis as a JSON object matching the SynthesisResult schema.
+Ensure all text fields are strings and all required fields are populated.
+Use lowercase for enum values (e.g., "buy" instead of "BUY").
 `);
 
   return sections.join('\n');
@@ -191,7 +171,6 @@ export async function runSynthesis(
   llmClient?: LLMClient
 ): Promise<SynthesisResult> {
   const llm = llmClient || createResilientClient();
-
   console.log(`[Synthesis] Starting synthesis for ${input.ticker}`);
 
   try {
@@ -205,21 +184,145 @@ export async function runSynthesis(
       jsonMode: true,
     });
 
+    console.log(`[Synthesis] Raw LLM Response for ${input.ticker}:`, response.content);
+
     // Parse and validate response
     const jsonMatch = response.content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No JSON found in synthesis response');
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    let parsed = JSON.parse(jsonMatch[0]);
+    console.log(`[Synthesis] Parsed object for ${input.ticker} before normalization:`, JSON.stringify(parsed, null, 2));
+    
+    // --- ROBUST NORMALIZATION ---
+    
+    // 1. Fix recommendation case and value
+    if (typeof parsed.recommendation === 'string') {
+      parsed.recommendation = parsed.recommendation.toLowerCase().replace(' ', '_');
+    } else {
+      parsed.recommendation = 'hold';
+    }
+
+    // 2. Fix conviction if it's a string, decimal, or missing
+    if (typeof parsed.conviction === 'string') {
+      parsed.conviction = parseFloat(parsed.conviction);
+    }
+    if (typeof parsed.conviction === 'number') {
+      // If conviction is a decimal between 0 and 1, convert to 1-10 scale
+      if (parsed.conviction > 0 && parsed.conviction < 1) {
+        parsed.conviction = Math.round(parsed.conviction * 10);
+      } else if (parsed.conviction >= 1 && parsed.conviction <= 10) {
+        parsed.conviction = Math.round(parsed.conviction);
+      }
+    }
+    if (isNaN(parsed.conviction) || parsed.conviction === undefined || parsed.conviction < 1) {
+      parsed.conviction = 5;
+    }
+    // Ensure conviction is within bounds
+    parsed.conviction = Math.max(1, Math.min(10, parsed.conviction));
+
+    // 3. Ensure string fields are strings
+    const stringFields = ['thesis', 'bull_case', 'base_case', 'bear_case'];
+    for (const field of stringFields) {
+      if (parsed[field] === undefined || parsed[field] === null) {
+        parsed[field] = "Not provided";
+      } else if (typeof parsed[field] === 'object') {
+        parsed[field] = JSON.stringify(parsed[field]);
+      }
+    }
+
+    // 4. Fix catalysts probability and impact case
+    if (Array.isArray(parsed.catalysts)) {
+      parsed.catalysts = parsed.catalysts.map((c: any) => ({
+        catalyst: c.catalyst || "Unknown catalyst",
+        timeframe: c.timeframe || "Unknown",
+        probability: (typeof c.probability === 'string' ? c.probability.toLowerCase() : 'medium') as any,
+        impact: (typeof c.impact === 'string' ? c.impact.toLowerCase() : 'medium') as any
+      }));
+    } else {
+      parsed.catalysts = [];
+    }
+
+    // 5. Fix risks severity case
+    if (Array.isArray(parsed.risks)) {
+      parsed.risks = parsed.risks.map((r: any) => ({
+        risk: r.risk || "Unknown risk",
+        severity: (typeof r.severity === 'string' ? r.severity.toLowerCase() : 'medium') as any,
+        mitigation: r.mitigation || ""
+      }));
+    } else {
+      parsed.risks = [{ risk: "General market risk", severity: "medium", mitigation: "" }];
+    }
+
+    // 6. Fix position_guidance
+    if (!parsed.position_guidance) {
+      parsed.position_guidance = {
+        suggested_weight: 'market_weight',
+        max_position_pct: 5,
+        entry_strategy: 'Standard entry',
+        exit_triggers: []
+      };
+    } else {
+      if (typeof parsed.position_guidance.suggested_weight === 'string') {
+        parsed.position_guidance.suggested_weight = parsed.position_guidance.suggested_weight.toLowerCase().replace(' ', '_');
+      } else {
+        parsed.position_guidance.suggested_weight = 'market_weight';
+      }
+      if (typeof parsed.position_guidance.max_position_pct !== 'number') {
+        parsed.position_guidance.max_position_pct = 5;
+      }
+      if (!parsed.position_guidance.entry_strategy) {
+        parsed.position_guidance.entry_strategy = 'Standard entry';
+      }
+      if (!Array.isArray(parsed.position_guidance.exit_triggers)) {
+        parsed.position_guidance.exit_triggers = [];
+      }
+    }
+
+    // 7. Fix monitoring
+    if (!parsed.monitoring) {
+      parsed.monitoring = {
+        key_metrics: [],
+        review_frequency: 'monthly',
+        red_flags: []
+      };
+    } else {
+      if (!Array.isArray(parsed.monitoring.key_metrics)) {
+        parsed.monitoring.key_metrics = [];
+      }
+      if (typeof parsed.monitoring.review_frequency === 'string') {
+        parsed.monitoring.review_frequency = parsed.monitoring.review_frequency.toLowerCase();
+      } else {
+        parsed.monitoring.review_frequency = 'monthly';
+      }
+      if (!Array.isArray(parsed.monitoring.red_flags)) {
+        parsed.monitoring.red_flags = [];
+      }
+    }
+
+    // 8. Fix evidence_quality
+    if (!parsed.evidence_quality) {
+      parsed.evidence_quality = {
+        data_completeness: 0.5,
+        analysis_depth: 0.5,
+        confidence_in_estimates: 0.5
+      };
+    } else {
+      ['data_completeness', 'analysis_depth', 'confidence_in_estimates'].forEach(field => {
+        if (typeof parsed.evidence_quality[field] !== 'number') {
+          parsed.evidence_quality[field] = 0.5;
+        }
+      });
+    }
+
+    console.log(`[Synthesis] Object for ${input.ticker} after normalization:`, JSON.stringify(parsed, null, 2));
+
     const validated = SynthesisResultSchema.parse(parsed);
-
     console.log(`[Synthesis] Completed for ${input.ticker} - Conviction: ${validated.conviction}, Recommendation: ${validated.recommendation}`);
-
     return validated;
   } catch (error) {
     console.error(`[Synthesis] Error for ${input.ticker}:`, error);
-
     // Return a default/error synthesis
     return {
       thesis: `Synthesis failed for ${input.ticker}: ${(error as Error).message}`,
@@ -238,7 +341,7 @@ export async function runSynthesis(
       },
       monitoring: {
         key_metrics: [],
-        review_frequency: 'weekly',
+        review_frequency: 'monthly',
         red_flags: ['Synthesis incomplete'],
       },
       evidence_quality: {
@@ -289,9 +392,7 @@ export async function quickSynthesis(
   metrics?: any
 ): Promise<Pick<SynthesisResult, 'thesis' | 'conviction' | 'recommendation' | 'risks'>> {
   const llm = createResilientClient();
-
   const prompt = `Quick investment assessment for ${ticker}:
-
 Hypothesis: ${hypothesis}
 Style: ${styleTag}
 Metrics: ${JSON.stringify(metrics || {}, null, 2)}
@@ -316,7 +417,7 @@ JSON output only:`;
     return {
       thesis: parsed.thesis || hypothesis,
       conviction: parsed.conviction || 5,
-      recommendation: parsed.recommendation || 'hold',
+      recommendation: (parsed.recommendation || 'hold').toLowerCase() as any,
       risks: parsed.risks || [],
     };
   } catch (error) {

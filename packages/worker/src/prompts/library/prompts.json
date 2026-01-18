@@ -1,23 +1,13 @@
 {
   "version": "1.0.0",
-  "last_updated": "2026-01-12",
   "prompts": [
     {
       "prompt_id": "gate_data_sufficiency",
-      "name": "Data Sufficiency Gate",
       "version": "1.0.0",
-      "category": "gates",
-      "subcategory": "pre_research",
-      "description": "Validates that sufficient data is available before proceeding with analysis",
+      "title": "Data Sufficiency Gate",
       "executor_type": "code",
-      "code_function": "gate_data_sufficiency",
-      "is_gate": true,
       "lane": "lane_a",
-      "pipeline_stage": "discovery",
-      "data_sources": [
-        "fmp",
-        "polygon"
-      ],
+      "stage": "discovery",
       "inputs_schema": {
         "type": "object",
         "properties": {
@@ -83,31 +73,34 @@
           "decision_reason"
         ]
       },
-      "template": ""
+      "required_sources": [
+        "fmp",
+        "polygon"
+      ],
+      "criticality": "blocker",
+      "budget": {
+        "max_tokens": 4000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "{prompt_id}_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "Execute Data Sufficiency Gate analysis for the given inputs.",
+      "category": "gates",
+      "code_function": "gate_data_sufficiency"
     },
     {
       "prompt_id": "lane_a_idea_generation",
-      "name": "Lane A Idea Generation",
       "version": "1.0.0",
-      "category": "idea_generation",
-      "subcategory": "discovery",
-      "description": "Generates investment ideas from company data and market signals",
+      "title": "Lane A Idea Generation",
       "executor_type": "llm",
-      "is_gate": false,
       "lane": "lane_a",
-      "pipeline_stage": "discovery",
-      "data_sources": [
-        "fmp",
-        "polygon",
-        "news",
-        "reddit"
-      ],
-      "llm_config": {
-        "provider": "openai",
-        "model": "gpt-4o",
-        "temperature": 0.3,
-        "max_tokens": 2000
-      },
+      "stage": "discovery",
       "inputs_schema": {
         "type": "object",
         "properties": {
@@ -205,21 +198,41 @@
           "conviction"
         ]
       },
-      "template": "[SYSTEM]\nYou are a senior investment analyst at a fundamental-focused hedge fund with a disciplined, research-driven approach. Your role is to identify high-conviction investment opportunities through rigorous analysis.\n\nYou must be selective - only flag companies with genuine investment potential based on:\n1. Quality of business (competitive position, returns on capital, management)\n2. Valuation (margin of safety, risk/reward)\n3. Catalysts (identifiable events that could unlock value)\n\nBe skeptical. Most companies are fairly valued. Only proceed if you see a genuine edge.\n[/SYSTEM]\n\n## Company Overview\n\n**Company:** {{profile.companyName}} ({{ticker}})\n**Sector:** {{profile.sector}}\n**Industry:** {{profile.industry}}\n**Market Cap:** ${{profile.marketCap}}B\n**Current Price:** ${{price.price}}\n\n## Business Description\n\n{{profile.description}}\n\n## Financial Metrics (TTM)\n\n| Metric | Value |\n|--------|-------|\n| EV/EBITDA | {{metrics.evToEbitda}} |\n| P/E | {{metrics.pe}} |\n| FCF Yield | {{metrics.fcfYield}}% |\n| EBIT Margin | {{metrics.ebitMargin}}% |\n| Gross Margin | {{metrics.grossMargin}}% |\n| ROIC | {{metrics.roic}}% |\n| ROE | {{metrics.roe}}% |\n| Net Debt/EBITDA | {{metrics.netDebtToEbitda}} |\n\n## Recent News\n\n{{news}}\n\n## Social Sentiment (Reddit)\n\n{{#if socialSentiment}}\n| Metric | Value |\n|--------|-------|\n| Reddit Mentions (24h) | {{socialSentiment.reddit_mentions_24h}} |\n| Sentiment Score | {{socialSentiment.reddit_sentiment}} (-1 to 1 scale) |\n| Key Themes | {{socialSentiment.key_themes}} |\n\n**Subreddit Breakdown:**\n{{#each socialSentiment.subreddit_breakdown}}\n- r/{{this.subreddit}}: {{this.mentions}} mentions, sentiment {{this.sentiment}}\n{{/each}}\n{{else}}\n*No social sentiment data available*\n{{/if}}\n\n---\n\n## Your Task\n\nAnalyze this company and determine if it warrants further research. Consider:\n\n1. **Investment Potential** (Consider Social Sentiment if available - high Reddit interest may indicate retail momentum or crowded trade): Is there a genuine opportunity here? Be honest - most companies don't qualify.\n\n2. **Investment Thesis**: If yes, articulate a clear, falsifiable thesis in 2-3 sentences.\n\n3. **Style Classification**:\n   - `quality_compounder`: High-quality business with durable moat, strong ROIC (>15%), can compound value over 5+ years\n   - `garp`: Growth at reasonable price - solid growth prospects at fair valuation (PEG < 1.5)\n   - `cigar_butt`: Deep value - trading significantly below intrinsic value with identifiable catalyst\n\n4. **Mechanism**: How will value be realized? (e.g., multiple expansion, earnings growth, capital return, M&A)\n\n5. **Edge Type**: What is our informational or analytical edge? (e.g., misunderstood business model, overlooked catalyst, market overreaction, variant perception)\n\n6. **Conviction**: Rate 1-10 based on quality of opportunity and confidence in thesis.\n\n7. **Catalysts**: Identify 1-3 specific events that could unlock value, with timeframes.\n\n8. **Key Risks**: List 2-4 risks that could invalidate the thesis.\n\n9. **Time Horizon**: Expected holding period (6-12 months, 1-3 years, 3-5 years).\n\nRespond ONLY in valid JSON format:\n\n```json\n{\n  \"hasInvestmentPotential\": boolean,\n  \"thesis\": \"string\",\n  \"styleTag\": \"quality_compounder\" | \"garp\" | \"cigar_butt\",\n  \"mechanism\": \"string\",\n  \"edgeType\": [\"string\"],\n  \"conviction\": number,\n  \"catalysts\": [{\"name\": \"string\", \"window\": \"string\", \"probability\": \"high|medium|low\"}],\n  \"keyRisks\": [\"string\"],\n  \"timeHorizon\": \"6_12_months\" | \"1_3_years\" | \"3_5_years\"\n}\n```"
+      "required_sources": [
+        "fmp",
+        "polygon",
+        "news",
+        "reddit"
+      ],
+      "criticality": "optional",
+      "budget": {
+        "max_tokens": 4000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "{prompt_id}_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "[SYSTEM]\nYou are a senior investment analyst at a fundamental-focused hedge fund with a disciplined, research-driven approach. Your role is to identify high-conviction investment opportunities through rigorous analysis.\n\nYou must be selective - only flag companies with genuine investment potential based on:\n1. Quality of business (competitive position, returns on capital, management)\n2. Valuation (margin of safety, risk/reward)\n3. Catalysts (identifiable events that could unlock value)\n\nBe skeptical. Most companies are fairly valued. Only proceed if you see a genuine edge.\n[/SYSTEM]\n\n## Company Overview\n\n**Company:** {{profile.companyName}} ({{ticker}})\n**Sector:** {{profile.sector}}\n**Industry:** {{profile.industry}}\n**Market Cap:** ${{profile.marketCap}}B\n**Current Price:** ${{price.price}}\n\n## Business Description\n\n{{profile.description}}\n\n## Financial Metrics (TTM)\n\n| Metric | Value |\n|--------|-------|\n| EV/EBITDA | {{metrics.evToEbitda}} |\n| P/E | {{metrics.pe}} |\n| FCF Yield | {{metrics.fcfYield}}% |\n| EBIT Margin | {{metrics.ebitMargin}}% |\n| Gross Margin | {{metrics.grossMargin}}% |\n| ROIC | {{metrics.roic}}% |\n| ROE | {{metrics.roe}}% |\n| Net Debt/EBITDA | {{metrics.netDebtToEbitda}} |\n\n## Recent News\n\n{{news}}\n\n## Social Sentiment (Reddit)\n\n{{#if socialSentiment}}\n| Metric | Value |\n|--------|-------|\n| Reddit Mentions (24h) | {{socialSentiment.reddit_mentions_24h}} |\n| Sentiment Score | {{socialSentiment.reddit_sentiment}} (-1 to 1 scale) |\n| Key Themes | {{socialSentiment.key_themes}} |\n\n**Subreddit Breakdown:**\n{{#each socialSentiment.subreddit_breakdown}}\n- r/{{this.subreddit}}: {{this.mentions}} mentions, sentiment {{this.sentiment}}\n{{/each}}\n{{else}}\n*No social sentiment data available*\n{{/if}}\n\n---\n\n## Your Task\n\nAnalyze this company and determine if it warrants further research. Consider:\n\n1. **Investment Potential** (Consider Social Sentiment if available - high Reddit interest may indicate retail momentum or crowded trade): Is there a genuine opportunity here? Be honest - most companies don't qualify.\n\n2. **Investment Thesis**: If yes, articulate a clear, falsifiable thesis in 2-3 sentences.\n\n3. **Style Classification**:\n   - `quality_compounder`: High-quality business with durable moat, strong ROIC (>15%), can compound value over 5+ years\n   - `garp`: Growth at reasonable price - solid growth prospects at fair valuation (PEG < 1.5)\n   - `cigar_butt`: Deep value - trading significantly below intrinsic value with identifiable catalyst\n\n4. **Mechanism**: How will value be realized? (e.g., multiple expansion, earnings growth, capital return, M&A)\n\n5. **Edge Type**: What is our informational or analytical edge? (e.g., misunderstood business model, overlooked catalyst, market overreaction, variant perception)\n\n6. **Conviction**: Rate 1-10 based on quality of opportunity and confidence in thesis.\n\n7. **Catalysts**: Identify 1-3 specific events that could unlock value, with timeframes.\n\n8. **Key Risks**: List 2-4 risks that could invalidate the thesis.\n\n9. **Time Horizon**: Expected holding period (6-12 months, 1-3 years, 3-5 years).\n\nRespond ONLY in valid JSON format:\n\n```json\n{\n  \"hasInvestmentPotential\": boolean,\n  \"thesis\": \"string\",\n  \"styleTag\": \"quality_compounder\" | \"garp\" | \"cigar_butt\",\n  \"mechanism\": \"string\",\n  \"edgeType\": [\"string\"],\n  \"conviction\": number,\n  \"catalysts\": [{\"name\": \"string\", \"window\": \"string\", \"probability\": \"high|medium|low\"}],\n  \"keyRisks\": [\"string\"],\n  \"timeHorizon\": \"6_12_months\" | \"1_3_years\" | \"3_5_years\"\n}\n```",
+      "category": "idea_generation",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4o",
+        "temperature": 0.3,
+        "max_tokens": 2000
+      }
     },
     {
       "prompt_id": "gate_coherence",
-      "name": "Coherence Gate",
       "version": "1.0.0",
-      "category": "gates",
-      "subcategory": "post_idea",
-      "description": "Validates that the generated idea is internally coherent",
+      "title": "Coherence Gate",
       "executor_type": "code",
-      "code_function": "gate_coherence",
-      "is_gate": true,
       "lane": "lane_a",
-      "pipeline_stage": "discovery",
-      "data_sources": [],
+      "stage": "discovery",
       "inputs_schema": {
         "type": "object",
         "properties": {
@@ -288,29 +301,31 @@
           "decision_reason"
         ]
       },
-      "template": ""
+      "required_sources": [],
+      "criticality": "blocker",
+      "budget": {
+        "max_tokens": 4000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "{prompt_id}_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "Execute Coherence Gate analysis for the given inputs.",
+      "category": "gates",
+      "code_function": "gate_coherence"
     },
     {
       "prompt_id": "business_model_analysis",
-      "name": "Business Model Analysis",
       "version": "1.0.0",
-      "category": "research_modules",
-      "subcategory": "business_analysis",
-      "description": "Deep analysis of the company's business model, revenue streams, and unit economics",
+      "title": "Business Model Analysis",
       "executor_type": "llm",
-      "is_gate": false,
       "lane": "lane_b",
-      "pipeline_stage": "research",
-      "data_sources": [
-        "fmp",
-        "sec_edgar"
-      ],
-      "llm_config": {
-        "provider": "anthropic",
-        "model": "claude-3-sonnet-20240229",
-        "temperature": 0.2,
-        "max_tokens": 4000
-      },
+      "stage": "research",
       "inputs_schema": {
         "type": "object",
         "properties": {
@@ -405,29 +420,39 @@
           "confidence"
         ]
       },
-      "template": "[SYSTEM]\nYou are a senior business analyst specializing in understanding how companies create and capture value. Your analysis should be thorough, evidence-based, and focused on the fundamental economics of the business.\n[/SYSTEM]\n\n## Company: {{profile.companyName}} ({{ticker}})\n\n### Business Description\n{{profile.description}}\n\n### Financial Data (Last 3 Years)\n{{incomeAnnual}}\n\n### SEC Filings Excerpts\n{{filings10K}}\n\n---\n\n## Analysis Required\n\nProvide a comprehensive business model analysis covering:\n\n1. **Revenue Streams**: Break down revenue by segment, geography, customer type. Identify growth drivers.\n\n2. **Unit Economics**: Analyze gross margins, contribution margins, customer acquisition costs, lifetime value where applicable.\n\n3. **Customer Concentration**: Assess dependency on key customers or segments.\n\n4. **Cyclicality**: How sensitive is the business to economic cycles?\n\n5. **Capital Intensity**: What ongoing investment is required to maintain/grow the business?\n\n6. **Scalability**: Can the business grow without proportional cost increases?\n\n7. **Overall Assessment**: Score the business model quality (1-10) with confidence level.\n\nRespond in JSON format with your analysis."
+      "required_sources": [
+        "fmp",
+        "sec_edgar"
+      ],
+      "criticality": "optional",
+      "budget": {
+        "max_tokens": 4000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "{prompt_id}_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "[SYSTEM]\nYou are a senior business analyst specializing in understanding how companies create and capture value. Your analysis should be thorough, evidence-based, and focused on the fundamental economics of the business.\n[/SYSTEM]\n\n## Company: {{profile.companyName}} ({{ticker}})\n\n### Business Description\n{{profile.description}}\n\n### Financial Data (Last 3 Years)\n{{incomeAnnual}}\n\n### SEC Filings Excerpts\n{{filings10K}}\n\n---\n\n## Analysis Required\n\nProvide a comprehensive business model analysis covering:\n\n1. **Revenue Streams**: Break down revenue by segment, geography, customer type. Identify growth drivers.\n\n2. **Unit Economics**: Analyze gross margins, contribution margins, customer acquisition costs, lifetime value where applicable.\n\n3. **Customer Concentration**: Assess dependency on key customers or segments.\n\n4. **Cyclicality**: How sensitive is the business to economic cycles?\n\n5. **Capital Intensity**: What ongoing investment is required to maintain/grow the business?\n\n6. **Scalability**: Can the business grow without proportional cost increases?\n\n7. **Overall Assessment**: Score the business model quality (1-10) with confidence level.\n\nRespond in JSON format with your analysis.",
+      "category": "research_modules",
+      "llm_config": {
+        "provider": "anthropic",
+        "model": "claude-3-sonnet-20240229",
+        "temperature": 0.2,
+        "max_tokens": 4000
+      }
     },
     {
       "prompt_id": "valuation_analysis",
-      "name": "Valuation Analysis",
       "version": "1.0.0",
-      "category": "research_modules",
-      "subcategory": "valuation",
-      "description": "Comprehensive valuation analysis using multiple methodologies",
+      "title": "Valuation Analysis",
       "executor_type": "llm",
-      "is_gate": false,
       "lane": "lane_b",
-      "pipeline_stage": "research",
-      "data_sources": [
-        "fmp",
-        "polygon"
-      ],
-      "llm_config": {
-        "provider": "openai",
-        "model": "gpt-4o",
-        "temperature": 0.2,
-        "max_tokens": 4000
-      },
+      "stage": "research",
       "inputs_schema": {
         "type": "object",
         "properties": {
@@ -519,30 +544,39 @@
           "confidence"
         ]
       },
-      "template": "[SYSTEM]\nYou are a senior equity analyst specializing in valuation. Your analysis should be rigorous, use multiple methodologies, and clearly articulate the assumptions and sensitivities.\n[/SYSTEM]\n\n## Company: {{profile.companyName}} ({{ticker}})\n\n### Current Valuation Metrics\n- Market Cap: ${{profile.marketCap}}B\n- EV/EBITDA: {{metrics.evToEbitda}}\n- P/E: {{metrics.pe}}\n- P/FCF: {{metrics.priceToFreeCashFlow}}\n- P/B: {{metrics.priceToBook}}\n\n### Historical Financials\n{{incomeAnnual}}\n\n### Cash Flow Data\n{{cashFlowAnnual}}\n\n### Price History\n{{priceHistory}}\n\n---\n\n## Valuation Analysis Required\n\n1. **DCF Analysis**: Build a simplified DCF with explicit assumptions for growth, margins, and discount rate.\n\n2. **Comparable Analysis**: Compare to relevant peers on key multiples.\n\n3. **Historical Analysis**: How does current valuation compare to historical ranges?\n\n4. **Sum-of-Parts**: If applicable, value different segments separately.\n\n5. **Price Targets**: Provide bull, base, and bear case price targets with probabilities.\n\n6. **Margin of Safety**: What discount to intrinsic value does the current price offer?\n\nRespond in JSON format with your analysis."
+      "required_sources": [
+        "fmp",
+        "polygon"
+      ],
+      "criticality": "optional",
+      "budget": {
+        "max_tokens": 4000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "{prompt_id}_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "[SYSTEM]\nYou are a senior equity analyst specializing in valuation. Your analysis should be rigorous, use multiple methodologies, and clearly articulate the assumptions and sensitivities.\n[/SYSTEM]\n\n## Company: {{profile.companyName}} ({{ticker}})\n\n### Current Valuation Metrics\n- Market Cap: ${{profile.marketCap}}B\n- EV/EBITDA: {{metrics.evToEbitda}}\n- P/E: {{metrics.pe}}\n- P/FCF: {{metrics.priceToFreeCashFlow}}\n- P/B: {{metrics.priceToBook}}\n\n### Historical Financials\n{{incomeAnnual}}\n\n### Cash Flow Data\n{{cashFlowAnnual}}\n\n### Price History\n{{priceHistory}}\n\n---\n\n## Valuation Analysis Required\n\n1. **DCF Analysis**: Build a simplified DCF with explicit assumptions for growth, margins, and discount rate.\n\n2. **Comparable Analysis**: Compare to relevant peers on key multiples.\n\n3. **Historical Analysis**: How does current valuation compare to historical ranges?\n\n4. **Sum-of-Parts**: If applicable, value different segments separately.\n\n5. **Price Targets**: Provide bull, base, and bear case price targets with probabilities.\n\n6. **Margin of Safety**: What discount to intrinsic value does the current price offer?\n\nRespond in JSON format with your analysis.",
+      "category": "research_modules",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4o",
+        "temperature": 0.2,
+        "max_tokens": 4000
+      }
     },
     {
       "prompt_id": "risk_assessment",
-      "name": "Risk Assessment",
       "version": "1.0.0",
-      "category": "research_modules",
-      "subcategory": "risk",
-      "description": "Comprehensive risk assessment including downside scenarios",
+      "title": "Risk Assessment",
       "executor_type": "llm",
-      "is_gate": false,
       "lane": "lane_b",
-      "pipeline_stage": "research",
-      "data_sources": [
-        "fmp",
-        "polygon",
-        "news"
-      ],
-      "llm_config": {
-        "provider": "anthropic",
-        "model": "claude-3-sonnet-20240229",
-        "temperature": 0.3,
-        "max_tokens": 3000
-      },
+      "stage": "research",
       "inputs_schema": {
         "type": "object",
         "properties": {
@@ -660,26 +694,40 @@
           "confidence"
         ]
       },
-      "template": "[SYSTEM]\nYou are a risk analyst with a focus on identifying what could go wrong with an investment. Your job is to stress-test the thesis and identify potential kill switches.\n[/SYSTEM]\n\n## Company: {{profile.companyName}} ({{ticker}})\n\n### Financial Health\n- Net Debt/EBITDA: {{metrics.netDebtToEbitda}}\n- Current Ratio: {{metrics.currentRatio}}\n- Interest Coverage: {{metrics.interestCoverage}}\n\n### Balance Sheet Data\n{{balanceAnnual}}\n\n### Recent News\n{{news}}\n\n---\n\n## Risk Assessment Required\n\n1. **Key Risks**: Identify and rank the top 5 risks to the investment thesis.\n\n2. **Financial Risks**:\n   - Leverage Risk: Could debt become problematic?\n   - Liquidity Risk: Any near-term funding concerns?\n\n3. **Business Risks**:\n   - Regulatory Risk: Any regulatory threats?\n   - Competitive Risk: Threat of disruption or market share loss?\n   - Execution Risk: Management's ability to execute?\n\n4. **Stress Scenarios**: Model 2-3 adverse scenarios with probability and impact.\n\n5. **Kill Switches**: What would cause us to immediately exit the position?\n\n6. **Overall Risk Score**: 1 (very risky) to 10 (very safe).\n\nRespond in JSON format with your analysis."
+      "required_sources": [
+        "fmp",
+        "polygon",
+        "news"
+      ],
+      "criticality": "optional",
+      "budget": {
+        "max_tokens": 4000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "{prompt_id}_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "[SYSTEM]\nYou are a risk analyst with a focus on identifying what could go wrong with an investment. Your job is to stress-test the thesis and identify potential kill switches.\n[/SYSTEM]\n\n## Company: {{profile.companyName}} ({{ticker}})\n\n### Financial Health\n- Net Debt/EBITDA: {{metrics.netDebtToEbitda}}\n- Current Ratio: {{metrics.currentRatio}}\n- Interest Coverage: {{metrics.interestCoverage}}\n\n### Balance Sheet Data\n{{balanceAnnual}}\n\n### Recent News\n{{news}}\n\n---\n\n## Risk Assessment Required\n\n1. **Key Risks**: Identify and rank the top 5 risks to the investment thesis.\n\n2. **Financial Risks**:\n   - Leverage Risk: Could debt become problematic?\n   - Liquidity Risk: Any near-term funding concerns?\n\n3. **Business Risks**:\n   - Regulatory Risk: Any regulatory threats?\n   - Competitive Risk: Threat of disruption or market share loss?\n   - Execution Risk: Management's ability to execute?\n\n4. **Stress Scenarios**: Model 2-3 adverse scenarios with probability and impact.\n\n5. **Kill Switches**: What would cause us to immediately exit the position?\n\n6. **Overall Risk Score**: 1 (very risky) to 10 (very safe).\n\nRespond in JSON format with your analysis.",
+      "category": "research_modules",
+      "llm_config": {
+        "provider": "anthropic",
+        "model": "claude-3-sonnet-20240229",
+        "temperature": 0.3,
+        "max_tokens": 3000
+      }
     },
     {
       "prompt_id": "investment_thesis_synthesis",
-      "name": "Investment Thesis Synthesis",
       "version": "1.0.0",
-      "category": "synthesis",
-      "subcategory": "final_thesis",
-      "description": "Synthesizes all research modules into a final investment recommendation",
+      "title": "Investment Thesis Synthesis",
       "executor_type": "llm",
-      "is_gate": false,
       "lane": "lane_b",
-      "pipeline_stage": "synthesis",
-      "data_sources": [],
-      "llm_config": {
-        "provider": "anthropic",
-        "model": "claude-3-opus-20240229",
-        "temperature": 0.2,
-        "max_tokens": 5000
-      },
+      "stage": "synthesis",
       "inputs_schema": {
         "type": "object",
         "properties": {
@@ -778,21 +826,36 @@
           "confidence"
         ]
       },
-      "template": "[SYSTEM]\nYou are the Chief Investment Officer synthesizing research from your team into a final investment recommendation. Be decisive but acknowledge uncertainty. Your recommendation will be presented to the Investment Committee.\n[/SYSTEM]\n\n## Research Summary for {{ticker}}\n\n### Business Model Analysis\n{{businessModelAnalysis}}\n\n### Valuation Analysis\n{{valuationAnalysis}}\n\n### Risk Assessment\n{{riskAssessment}}\n\n### Industry & Moat Analysis\n{{industryMoatAnalysis}}\n\n### Management Quality\n{{managementQualityAnalysis}}\n\n---\n\n## Synthesis Required\n\nAs CIO, synthesize all research into a final recommendation:\n\n1. **Recommendation**: PROCEED (add to portfolio), WATCH (monitor for better entry), or PASS (not suitable)\n\n2. **Conviction**: 1-10 scale based on quality of opportunity and confidence in analysis\n\n3. **Investment Thesis**: A clear, falsifiable thesis that can be monitored over time\n\n4. **Scenario Analysis**:\n   - Bull Case: What goes right? Target price and probability.\n   - Base Case: Expected outcome. Target price and probability.\n   - Bear Case: What goes wrong? Target price and probability.\n\n5. **Position Sizing**: Full (2-4%), Half (1-2%), or Starter (0.5-1%)\n\n6. **Time Horizon**: Expected holding period\n\n7. **Key Monitoring Points**: What should we watch to validate/invalidate the thesis?\n\n8. **Dissent**: What's the strongest argument against this investment?\n\nRespond in JSON format with your synthesis."
+      "required_sources": [],
+      "criticality": "optional",
+      "budget": {
+        "max_tokens": 4000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "{prompt_id}_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "[SYSTEM]\nYou are the Chief Investment Officer synthesizing research from your team into a final investment recommendation. Be decisive but acknowledge uncertainty. Your recommendation will be presented to the Investment Committee.\n[/SYSTEM]\n\n## Research Summary for {{ticker}}\n\n### Business Model Analysis\n{{businessModelAnalysis}}\n\n### Valuation Analysis\n{{valuationAnalysis}}\n\n### Risk Assessment\n{{riskAssessment}}\n\n### Industry & Moat Analysis\n{{industryMoatAnalysis}}\n\n### Management Quality\n{{managementQualityAnalysis}}\n\n---\n\n## Synthesis Required\n\nAs CIO, synthesize all research into a final recommendation:\n\n1. **Recommendation**: PROCEED (add to portfolio), WATCH (monitor for better entry), or PASS (not suitable)\n\n2. **Conviction**: 1-10 scale based on quality of opportunity and confidence in analysis\n\n3. **Investment Thesis**: A clear, falsifiable thesis that can be monitored over time\n\n4. **Scenario Analysis**:\n   - Bull Case: What goes right? Target price and probability.\n   - Base Case: Expected outcome. Target price and probability.\n   - Bear Case: What goes wrong? Target price and probability.\n\n5. **Position Sizing**: Full (2-4%), Half (1-2%), or Starter (0.5-1%)\n\n6. **Time Horizon**: Expected holding period\n\n7. **Key Monitoring Points**: What should we watch to validate/invalidate the thesis?\n\n8. **Dissent**: What's the strongest argument against this investment?\n\nRespond in JSON format with your synthesis.",
+      "category": "synthesis",
+      "llm_config": {
+        "provider": "anthropic",
+        "model": "claude-3-opus-20240229",
+        "temperature": 0.2,
+        "max_tokens": 5000
+      }
     },
     {
       "prompt_id": "gate_style_fit",
-      "name": "Style Fit Gate",
       "version": "1.0.0",
-      "category": "gates",
-      "subcategory": "post_research",
-      "description": "Validates that the investment fits the declared style (quality, GARP, value)",
+      "title": "Style Fit Gate",
       "executor_type": "code",
-      "code_function": "gate_style_fit",
-      "is_gate": true,
       "lane": "lane_b",
-      "pipeline_stage": "synthesis",
-      "data_sources": [],
+      "stage": "synthesis",
       "inputs_schema": {
         "type": "object",
         "properties": {
@@ -867,7 +930,280 @@
           "decision_reason"
         ]
       },
-      "template": ""
+      "required_sources": [],
+      "criticality": "blocker",
+      "budget": {
+        "max_tokens": 4000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "{prompt_id}_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "Execute Style Fit Gate analysis for the given inputs.",
+      "category": "gates",
+      "code_function": "gate_style_fit"
+    },
+    {
+      "prompt_id": "variant_perception",
+      "version": "1.0.0",
+      "title": "Variant Perception",
+      "executor_type": "llm",
+      "lane": "lane_b",
+      "stage": "research",
+      "category": "supporting",
+      "tags": [
+        "ic_memo",
+        "supporting"
+      ],
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4o",
+        "temperature": 0.3,
+        "max_tokens": 2000
+      },
+      "inputs_schema": {
+        "type": "object"
+      },
+      "output_schema": {
+        "type": "object"
+      },
+      "required_sources": [
+        "fmp",
+        "polygon"
+      ],
+      "criticality": "optional",
+      "budget": {
+        "max_tokens": 2000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "variant_perception_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "Analyze the variant perception for {{ticker}} ({{company_name}}).\n\n## Context\n- Sector: {{sector}}\n- Industry: {{industry}}\n- Market Cap: ${{market_cap}}\n- Current Price: ${{current_price}}\n\n## Research Thesis\n{{thesis}}\n\n## Task\nIdentify where our view differs from market consensus:\n\n1. **Consensus View**: What does the market believe about this company?\n2. **Our View**: What do we believe that differs from consensus?\n3. **Why Market May Be Wrong**: What is the market missing or misunderstanding?\n4. **Evidence**: What data supports our variant view?\n5. **Time to Convergence**: When might the market recognize what we see?\n\nRespond in JSON format:\n{\n  \"consensus_view\": \"string\",\n  \"our_view\": \"string\",\n  \"why_market_wrong\": \"string\",\n  \"supporting_evidence\": [\"string\"],\n  \"time_to_convergence\": \"string\",\n  \"confidence\": 1-10\n}"
+    },
+    {
+      "prompt_id": "bull_bear_analysis",
+      "version": "1.0.0",
+      "title": "Bull Bear Analysis",
+      "executor_type": "llm",
+      "lane": "lane_b",
+      "stage": "research",
+      "category": "supporting",
+      "tags": [
+        "ic_memo",
+        "supporting"
+      ],
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4o",
+        "temperature": 0.3,
+        "max_tokens": 2000
+      },
+      "inputs_schema": {
+        "type": "object"
+      },
+      "output_schema": {
+        "type": "object"
+      },
+      "required_sources": [
+        "fmp",
+        "polygon"
+      ],
+      "criticality": "optional",
+      "budget": {
+        "max_tokens": 2000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "bull_bear_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "Develop comprehensive bull and bear cases for {{ticker}} ({{company_name}}).\n\n## Context\n- Sector: {{sector}}\n- Industry: {{industry}}\n- Current Price: ${{current_price}}\n\n## Research Thesis\n{{thesis}}\n\n## Task\nCreate detailed bull and bear scenarios with target prices and probabilities.\n\nRespond in JSON format with bull_case, bear_case, base_case_probability, and expected_value fields."
+    },
+    {
+      "prompt_id": "position_sizing",
+      "version": "1.0.0",
+      "title": "Position Sizing",
+      "executor_type": "llm",
+      "lane": "lane_b",
+      "stage": "research",
+      "category": "supporting",
+      "tags": [
+        "ic_memo",
+        "supporting"
+      ],
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4o",
+        "temperature": 0.2,
+        "max_tokens": 1500
+      },
+      "inputs_schema": {
+        "type": "object"
+      },
+      "output_schema": {
+        "type": "object"
+      },
+      "required_sources": [
+        "fmp",
+        "polygon"
+      ],
+      "criticality": "optional",
+      "budget": {
+        "max_tokens": 1500,
+        "max_cost": 0.08
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "position_sizing_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "Recommend position sizing for {{ticker}} ({{company_name}}).\n\n## Context\n- Market Cap: ${{market_cap}}\n- Current Price: ${{current_price}}\n- Conviction: {{conviction}}/10\n\n## Research Summary\n{{thesis}}\n\n## Task\nProvide position sizing recommendation considering conviction, liquidity, volatility, and risk budget.\n\nRespond in JSON format with recommended_position_size, max_position_size, entry_strategy, and rationale."
+    },
+    {
+      "prompt_id": "pre_mortem_analysis",
+      "version": "1.0.0",
+      "title": "Pre Mortem Analysis",
+      "executor_type": "llm",
+      "lane": "lane_b",
+      "stage": "research",
+      "category": "supporting",
+      "tags": [
+        "ic_memo",
+        "supporting"
+      ],
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4o",
+        "temperature": 0.4,
+        "max_tokens": 2000
+      },
+      "inputs_schema": {
+        "type": "object"
+      },
+      "output_schema": {
+        "type": "object"
+      },
+      "required_sources": [
+        "fmp"
+      ],
+      "criticality": "optional",
+      "budget": {
+        "max_tokens": 2000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "pre_mortem_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "Conduct a pre-mortem analysis for {{ticker}} ({{company_name}}).\n\n## Investment Thesis\n{{thesis}}\n\n## Task\nImagine it's 18 months from now and this investment has failed badly. Work backwards to identify what went wrong.\n\nRespond in JSON format with failure_scenarios, most_likely_failure_mode, and key_monitoring_points."
+    },
+    {
+      "prompt_id": "exit_strategy",
+      "version": "1.0.0",
+      "title": "Exit Strategy",
+      "executor_type": "llm",
+      "lane": "lane_b",
+      "stage": "research",
+      "category": "supporting",
+      "tags": [
+        "ic_memo",
+        "supporting"
+      ],
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4o",
+        "temperature": 0.2,
+        "max_tokens": 1500
+      },
+      "inputs_schema": {
+        "type": "object"
+      },
+      "output_schema": {
+        "type": "object"
+      },
+      "required_sources": [
+        "fmp",
+        "polygon"
+      ],
+      "criticality": "optional",
+      "budget": {
+        "max_tokens": 1500,
+        "max_cost": 0.08
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "exit_strategy_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "Define exit strategy for {{ticker}} ({{company_name}}).\n\n## Context\n- Current Price: ${{current_price}}\n- Conviction: {{conviction}}/10\n\n## Investment Thesis\n{{thesis}}\n\n## Task\nDefine clear exit criteria including profit targets, stop loss, time stop, and thesis invalidation triggers.\n\nRespond in JSON format with profit_targets, stop_loss, time_stop, thesis_invalidation_triggers, and scaling_strategy."
+    },
+    {
+      "prompt_id": "catalyst_identification",
+      "version": "1.0.0",
+      "title": "Catalyst Identification",
+      "executor_type": "llm",
+      "lane": "lane_b",
+      "stage": "research",
+      "category": "supporting",
+      "tags": [
+        "ic_memo",
+        "supporting"
+      ],
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4o",
+        "temperature": 0.3,
+        "max_tokens": 2000
+      },
+      "inputs_schema": {
+        "type": "object"
+      },
+      "output_schema": {
+        "type": "object"
+      },
+      "required_sources": [
+        "fmp",
+        "news"
+      ],
+      "criticality": "optional",
+      "budget": {
+        "max_tokens": 2000,
+        "max_cost": 0.1
+      },
+      "cache_policy": {
+        "ttl_seconds": 3600,
+        "cache_key_template": "catalysts_{ticker}"
+      },
+      "degradation_policy": {
+        "on_source_failure": "skip_with_warning",
+        "on_validation_failure": "skip_with_warning"
+      },
+      "template": "Identify value-unlocking catalysts for {{ticker}} ({{company_name}}).\n\n## Context\n- Sector: {{sector}}\n- Industry: {{industry}}\n\n## Investment Thesis\n{{thesis}}\n\n## Task\nIdentify specific events that could unlock value including company-specific, industry, macro, and technical catalysts.\n\nRespond in JSON format with catalysts array, catalyst_calendar, and expected_catalyst_horizon."
     }
   ]
 }

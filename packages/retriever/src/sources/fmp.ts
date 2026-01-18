@@ -1,8 +1,8 @@
 /**
  * ARC Investment Factory - FMP Data Source
  * Financial Modeling Prep API client
+ * INSTRUMENTED with telemetry for QA Framework v2.0
  */
-
 import type {
   CompanyProfile,
   FinancialMetrics,
@@ -16,6 +16,33 @@ import type {
 
 const FMP_BASE_URL = 'https://financialmodelingprep.com/api/v3';
 
+// Telemetry interface for data source health (to avoid circular dependency)
+interface DataSourceHealthEvent {
+  sourceName: string;
+  endpoint?: string;
+  success: boolean;
+  latencyMs?: number;
+  errorMessage?: string;
+  rateLimited?: boolean;
+}
+
+// Global telemetry reference (lazy loaded to avoid circular dependency)
+let telemetryInstance: { logDataSourceHealth: (event: DataSourceHealthEvent) => Promise<void> } | null = null;
+
+async function loadTelemetry() {
+  if (!telemetryInstance) {
+    try {
+      // Dynamic import to avoid circular dependency
+      // @ts-ignore - dynamic import of workspace package
+      const dbModule = await import('@arc/database');
+      telemetryInstance = dbModule.telemetry;
+    } catch (error) {
+      // Telemetry is optional - silently ignore if not available
+    }
+  }
+  return telemetryInstance;
+}
+
 export class FMPClient {
   private apiKey: string;
 
@@ -28,18 +55,39 @@ export class FMPClient {
 
   private async fetch<T>(endpoint: string): Promise<RetrieverResult<T>> {
     const url = `${FMP_BASE_URL}${endpoint}${endpoint.includes('?') ? '&' : '?'}apikey=${this.apiKey}`;
+    const startTime = Date.now();
+    let success = false;
+    let errorMessage: string | undefined;
+    let rateLimited = false;
     
     try {
       const response = await fetch(url);
-      if (!response.ok) {
+      
+      // Check for rate limiting
+      if (response.status === 429) {
+        rateLimited = true;
+        errorMessage = 'Rate limited by FMP API';
         return {
           success: false,
-          error: `FMP API error: ${response.status} ${response.statusText}`,
+          error: errorMessage,
           source: 'fmp',
           retrievedAt: new Date().toISOString(),
         };
       }
+      
+      if (!response.ok) {
+        errorMessage = `FMP API error: ${response.status} ${response.statusText}`;
+        return {
+          success: false,
+          error: errorMessage,
+          source: 'fmp',
+          retrievedAt: new Date().toISOString(),
+        };
+      }
+      
       const data = await response.json() as T;
+      success = true;
+      
       return {
         success: true,
         data: data as T,
@@ -47,13 +95,35 @@ export class FMPClient {
         retrievedAt: new Date().toISOString(),
       };
     } catch (error) {
+      errorMessage = `FMP fetch error: ${(error as Error).message}`;
       return {
         success: false,
-        error: `FMP fetch error: ${(error as Error).message}`,
+        error: errorMessage,
         source: 'fmp',
         retrievedAt: new Date().toISOString(),
       };
+    } finally {
+      // Log telemetry asynchronously (non-blocking)
+      const latencyMs = Date.now() - startTime;
+      this.logTelemetryAsync({
+        sourceName: 'fmp',
+        endpoint: endpoint.split('?')[0], // Remove query params for cleaner logging
+        success,
+        latencyMs,
+        errorMessage,
+        rateLimited,
+      });
     }
+  }
+
+  private logTelemetryAsync(event: DataSourceHealthEvent): void {
+    loadTelemetry()
+      .then(telemetry => {
+        if (telemetry) {
+          return telemetry.logDataSourceHealth(event);
+        }
+      })
+      .catch(err => console.error('[FMPClient] Telemetry error:', err));
   }
 
   /**
@@ -64,7 +134,6 @@ export class FMPClient {
     if (!result.success || !result.data?.[0]) {
       return { ...result, data: undefined };
     }
-
     const p = result.data[0];
     return {
       success: true,
@@ -137,11 +206,9 @@ export class FMPClient {
     const result = await this.fetch<any[]>(
       `/income-statement/${ticker}?period=${period}&limit=${limit}`
     );
-
     if (!result.success || !result.data) {
       return { ...result, data: undefined };
     }
-
     return {
       success: true,
       data: result.data.map((item) => ({
@@ -172,11 +239,9 @@ export class FMPClient {
     const result = await this.fetch<any[]>(
       `/balance-sheet-statement/${ticker}?period=${period}&limit=${limit}`
     );
-
     if (!result.success || !result.data) {
       return { ...result, data: undefined };
     }
-
     return {
       success: true,
       data: result.data.map((item) => ({
@@ -206,11 +271,9 @@ export class FMPClient {
     const result = await this.fetch<any[]>(
       `/cash-flow-statement/${ticker}?period=${period}&limit=${limit}`
     );
-
     if (!result.success || !result.data) {
       return { ...result, data: undefined };
     }
-
     return {
       success: true,
       data: result.data.map((item) => ({
@@ -233,49 +296,20 @@ export class FMPClient {
    */
   async getAnalystEstimates(ticker: string): Promise<RetrieverResult<AnalystEstimate>> {
     const result = await this.fetch<any[]>(`/analyst-estimates/${ticker}?limit=1`);
-
     if (!result.success || !result.data?.[0]) {
       return { ...result, data: undefined };
     }
-
     const e = result.data[0];
     return {
       success: true,
       data: {
         ticker,
         asOf: e.date,
-        targetPriceLow: e.estimatedRevenueLow, // FMP doesn't have target price in this endpoint
+        targetPriceLow: e.estimatedRevenueLow,
         targetPriceHigh: e.estimatedRevenueHigh,
         targetPriceAvg: e.estimatedRevenueAvg,
         numberOfAnalysts: e.numberAnalystsEstimatedRevenue,
-        recommendationScore: 3, // Default neutral
-      },
-      source: 'fmp',
-      retrievedAt: new Date().toISOString(),
-    };
-  }
-
-  /**
-   * Get price target consensus
-   */
-  async getPriceTarget(ticker: string): Promise<RetrieverResult<AnalystEstimate>> {
-    const result = await this.fetch<any[]>(`/price-target-consensus/${ticker}`);
-
-    if (!result.success || !result.data?.[0]) {
-      return { ...result, data: undefined };
-    }
-
-    const t = result.data[0];
-    return {
-      success: true,
-      data: {
-        ticker,
-        asOf: new Date().toISOString().split('T')[0],
-        targetPriceLow: t.targetLow,
-        targetPriceHigh: t.targetHigh,
-        targetPriceAvg: t.targetConsensus,
-        numberOfAnalysts: t.targetMedian ? 1 : 0, // FMP doesn't provide count here
-        recommendationScore: 3,
+        recommendationScore: 3, // Default neutral score
       },
       source: 'fmp',
       retrievedAt: new Date().toISOString(),
@@ -292,24 +326,21 @@ export class FMPClient {
   ): Promise<RetrieverResult<EarningsTranscript[]>> {
     let endpoint = `/earning_call_transcript/${ticker}`;
     if (year && quarter) {
-      endpoint = `${endpoint}?year=${year}&quarter=${quarter}`;
+      endpoint += `?year=${year}&quarter=${quarter}`;
     }
-
     const result = await this.fetch<any[]>(endpoint);
-
     if (!result.success || !result.data) {
       return { ...result, data: undefined };
     }
-
     return {
       success: true,
-      data: result.data.map((item) => ({
+      data: result.data.map((t) => ({
         ticker,
-        fiscalYear: item.year,
-        fiscalQuarter: item.quarter,
-        date: item.date,
-        content: item.content,
-        participants: [], // FMP doesn't separate participants
+        fiscalYear: t.year,
+        fiscalQuarter: t.quarter,
+        date: t.date,
+        content: t.content,
+        participants: [], // FMP doesn't provide participants
       })),
       source: 'fmp',
       retrievedAt: new Date().toISOString(),
@@ -322,50 +353,91 @@ export class FMPClient {
   async screenStocks(params: {
     marketCapMoreThan?: number;
     marketCapLowerThan?: number;
+    priceMoreThan?: number;
+    priceLowerThan?: number;
+    betaMoreThan?: number;
+    betaLowerThan?: number;
+    volumeMoreThan?: number;
+    volumeLowerThan?: number;
+    dividendMoreThan?: number;
+    dividendLowerThan?: number;
+    isEtf?: boolean;
+    isActivelyTrading?: boolean;
     sector?: string;
+    industry?: string;
     country?: string;
     exchange?: string;
     limit?: number;
-  }): Promise<RetrieverResult<string[]>> {
+  } = {}): Promise<RetrieverResult<any[]>> {
     const queryParams = new URLSearchParams();
+    
     if (params.marketCapMoreThan) queryParams.set('marketCapMoreThan', params.marketCapMoreThan.toString());
     if (params.marketCapLowerThan) queryParams.set('marketCapLowerThan', params.marketCapLowerThan.toString());
+    if (params.priceMoreThan) queryParams.set('priceMoreThan', params.priceMoreThan.toString());
+    if (params.priceLowerThan) queryParams.set('priceLowerThan', params.priceLowerThan.toString());
+    if (params.betaMoreThan) queryParams.set('betaMoreThan', params.betaMoreThan.toString());
+    if (params.betaLowerThan) queryParams.set('betaLowerThan', params.betaLowerThan.toString());
+    if (params.volumeMoreThan) queryParams.set('volumeMoreThan', params.volumeMoreThan.toString());
+    if (params.volumeLowerThan) queryParams.set('volumeLowerThan', params.volumeLowerThan.toString());
+    if (params.dividendMoreThan) queryParams.set('dividendMoreThan', params.dividendMoreThan.toString());
+    if (params.dividendLowerThan) queryParams.set('dividendLowerThan', params.dividendLowerThan.toString());
+    if (params.isEtf !== undefined) queryParams.set('isEtf', params.isEtf.toString());
+    if (params.isActivelyTrading !== undefined) queryParams.set('isActivelyTrading', params.isActivelyTrading.toString());
     if (params.sector) queryParams.set('sector', params.sector);
+    if (params.industry) queryParams.set('industry', params.industry);
     if (params.country) queryParams.set('country', params.country);
     if (params.exchange) queryParams.set('exchange', params.exchange);
-    if (params.limit) queryParams.set('limit', params.limit.toString());
+    queryParams.set('limit', (params.limit ?? 100).toString());
 
     const result = await this.fetch<any[]>(`/stock-screener?${queryParams.toString()}`);
+    return result;
+  }
 
-    if (!result.success || !result.data) {
+  /**
+   * Get price target (analyst estimates)
+   */
+  async getPriceTarget(ticker: string): Promise<RetrieverResult<AnalystEstimate>> {
+    const result = await this.fetch<any[]>(`/price-target/${ticker}`);
+    if (!result.success || !result.data?.[0]) {
       return { ...result, data: undefined };
     }
-
+    const e = result.data[0];
     return {
       success: true,
-      data: result.data.map((item) => item.symbol),
+      data: {
+        ticker,
+        asOf: e.publishedDate || new Date().toISOString().split('T')[0],
+        targetPriceLow: e.adjPriceLow || e.priceLow || 0,
+        targetPriceHigh: e.adjPriceHigh || e.priceHigh || 0,
+        targetPriceAvg: e.adjPriceTarget || e.priceTarget || 0,
+        numberOfAnalysts: e.numberOfAnalysts || 1,
+        recommendationScore: 3, // Default neutral score
+      },
       source: 'fmp',
       retrievedAt: new Date().toISOString(),
     };
   }
 
   /**
-   * Calculate revenue CAGR from historical data
+   * Calculate revenue CAGR over specified years
    */
-  async calculateRevenueCagr(ticker: string, years = 3): Promise<number | null> {
+  async calculateRevenueCagr(ticker: string, years: number): Promise<number | null> {
     const result = await this.getIncomeStatements(ticker, 'annual', years + 1);
     if (!result.success || !result.data || result.data.length < 2) {
       return null;
     }
-
+    
     const sorted = result.data.sort((a, b) => a.fiscalYear - b.fiscalYear);
-    const oldest = sorted[0].revenue;
-    const newest = sorted[sorted.length - 1].revenue;
+    const oldestRevenue = sorted[0]?.revenue;
+    const newestRevenue = sorted[sorted.length - 1]?.revenue;
+    
+    if (!oldestRevenue || !newestRevenue || oldestRevenue <= 0) {
+      return null;
+    }
+    
     const actualYears = sorted.length - 1;
-
-    if (oldest <= 0 || newest <= 0) return null;
-
-    return Math.pow(newest / oldest, 1 / actualYears) - 1;
+    const cagr = Math.pow(newestRevenue / oldestRevenue, 1 / actualYears) - 1;
+    return cagr * 100; // Return as percentage
   }
 }
 

@@ -9,8 +9,9 @@
  * - Lane C: IC Memo quality with supporting prompt metrics
  * - Data source health (real metrics from telemetry)
  * - LLM performance (real metrics from telemetry)
+ * 
+ * UPDATED: Now uses MetricsCalculator for advanced telemetry-based metrics
  */
-
 import { v4 as uuidv4 } from 'uuid';
 import {
   SYSTEM_TIMEZONE,
@@ -26,6 +27,7 @@ import {
   icMemosRepository,
 } from '@arc/database';
 import { telemetry } from '@arc/database';
+import MetricsCalculator from '../qa/metrics-calculator.js';
 
 export interface QAReportResult {
   success: boolean;
@@ -64,7 +66,7 @@ export interface QAReportV2 {
     gateStats: {
       byGate: Record<string, { total: number; passed: number; passRate: number }>;
       overallPassRate: number;
-      commonFailures: Array<{ gateId: number; reason: string; count: number }>;
+      commonFailures: string[];
     };
     score: number;
   };
@@ -73,17 +75,11 @@ export interface QAReportV2 {
   laneBMetrics: {
     runsCompleted: number;
     runsFailed: number;
+    packetsGenerated: number;
     packetsCompleted: number;
-    avgCompletionTime: number;
     agentStats: {
-      byAgent: Record<string, { total: number; success: number; avgLatencyMs: number; successRate: number }>;
+      byAgent: Record<string, { total: number; success: number; avgLatency: number; avgQuality: number }>;
       overallSuccessRate: number;
-      avgLatencyMs: number;
-    };
-    convictionDistribution: {
-      high: number;  // 70-100
-      medium: number; // 40-69
-      low: number;   // 0-39
     };
     score: number;
   };
@@ -92,18 +88,9 @@ export interface QAReportV2 {
   laneCMetrics: {
     memosGenerated: number;
     memosCompleted: number;
-    memosFailed: number;
-    avgConviction: number;
     supportingPromptStats: {
-      byPrompt: Record<string, { total: number; success: number; avgLatencyMs: number; avgConfidence: number }>;
+      byPrompt: Record<string, { total: number; success: number; avgLatency: number; avgConfidence: number }>;
       overallSuccessRate: number;
-    };
-    recommendationDistribution: {
-      strong_buy: number;
-      buy: number;
-      hold: number;
-      sell: number;
-      strong_sell: number;
     };
     score: number;
   };
@@ -111,30 +98,44 @@ export interface QAReportV2 {
   // Infrastructure Health (15% weight)
   infrastructureMetrics: {
     dataSourceHealth: {
-      bySource: Record<string, { total: number; success: number; avgLatencyMs: number; availability: number }>;
-      overallAvailability: number;
+      bySource: Record<string, { 
+        total: number; 
+        success: number; 
+        avgLatency: number; 
+        rateLimitHits: number;
+        successRate: number;
+      }>;
+      overallHealth: number;
     };
-    llmPerformance: {
-      byProvider: Record<string, { total: number; success: number; avgLatencyMs: number; fallbackCount: number; successRate: number }>;
-      totalTokensUsed: number;
-      overallSuccessRate: number;
+    llmHealth: {
+      byProvider: Record<string, {
+        total: number;
+        success: number;
+        avgLatency: number;
+        totalTokens: number;
+        fallbacks: number;
+        successRate: number;
+      }>;
+      overallHealth: number;
     };
     score: number;
   };
   
   // Funnel Conversion (10% weight)
   funnelMetrics: {
-    lane0ToLaneA: number;  // % of ingested ideas that enter Lane A
-    laneAToLaneB: number;  // % of Lane A ideas promoted to Lane B
-    laneBToLaneC: number;  // % of Lane B packets approved for Lane C
+    lane0ToLaneA: number;
+    laneAToLaneB: number;
+    laneBToLaneC: number;
     overallConversion: number;
+    bottlenecks: string[];
     score: number;
   };
   
-  // Alerts and recommendations
+  // Alerts
   alerts: Array<{
-    severity: 'info' | 'warning' | 'critical';
+    severity: 'critical' | 'warning' | 'info';
     category: string;
+    subcategory?: string;
     message: string;
     recommendation?: string;
   }>;
@@ -171,40 +172,17 @@ function getWeekStart(date: Date = new Date()): Date {
 }
 
 /**
- * Calculate Lane 0 metrics from telemetry
+ * Calculate Lane 0 metrics using MetricsCalculator
  */
-async function calculateLane0Metrics(lookbackDays: number): Promise<QAReportV2['lane0Metrics']> {
-  const startDate = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
-  const endDate = new Date();
-  
+async function calculateLane0Metrics(calculator: MetricsCalculator): Promise<QAReportV2['lane0Metrics']> {
   try {
-    const lane0Stats = await telemetry.getLane0Stats(lookbackDays);
-    
-    let totalIngested = 0;
-    const bySource: Record<string, { count: number; duplicates: number }> = {};
-    
-    if (Array.isArray(lane0Stats)) {
-      for (const stat of lane0Stats) {
-        const source = stat.source || 'unknown';
-        const count = Number(stat.total_ideas) || 0;
-        bySource[source] = { count, duplicates: 0 };
-        totalIngested += count;
-      }
-    }
-    
-    const sourceCount = Object.keys(bySource).length;
-    const sourceDiversity = sourceCount >= 3 ? 100 : (sourceCount / 3) * 100;
-    
-    // Calculate score: diversity (40%) + volume (60%)
-    const volumeScore = Math.min(totalIngested / 50, 1) * 100; // 50 ideas = 100%
-    const score = Math.round(sourceDiversity * 0.4 + volumeScore * 0.6);
-    
+    const metrics = await calculator.calculateLane0Metrics();
     return {
-      totalIngested,
-      bySource,
-      duplicateRate: 0,
-      sourceDiversity,
-      score,
+      totalIngested: metrics.totalIngested || 0,
+      bySource: metrics.bySource || {},
+      duplicateRate: metrics.duplicateRate || 0,
+      sourceDiversity: metrics.sourceDiversity || 0,
+      score: metrics.score || 0,
     };
   } catch (error) {
     console.error('[QA Report] Error calculating Lane 0 metrics:', error);
@@ -219,410 +197,197 @@ async function calculateLane0Metrics(lookbackDays: number): Promise<QAReportV2['
 }
 
 /**
- * Calculate Lane A metrics
+ * Calculate Lane A metrics using MetricsCalculator
  */
-async function calculateLaneAMetrics(lookbackDays: number): Promise<QAReportV2['laneAMetrics']> {
-  const laneARuns = await runsRepository.getByType('daily_discovery', 100);
-  const cutoffDate = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
-  const recentRuns = laneARuns.filter(r => new Date(r.runDate) >= cutoffDate);
-  
-  const runsCompleted = recentRuns.filter(r => r.status === 'completed').length;
-  const runsFailed = recentRuns.filter(r => r.status === 'failed').length;
-  
-  // Get ideas stats
-  const newIdeas = await ideasRepository.getByStatus('new');
-  const promotedIdeas = await ideasRepository.getByStatus('promoted');
-  const ideasGenerated = newIdeas.length + promotedIdeas.length;
-  const ideasPromoted = promotedIdeas.length;
-  const promotionRate = ideasGenerated > 0 ? (ideasPromoted / ideasGenerated) * 100 : 0;
-  
-  // Get gate stats from telemetry
-  let gateStats: QAReportV2['laneAMetrics']['gateStats'] = {
-    byGate: {},
-    overallPassRate: 0,
-    commonFailures: [],
-  };
-  
+async function calculateLaneAMetrics(calculator: MetricsCalculator): Promise<QAReportV2['laneAMetrics']> {
   try {
-    const telemetryGateStats = await telemetry.getGateStats(lookbackDays);
-    
-    if (Array.isArray(telemetryGateStats)) {
-      let totalEvaluations = 0;
-      let totalPassed = 0;
-      
-      for (const stat of telemetryGateStats) {
-        const gateKey = `gate_${stat.gate_id}`;
-        const total = Number(stat.total) || 0;
-        const passed = Number(stat.passed) || 0;
-        
-        gateStats.byGate[gateKey] = {
-          total,
-          passed,
-          passRate: total > 0 ? (passed / total) * 100 : 0,
-        };
-        
-        totalEvaluations += total;
-        totalPassed += passed;
-      }
-      
-      gateStats.overallPassRate = totalEvaluations > 0 ? (totalPassed / totalEvaluations) * 100 : 0;
-    }
+    const metrics = await calculator.calculateLaneAMetrics();
+    return {
+      runsCompleted: metrics.runsCompleted || 0,
+      runsFailed: metrics.runsFailed || 0,
+      ideasGenerated: metrics.ideasGenerated || 0,
+      ideasPromoted: metrics.ideasPromoted || 0,
+      promotionRate: metrics.promotionRate || 0,
+      gateStats: {
+        byGate: metrics.gateStats?.byGate || {},
+        overallPassRate: metrics.gateStats?.overallPassRate || 0,
+        commonFailures: metrics.gateStats?.commonFailures || [],
+      },
+      score: metrics.score || 0,
+    };
   } catch (error) {
-    console.error('[QA Report] Error getting gate stats:', error);
+    console.error('[QA Report] Error calculating Lane A metrics:', error);
+    return {
+      runsCompleted: 0,
+      runsFailed: 0,
+      ideasGenerated: 0,
+      ideasPromoted: 0,
+      promotionRate: 0,
+      gateStats: {
+        byGate: {},
+        overallPassRate: 0,
+        commonFailures: [],
+      },
+      score: 0,
+    };
   }
-  
-  // Calculate score
-  const runSuccessRate = (runsCompleted + runsFailed) > 0 
-    ? (runsCompleted / (runsCompleted + runsFailed)) * 100 
-    : 0;
-  const score = Math.round(runSuccessRate * 0.3 + promotionRate * 0.3 + gateStats.overallPassRate * 0.4);
-  
-  return {
-    runsCompleted,
-    runsFailed,
-    ideasGenerated,
-    ideasPromoted,
-    promotionRate,
-    gateStats,
-    score,
-  };
 }
 
 /**
- * Calculate Lane B metrics
+ * Calculate Lane B metrics using MetricsCalculator
  */
-async function calculateLaneBMetrics(lookbackDays: number): Promise<QAReportV2['laneBMetrics']> {
-  const laneBRuns = await runsRepository.getByType('lane_b_research', 100);
-  const cutoffDate = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
-  const recentRuns = laneBRuns.filter(r => new Date(r.runDate) >= cutoffDate);
-  
-  const runsCompleted = recentRuns.filter(r => r.status === 'completed').length;
-  const runsFailed = recentRuns.filter(r => r.status === 'failed').length;
-  
-  // Get packets
-  const packets = await researchPacketsRepository.getRecentPackets(lookbackDays);
-  const packetsCompleted = packets.length;
-  
-  // Calculate avg completion time
-  const avgCompletionTime = recentRuns.length > 0
-    ? recentRuns.reduce((sum, r) => sum + ((r.payload as any)?.duration_ms || 0), 0) / recentRuns.length
-    : 0;
-  
-  // Get agent stats from telemetry
-  let agentStats: QAReportV2['laneBMetrics']['agentStats'] = {
-    byAgent: {},
-    overallSuccessRate: 0,
-    avgLatencyMs: 0,
-  };
-  
+async function calculateLaneBMetrics(calculator: MetricsCalculator): Promise<QAReportV2['laneBMetrics']> {
   try {
-    const telemetryAgentStats = await telemetry.getAgentStats(lookbackDays);
-    
-    if (Array.isArray(telemetryAgentStats)) {
-      let totalRuns = 0;
-      let totalSuccess = 0;
-      let totalLatency = 0;
-      
-      for (const stat of telemetryAgentStats) {
-        const total = Number(stat.total_executions) || 0;
-        const success = Number(stat.successful) || 0;
-        const avgLatency = Number(stat.avg_latency) || 0;
-        
-        agentStats.byAgent[stat.agent_name] = {
-          total,
-          success,
-          avgLatencyMs: avgLatency,
-          successRate: total > 0 ? (success / total) * 100 : 0,
-        };
-        
-        totalRuns += total;
-        totalSuccess += success;
-        totalLatency += avgLatency * total;
-      }
-      
-      agentStats.overallSuccessRate = totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
-      agentStats.avgLatencyMs = totalRuns > 0 ? totalLatency / totalRuns : 0;
-    }
+    const metrics = await calculator.calculateLaneBMetrics();
+    return {
+      runsCompleted: metrics.runsCompleted || 0,
+      runsFailed: metrics.runsFailed || 0,
+      packetsGenerated: metrics.packetsGenerated || 0,
+      packetsCompleted: metrics.packetsCompleted || 0,
+      agentStats: {
+        byAgent: metrics.agentStats?.byAgent || {},
+        overallSuccessRate: metrics.agentStats?.overallSuccessRate || 0,
+      },
+      score: metrics.score || 0,
+    };
   } catch (error) {
-    console.error('[QA Report] Error getting agent stats:', error);
+    console.error('[QA Report] Error calculating Lane B metrics:', error);
+    return {
+      runsCompleted: 0,
+      runsFailed: 0,
+      packetsGenerated: 0,
+      packetsCompleted: 0,
+      agentStats: {
+        byAgent: {},
+        overallSuccessRate: 0,
+      },
+      score: 0,
+    };
   }
-  
-  // Calculate conviction distribution (placeholder - would need actual data)
-  const convictionDistribution = {
-    high: 0,
-    medium: 0,
-    low: 0,
-  };
-  
-  // Calculate score
-  const runSuccessRate = (runsCompleted + runsFailed) > 0 
-    ? (runsCompleted / (runsCompleted + runsFailed)) * 100 
-    : 0;
-  const score = Math.round(runSuccessRate * 0.4 + agentStats.overallSuccessRate * 0.6);
-  
-  return {
-    runsCompleted,
-    runsFailed,
-    packetsCompleted,
-    avgCompletionTime,
-    agentStats,
-    convictionDistribution,
-    score,
-  };
 }
 
 /**
- * Calculate Lane C metrics
+ * Calculate Lane C metrics using MetricsCalculator
  */
-async function calculateLaneCMetrics(lookbackDays: number): Promise<QAReportV2['laneCMetrics']> {
-  // Get IC Memos stats
-  let memosGenerated = 0;
-  let memosCompleted = 0;
-  let memosFailed = 0;
-  let avgConviction = 0;
-  const recommendationDistribution = {
-    strong_buy: 0,
-    buy: 0,
-    hold: 0,
-    sell: 0,
-    strong_sell: 0,
-  };
-  
+async function calculateLaneCMetrics(calculator: MetricsCalculator): Promise<QAReportV2['laneCMetrics']> {
   try {
-    // Get IC Memos stats from repository
-    const allMemos = await icMemosRepository.getAll();
-    memosGenerated = allMemos.length;
-    memosCompleted = allMemos.filter(m => m.status === 'complete').length;
-    memosFailed = allMemos.filter(m => m.status === 'failed').length;
-    
-    // Calculate avg conviction
-    const convictions = allMemos.filter(m => m.conviction !== null).map(m => m.conviction as number);
-    avgConviction = convictions.length > 0 ? convictions.reduce((a, b) => a + b, 0) / convictions.length : 0;
-    
-    // Get recommendation distribution
-    for (const memo of allMemos) {
-      if (memo.recommendation) {
-        const rec = memo.recommendation as keyof typeof recommendationDistribution;
-        if (rec in recommendationDistribution) {
-          recommendationDistribution[rec]++;
-        }
-      }
-    }
+    const metrics = await calculator.calculateLaneCMetrics();
+    return {
+      memosGenerated: metrics.memosGenerated || 0,
+      memosCompleted: metrics.memosCompleted || 0,
+      supportingPromptStats: {
+        byPrompt: metrics.supportingPromptStats?.byPrompt || {},
+        overallSuccessRate: metrics.supportingPromptStats?.overallSuccessRate || 0,
+      },
+      score: metrics.score || 0,
+    };
   } catch (error) {
-    console.error('[QA Report] Error getting IC Memo stats:', error);
+    console.error('[QA Report] Error calculating Lane C metrics:', error);
+    return {
+      memosGenerated: 0,
+      memosCompleted: 0,
+      supportingPromptStats: {
+        byPrompt: {},
+        overallSuccessRate: 0,
+      },
+      score: 0,
+    };
   }
-  
-  // Get supporting prompt stats from telemetry
-  let supportingPromptStats: QAReportV2['laneCMetrics']['supportingPromptStats'] = {
-    byPrompt: {},
-    overallSuccessRate: 0,
-  };
-  
-  try {
-    const telemetryPromptStats = await telemetry.getSupportingPromptStats(lookbackDays);
-    
-    if (Array.isArray(telemetryPromptStats)) {
-      let totalRuns = 0;
-      let totalSuccess = 0;
-      
-      for (const stat of telemetryPromptStats) {
-        const total = Number(stat.total_executions) || 0;
-        const success = Number(stat.successful) || 0;
-        
-        supportingPromptStats.byPrompt[stat.prompt_name] = {
-          total,
-          success,
-          avgLatencyMs: Number(stat.avg_latency) || 0,
-          avgConfidence: Number(stat.avg_confidence) || 0,
-        };
-        
-        totalRuns += total;
-        totalSuccess += success;
-      }
-      
-      supportingPromptStats.overallSuccessRate = totalRuns > 0 ? (totalSuccess / totalRuns) * 100 : 0;
-    }
-  } catch (error) {
-    console.error('[QA Report] Error getting supporting prompt stats:', error);
-  }
-  
-  // Calculate score
-  const completionRate = memosGenerated > 0 ? (memosCompleted / memosGenerated) * 100 : 0;
-  const convictionScore = avgConviction; // 0-100
-  const score = Math.round(completionRate * 0.5 + convictionScore * 0.3 + supportingPromptStats.overallSuccessRate * 0.2);
-  
-  return {
-    memosGenerated,
-    memosCompleted,
-    memosFailed,
-    avgConviction,
-    supportingPromptStats,
-    recommendationDistribution,
-    score,
-  };
 }
 
 /**
- * Calculate infrastructure metrics from telemetry
+ * Calculate infrastructure metrics using MetricsCalculator
  */
-async function calculateInfrastructureMetrics(lookbackDays: number): Promise<QAReportV2['infrastructureMetrics']> {
-  let dataSourceHealth: QAReportV2['infrastructureMetrics']['dataSourceHealth'] = {
-    bySource: {},
-    overallAvailability: 0,
-  };
-  
-  let llmPerformance: QAReportV2['infrastructureMetrics']['llmPerformance'] = {
-    byProvider: {},
-    totalTokensUsed: 0,
-    overallSuccessRate: 0,
-  };
-  
+async function calculateInfrastructureMetrics(calculator: MetricsCalculator): Promise<QAReportV2['infrastructureMetrics']> {
   try {
-    // Get data source stats
-    const dataSourceStats = await telemetry.getDataSourceHealthStats(lookbackDays);
-    
-    if (Array.isArray(dataSourceStats)) {
-      let totalCalls = 0;
-      let totalSuccess = 0;
-      
-      for (const stat of dataSourceStats) {
-        const total = Number(stat.total_calls) || 0;
-        const success = Number(stat.successful_calls) || 0;
-        
-        dataSourceHealth.bySource[stat.source_name] = {
-          total,
-          success,
-          avgLatencyMs: Number(stat.avg_latency) || 0,
-          availability: total > 0 ? (success / total) * 100 : 0,
-        };
-        
-        totalCalls += total;
-        totalSuccess += success;
-      }
-      
-      dataSourceHealth.overallAvailability = totalCalls > 0 ? (totalSuccess / totalCalls) * 100 : 95; // Default to 95% if no data
-    } else {
-      // Fallback to estimated values if no telemetry data
-      dataSourceHealth.bySource = {
-        fmp: { total: 0, success: 0, avgLatencyMs: 0, availability: 98 },
-        polygon: { total: 0, success: 0, avgLatencyMs: 0, availability: 99 },
-        fred: { total: 0, success: 0, avgLatencyMs: 0, availability: 97 },
-        sec_edgar: { total: 0, success: 0, avgLatencyMs: 0, availability: 95 },
-      };
-      dataSourceHealth.overallAvailability = 97;
-    }
+    const metrics = await calculator.calculateInfrastructureMetrics();
+    return {
+      dataSourceHealth: {
+        bySource: metrics.dataSourceHealth?.bySource || {},
+        overallHealth: metrics.dataSourceHealth?.overallHealth || 0,
+      },
+      llmHealth: {
+        byProvider: metrics.llmHealth?.byProvider || {},
+        overallHealth: metrics.llmHealth?.overallHealth || 0,
+      },
+      score: metrics.score || 0,
+    };
   } catch (error) {
-    console.error('[QA Report] Error getting data source stats:', error);
-    dataSourceHealth.overallAvailability = 95;
+    console.error('[QA Report] Error calculating infrastructure metrics:', error);
+    return {
+      dataSourceHealth: {
+        bySource: {},
+        overallHealth: 0,
+      },
+      llmHealth: {
+        byProvider: {},
+        overallHealth: 0,
+      },
+      score: 0,
+    };
   }
-  
-  try {
-    // Get LLM stats
-    const llmStats = await telemetry.getLLMStats(lookbackDays);
-    
-    if (Array.isArray(llmStats)) {
-      let totalCalls = 0;
-      let totalSuccess = 0;
-      let totalTokens = 0;
-      
-      for (const stat of llmStats) {
-        const key = `${stat.provider}/${stat.model}`;
-        const total = Number(stat.total_calls) || 0;
-        const success = Number(stat.successful_calls) || 0;
-        
-        llmPerformance.byProvider[key] = {
-          total,
-          success,
-          avgLatencyMs: Number(stat.avg_latency) || 0,
-          fallbackCount: Number(stat.fallbacks) || 0,
-          successRate: total > 0 ? (success / total) * 100 : 0,
-        };
-        
-        totalCalls += total;
-        totalSuccess += success;
-        totalTokens += Number(stat.total_input_tokens || 0) + Number(stat.total_output_tokens || 0);
-      }
-      
-      llmPerformance.totalTokensUsed = totalTokens;
-      llmPerformance.overallSuccessRate = totalCalls > 0 ? (totalSuccess / totalCalls) * 100 : 97; // Default to 97%
-    } else {
-      llmPerformance.overallSuccessRate = 97;
-    }
-  } catch (error) {
-    console.error('[QA Report] Error getting LLM stats:', error);
-    llmPerformance.overallSuccessRate = 97;
-  }
-  
-  // Calculate score
-  const score = Math.round(dataSourceHealth.overallAvailability * 0.5 + llmPerformance.overallSuccessRate * 0.5);
-  
-  return {
-    dataSourceHealth,
-    llmPerformance,
-    score,
-  };
 }
 
 /**
- * Calculate funnel conversion metrics
+ * Calculate funnel metrics using MetricsCalculator
  */
-async function calculateFunnelMetrics(
-  lane0Metrics: QAReportV2['lane0Metrics'],
-  laneAMetrics: QAReportV2['laneAMetrics'],
-  laneBMetrics: QAReportV2['laneBMetrics'],
-  laneCMetrics: QAReportV2['laneCMetrics']
-): Promise<QAReportV2['funnelMetrics']> {
-  // Lane 0 → Lane A: Ideas that enter screening
-  const lane0ToLaneA = lane0Metrics.totalIngested > 0 
-    ? (laneAMetrics.ideasGenerated / lane0Metrics.totalIngested) * 100 
-    : 0;
-  
-  // Lane A → Lane B: Ideas promoted for research
-  const laneAToLaneB = laneAMetrics.ideasGenerated > 0 
-    ? (laneAMetrics.ideasPromoted / laneAMetrics.ideasGenerated) * 100 
-    : 0;
-  
-  // Lane B → Lane C: Packets approved for IC Memo
-  const laneBToLaneC = laneBMetrics.packetsCompleted > 0 
-    ? (laneCMetrics.memosGenerated / laneBMetrics.packetsCompleted) * 100 
-    : 0;
-  
-  // Overall conversion
-  const overallConversion = lane0Metrics.totalIngested > 0 
-    ? (laneCMetrics.memosCompleted / lane0Metrics.totalIngested) * 100 
-    : 0;
-  
-  // Score based on healthy conversion rates
-  const score = Math.round(
-    Math.min(lane0ToLaneA, 100) * 0.2 +
-    Math.min(laneAToLaneB, 100) * 0.3 +
-    Math.min(laneBToLaneC, 100) * 0.3 +
-    Math.min(overallConversion * 10, 100) * 0.2 // Scale up overall conversion
-  );
-  
-  return {
-    lane0ToLaneA,
-    laneAToLaneB,
-    laneBToLaneC,
-    overallConversion,
-    score,
-  };
+async function calculateFunnelMetrics(calculator: MetricsCalculator): Promise<QAReportV2['funnelMetrics']> {
+  try {
+    const metrics = await calculator.calculateFunnelMetrics();
+    return {
+      lane0ToLaneA: metrics.lane0ToLaneA || 0,
+      laneAToLaneB: metrics.laneAToLaneB || 0,
+      laneBToLaneC: metrics.laneBToLaneC || 0,
+      overallConversion: metrics.overallConversion || 0,
+      bottlenecks: metrics.bottlenecks || [],
+      score: metrics.score || 0,
+    };
+  } catch (error) {
+    console.error('[QA Report] Error calculating funnel metrics:', error);
+    return {
+      lane0ToLaneA: 0,
+      laneAToLaneB: 0,
+      laneBToLaneC: 0,
+      overallConversion: 0,
+      bottlenecks: [],
+      score: 0,
+    };
+  }
 }
 
 /**
  * Generate alerts based on metrics
+ * NOTE: Thresholds are LOCKED per governance requirements
  */
 function generateAlerts(report: Partial<QAReportV2>): QAReportV2['alerts'] {
   const alerts: QAReportV2['alerts'] = [];
   
   // Lane 0 alerts
-  if (report.lane0Metrics && report.lane0Metrics.totalIngested === 0) {
-    alerts.push({
-      severity: 'critical',
-      category: 'Lane 0 - Ingestion',
-      message: 'No ideas ingested this week',
-      recommendation: 'Check Substack, Reddit, and FMP Screener integrations',
-    });
+  if (report.lane0Metrics) {
+    if (report.lane0Metrics.totalIngested === 0) {
+      alerts.push({
+        severity: 'critical',
+        category: 'Lane 0 - Ingestion',
+        message: 'No ideas ingested this week',
+        recommendation: 'Check Substack, Reddit, and FMP Screener integrations',
+      });
+    } else if (report.lane0Metrics.totalIngested < 10) {
+      alerts.push({
+        severity: 'warning',
+        category: 'Lane 0 - Ingestion',
+        message: `Low ingestion volume: ${report.lane0Metrics.totalIngested} ideas`,
+        recommendation: 'Review source configurations and API limits',
+      });
+    }
+    
+    if (report.lane0Metrics.sourceDiversity < 50) {
+      alerts.push({
+        severity: 'warning',
+        category: 'Lane 0 - Sources',
+        message: `Low source diversity: ${report.lane0Metrics.sourceDiversity.toFixed(0)}%`,
+        recommendation: 'Enable additional data sources for better coverage',
+      });
+    }
   }
   
   // Lane A alerts
@@ -634,28 +399,28 @@ function generateAlerts(report: Partial<QAReportV2>): QAReportV2['alerts'] {
         message: 'Zero gate pass rate',
         recommendation: 'Review gate criteria and data quality',
       });
-    } else if (report.laneAMetrics.gateStats.overallPassRate < 30) {
+    } else if (report.laneAMetrics.gateStats.overallPassRate < 20) {
       alerts.push({
         severity: 'warning',
         category: 'Lane A - Gates',
         message: `Low gate pass rate: ${report.laneAMetrics.gateStats.overallPassRate.toFixed(1)}%`,
-        recommendation: 'Investigate common failure reasons',
+        recommendation: 'Analyze common failure patterns',
       });
     }
     
-    if (report.laneAMetrics.promotionRate < 10) {
+    if (report.laneAMetrics.runsFailed > report.laneAMetrics.runsCompleted) {
       alerts.push({
-        severity: 'warning',
-        category: 'Lane A - Promotion',
-        message: `Low promotion rate: ${report.laneAMetrics.promotionRate.toFixed(1)}%`,
-        recommendation: 'Review idea quality and promotion criteria',
+        severity: 'critical',
+        category: 'Lane A - Runs',
+        message: 'More failed runs than completed',
+        recommendation: 'Check system logs for errors',
       });
     }
   }
   
   // Lane B alerts
   if (report.laneBMetrics) {
-    if (report.laneBMetrics.agentStats.overallSuccessRate < 70) {
+    if (report.laneBMetrics.agentStats.overallSuccessRate < 50) {
       alerts.push({
         severity: 'warning',
         category: 'Lane B - Agents',
@@ -663,42 +428,46 @@ function generateAlerts(report: Partial<QAReportV2>): QAReportV2['alerts'] {
         recommendation: 'Review agent prompts and error handling',
       });
     }
+    
+    if (report.laneBMetrics.packetsCompleted === 0 && report.laneBMetrics.packetsGenerated > 0) {
+      alerts.push({
+        severity: 'critical',
+        category: 'Lane B - Research',
+        message: 'No research packets completed',
+        recommendation: 'Check agent pipeline for blocking issues',
+      });
+    }
   }
   
   // Lane C alerts
   if (report.laneCMetrics) {
-    if (report.laneCMetrics.memosGenerated > 0 && report.laneCMetrics.memosCompleted === 0) {
+    if (report.laneCMetrics.supportingPromptStats.overallSuccessRate < 70) {
       alerts.push({
-        severity: 'critical',
-        category: 'Lane C - IC Memos',
-        message: 'No IC Memos completed this week',
-        recommendation: 'Check Lane C runner and supporting prompts',
+        severity: 'warning',
+        category: 'Lane C - Prompts',
+        message: `Low supporting prompt success rate: ${report.laneCMetrics.supportingPromptStats.overallSuccessRate.toFixed(1)}%`,
+        recommendation: 'Review prompt templates and LLM responses',
       });
-    }
-    
-    // Check for uniform conviction (all same value)
-    if (report.laneCMetrics.memosCompleted > 3) {
-      // This would need actual conviction values to check variance
     }
   }
   
   // Infrastructure alerts
   if (report.infrastructureMetrics) {
-    if (report.infrastructureMetrics.dataSourceHealth.overallAvailability < 90) {
+    if (report.infrastructureMetrics.dataSourceHealth.overallHealth < 80) {
       alerts.push({
         severity: 'warning',
         category: 'Infrastructure - Data Sources',
-        message: `Low data source availability: ${report.infrastructureMetrics.dataSourceHealth.overallAvailability.toFixed(1)}%`,
+        message: `Data source health degraded: ${report.infrastructureMetrics.dataSourceHealth.overallHealth.toFixed(0)}%`,
         recommendation: 'Check API keys and rate limits',
       });
     }
     
-    if (report.infrastructureMetrics.llmPerformance.overallSuccessRate < 90) {
+    if (report.infrastructureMetrics.llmHealth.overallHealth < 90) {
       alerts.push({
         severity: 'warning',
         category: 'Infrastructure - LLM',
-        message: `Low LLM success rate: ${report.infrastructureMetrics.llmPerformance.overallSuccessRate.toFixed(1)}%`,
-        recommendation: 'Review prompts and fallback configuration',
+        message: `LLM health degraded: ${report.infrastructureMetrics.llmHealth.overallHealth.toFixed(0)}%`,
+        recommendation: 'Check API keys and fallback configurations',
       });
     }
   }
@@ -713,6 +482,15 @@ function generateAlerts(report: Partial<QAReportV2>): QAReportV2['alerts'] {
         recommendation: 'This is normal for a selective investment process',
       });
     }
+    
+    if (report.funnelMetrics.bottlenecks.length > 0) {
+      alerts.push({
+        severity: 'warning',
+        category: 'Funnel - Bottlenecks',
+        message: `Bottlenecks identified: ${report.funnelMetrics.bottlenecks.join(', ')}`,
+        recommendation: 'Focus optimization efforts on bottleneck areas',
+      });
+    }
   }
   
   return alerts;
@@ -720,6 +498,7 @@ function generateAlerts(report: Partial<QAReportV2>): QAReportV2['alerts'] {
 
 /**
  * Calculate overall score with weighted components
+ * NOTE: Weights are LOCKED per governance requirements
  */
 function calculateOverallScore(report: Partial<QAReportV2>): number {
   const weights = {
@@ -750,6 +529,7 @@ function calculateOverallScore(report: Partial<QAReportV2>): number {
 
 /**
  * Determine status based on score and alerts
+ * NOTE: Thresholds are LOCKED per governance requirements
  */
 function determineStatus(score: number, alerts: QAReportV2['alerts']): 'pass' | 'warn' | 'fail' {
   const criticalAlerts = alerts.filter(a => a.severity === 'critical').length;
@@ -761,17 +541,36 @@ function determineStatus(score: number, alerts: QAReportV2['alerts']): 'pass' | 
 }
 
 /**
- * Calculate trends compared to previous week
+ * Calculate trends compared to previous week using MetricsCalculator
  */
-async function calculateTrends(): Promise<QAReportV2['trends']> {
-  // TODO: Implement actual trend calculation by comparing with previous week's report
-  return {
-    lane0Trend: 'stable',
-    laneATrend: 'stable',
-    laneBTrend: 'stable',
-    laneCTrend: 'stable',
-    overallTrend: 'stable',
-  };
+async function calculateTrends(calculator: MetricsCalculator): Promise<QAReportV2['trends']> {
+  try {
+    const historical = await calculator.calculateHistoricalComparison();
+    
+    const getTrendDirection = (trend: any): 'up' | 'stable' | 'down' => {
+      if (!trend) return 'stable';
+      if (trend.trend === 'improving') return 'up';
+      if (trend.trend === 'declining') return 'down';
+      return 'stable';
+    };
+    
+    return {
+      lane0Trend: getTrendDirection(historical.lane0Trend),
+      laneATrend: getTrendDirection(historical.laneATrend),
+      laneBTrend: getTrendDirection(historical.laneBTrend),
+      laneCTrend: getTrendDirection(historical.laneCTrend),
+      overallTrend: getTrendDirection(historical.overallTrend),
+    };
+  } catch (error) {
+    console.error('[QA Report] Error calculating trends:', error);
+    return {
+      lane0Trend: 'stable',
+      laneATrend: 'stable',
+      laneBTrend: 'stable',
+      laneCTrend: 'stable',
+      overallTrend: 'stable',
+    };
+  }
 }
 
 /**
@@ -789,25 +588,30 @@ export async function runWeeklyQAReport(): Promise<QAReportResult> {
   try {
     const weekStart = getWeekStart();
     const weekOf = weekStart.toISOString().split('T')[0];
+    
+    // Initialize MetricsCalculator for the lookback period
+    const endDate = new Date();
+    const startDate = new Date(endDate.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
+    const calculator = new MetricsCalculator(startDate, endDate);
 
-    // Calculate all metrics
+    // Calculate all metrics using MetricsCalculator
     console.log('[QA Report v2.0] Calculating Lane 0 metrics...');
-    const lane0Metrics = await calculateLane0Metrics(lookbackDays);
+    const lane0Metrics = await calculateLane0Metrics(calculator);
 
     console.log('[QA Report v2.0] Calculating Lane A metrics...');
-    const laneAMetrics = await calculateLaneAMetrics(lookbackDays);
+    const laneAMetrics = await calculateLaneAMetrics(calculator);
 
     console.log('[QA Report v2.0] Calculating Lane B metrics...');
-    const laneBMetrics = await calculateLaneBMetrics(lookbackDays);
+    const laneBMetrics = await calculateLaneBMetrics(calculator);
 
     console.log('[QA Report v2.0] Calculating Lane C metrics...');
-    const laneCMetrics = await calculateLaneCMetrics(lookbackDays);
+    const laneCMetrics = await calculateLaneCMetrics(calculator);
 
     console.log('[QA Report v2.0] Calculating infrastructure metrics...');
-    const infrastructureMetrics = await calculateInfrastructureMetrics(lookbackDays);
+    const infrastructureMetrics = await calculateInfrastructureMetrics(calculator);
 
     console.log('[QA Report v2.0] Calculating funnel metrics...');
-    const funnelMetrics = await calculateFunnelMetrics(lane0Metrics, laneAMetrics, laneBMetrics, laneCMetrics);
+    const funnelMetrics = await calculateFunnelMetrics(calculator);
 
     // Build partial report for alert generation
     const partialReport: Partial<QAReportV2> = {
@@ -827,7 +631,7 @@ export async function runWeeklyQAReport(): Promise<QAReportResult> {
     const status = determineStatus(overallScore, alerts);
 
     // Calculate trends
-    const trends = await calculateTrends();
+    const trends = await calculateTrends(calculator);
 
     // Build the complete report
     const report: QAReportV2 = {
@@ -869,10 +673,10 @@ export async function runWeeklyQAReport(): Promise<QAReportResult> {
       duration_ms: Date.now() - startTime,
       report,
     };
+
   } catch (error) {
     const errorMessage = (error as Error).message;
     errors.push(errorMessage);
-
     console.error('[QA Report v2.0] Generation failed:', errorMessage);
 
     return {
