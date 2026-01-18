@@ -19,7 +19,7 @@ const lockedParams = [
   // Lane B
   { category: "Lane B", name: "Daily Packet Limit", value: "50 packets", description: "Max research packets per day" },
   { category: "Lane B", name: "Weekly Packet Limit", value: "200 packets", description: "Max research packets per week" },
-  { category: "Lane B", name: "Max Concurrency", value: "3 jobs", description: "Parallel research jobs" },
+  { category: "Lane B", name: "Max Concurrency", value: "10 jobs", description: "Parallel research jobs" },
   { category: "Lane B", name: "Time Per Name", value: "60-120 min", description: "Time budget per research packet" },
   { category: "Lane B", name: "Schedule", value: "08:00 daily", description: "Lane B run time (São Paulo)" },
   

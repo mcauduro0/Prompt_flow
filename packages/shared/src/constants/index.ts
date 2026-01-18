@@ -70,7 +70,7 @@ export const LANE_B_DAILY_PROMOTIONS_MAX = 50;
 export const LANE_B_WEEKLY_DEEP_PACKETS = 200;
 
 /** Max concurrent research jobs */
-export const LANE_B_MAX_CONCURRENCY = 3;
+export const LANE_B_MAX_CONCURRENCY = 10;
 
 /** Time budget per name (minutes) */
 export const LANE_B_TIME_PER_NAME_MIN = 60;
