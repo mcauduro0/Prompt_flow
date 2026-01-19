@@ -259,6 +259,133 @@ function RawContentViewer({ content }: { content: string }) {
   );
 }
 
+// Score Display Component for ROIC
+function ScoreDisplay({ 
+  label, 
+  score, 
+  maxScore = 10
+}: { 
+  label: string; 
+  score: number; 
+  maxScore?: number;
+}) {
+  const percentage = (score / maxScore) * 100;
+  const getColor = () => {
+    if (percentage >= 70) return "bg-green-500";
+    if (percentage >= 40) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+  
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between items-center">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="text-sm font-medium text-foreground">{score}/{maxScore}</span>
+      </div>
+      <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div 
+          className={`h-full ${getColor()} transition-all`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ROIC Decomposition Section Component
+function ROICDecompositionSection({ data }: { data: any }) {
+  if (!data || !data.success || !data.result?.data) return null;
+  
+  const roicData = data.result.data;
+  const grossMargin = roicData.gross_margin_analysis;
+  const capitalEfficiency = roicData.capital_efficiency_analysis;
+  const stressTest = roicData.roic_stress_test;
+  
+  // Extract scores safely
+  const grossMarginQuality = grossMargin?.scores?.gross_margin_quality_score_1_to_10 || 0;
+  const grossMarginDurability = grossMargin?.scores?.gross_margin_durability_score_1_to_10 || 0;
+  const capitalTurnsFragility = stressTest?.scores?.capital_turns_fragility_score_1_to_10_higher_more_fragile || 0;
+  const overallDurability = stressTest?.scores?.overall_roic_durability_score_1_to_10_higher_more_durable || 0;
+  
+  // Extract classifications
+  const grossMarginClass = grossMargin?.scores?.classification || "N/A";
+  const capitalClass = capitalEfficiency?.executive_summary?.classification || "N/A";
+  
+  // Extract key insights
+  const numberOneWatch = stressTest?.number_one_thing_to_watch;
+  
+  const formatClassification = (cls: string) => {
+    return cls.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  };
+  
+  return (
+    <Section title="ROIC Decomposition" icon={BarChart3}>
+      <div className="space-y-6">
+        {/* Overall Score */}
+        <div className="p-4 bg-accent/10 rounded-lg border border-accent/20">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-lg font-semibold text-foreground">Overall ROIC Durability</span>
+            <span className="text-2xl font-bold text-accent">{overallDurability}/10</span>
+          </div>
+          <div className="h-3 bg-muted rounded-full overflow-hidden">
+            <div 
+              className={`h-full ${overallDurability >= 7 ? 'bg-green-500' : overallDurability >= 4 ? 'bg-yellow-500' : 'bg-red-500'} transition-all`}
+              style={{ width: `${(overallDurability / 10) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Detailed Scores */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Gross Margin Analysis</h4>
+            <ScoreDisplay 
+              label="Quality Score" 
+              score={grossMarginQuality} 
+            />
+            <ScoreDisplay 
+              label="Durability Score" 
+              score={grossMarginDurability} 
+            />
+            <div className="pt-2">
+              <span className="text-xs text-muted-foreground">Classification: </span>
+              <span className="text-sm font-medium text-foreground">{formatClassification(grossMarginClass)}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Capital Efficiency</h4>
+            <ScoreDisplay 
+              label="Capital Turns Fragility" 
+              score={capitalTurnsFragility} 
+            />
+            <div className="pt-2">
+              <span className="text-xs text-muted-foreground">Classification: </span>
+              <span className="text-sm font-medium text-foreground">{formatClassification(capitalClass)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Number One Thing to Watch */}
+        {numberOneWatch && (
+          <div className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-semibold text-yellow-500 uppercase tracking-wider mb-1">
+                  Number One Thing to Watch
+                </h4>
+                <p className="text-sm font-medium text-foreground">{numberOneWatch.metric_or_event}</p>
+                <p className="text-sm text-muted-foreground mt-1">{numberOneWatch.why}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </Section>
+  );
+}
+
 export default function ICMemoDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -998,6 +1125,11 @@ export default function ICMemoDetailPage() {
                   )}
                 </div>
               </Section>
+            )}
+
+            {/* ROIC Decomposition */}
+            {memo.supporting_analyses?.roic_decomposition && (
+              <ROICDecompositionSection data={memo.supporting_analyses.roic_decomposition} />
             )}
 
             {/* Supporting Analyses */}
