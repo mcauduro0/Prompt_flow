@@ -61,16 +61,16 @@ export const LANE_A_DAILY_LIMIT = LANE_A_DAILY_TARGET;
 // ============================================================================
 
 /** Daily promotions target: 3-5 */
-export const LANE_B_DAILY_PROMOTIONS_TARGET = 10;
+export const LANE_B_DAILY_PROMOTIONS_TARGET = 50;
 
-/** Daily promotions hard cap: 50 */
-export const LANE_B_DAILY_PROMOTIONS_MAX = 50;
+/** Daily promotions hard cap: 200 */
+export const LANE_B_DAILY_PROMOTIONS_MAX = 200;
 
-/** Weekly deep packets hard cap: 200 */
-export const LANE_B_WEEKLY_DEEP_PACKETS = 200;
+/** Weekly deep packets hard cap: 500 */
+export const LANE_B_WEEKLY_DEEP_PACKETS = 500;
 
-/** Max concurrent research jobs */
-export const LANE_B_MAX_CONCURRENCY = 10;
+/** Max concurrent research jobs - increased for faster processing */
+export const LANE_B_MAX_CONCURRENCY = 5;
 
 /** Time budget per name (minutes) */
 export const LANE_B_TIME_PER_NAME_MIN = 60;

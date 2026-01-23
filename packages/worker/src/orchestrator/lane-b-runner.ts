@@ -538,18 +538,63 @@ export async function runLaneB(config: LaneBConfig = {}): Promise<LaneBResult> {
     // Create LLM client
     const llm = createResilientClient();
 
-    // Process ideas (with concurrency limit)
+    // Process ideas in parallel with concurrency limit
     let packetsCompleted = 0;
     let packetsFailed = 0;
 
-    for (const idea of ideasToResearch) {
-      const result = await runDeepResearch(
-        idea.ideaId,
-        idea.ticker,
-        idea.styleTag,
-        llm
-      );
+    // Helper function to process ideas in batches with concurrency
+    async function processWithConcurrency<T, R>(
+      items: T[],
+      processor: (item: T) => Promise<R>,
+      concurrency: number
+    ): Promise<R[]> {
+      const results: R[] = [];
+      const executing: Promise<void>[] = [];
 
+      for (const item of items) {
+        const promise = processor(item).then(result => {
+          results.push(result);
+        });
+        executing.push(promise);
+
+        if (executing.length >= concurrency) {
+          await Promise.race(executing);
+          // Remove completed promises
+          for (let i = executing.length - 1; i >= 0; i--) {
+            const p = executing[i];
+            // Check if promise is settled by racing with an immediate resolve
+            const settled = await Promise.race([p.then(() => true), Promise.resolve(false)]);
+            if (settled) {
+              executing.splice(i, 1);
+            }
+          }
+        }
+      }
+
+      // Wait for remaining promises
+      await Promise.all(executing);
+      return results;
+    }
+
+    console.log(`[Lane B] Processing ${ideasToResearch.length} ideas with concurrency ${LANE_B_MAX_CONCURRENCY}...`);
+
+    // Process ideas in parallel
+    const results = await processWithConcurrency(
+      ideasToResearch,
+      async (idea) => {
+        const result = await runDeepResearch(
+          idea.ideaId,
+          idea.ticker,
+          idea.styleTag,
+          llm
+        );
+        return { idea, result };
+      },
+      LANE_B_MAX_CONCURRENCY
+    );
+
+    // Collect results
+    for (const { idea, result } of results) {
       if (result.success) {
         packetsCompleted++;
         packets.push({
@@ -568,9 +613,6 @@ export async function runLaneB(config: LaneBConfig = {}): Promise<LaneBResult> {
         });
         errors.push(`${idea.ticker}: ${result.error}`);
       }
-
-      // Rate limiting between ideas
-      await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     // Update run record
