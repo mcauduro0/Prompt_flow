@@ -394,6 +394,28 @@ export class FMPClient {
   }
 
   /**
+   * Search for companies by name or ticker
+   */
+  async searchCompany(query: string, limit: number = 10): Promise<RetrieverResult<Array<{ symbol: string; name: string; currency: string; stockExchange: string; exchangeShortName: string }>>> {
+    const result = await this.fetch<any[]>(`/search?query=${encodeURIComponent(query)}&limit=${limit}`);
+    if (!result.success || !result.data) {
+      return { ...result, data: undefined };
+    }
+    return {
+      success: true,
+      data: result.data.map((item: any) => ({
+        symbol: item.symbol,
+        name: item.name,
+        currency: item.currency,
+        stockExchange: item.stockExchange,
+        exchangeShortName: item.exchangeShortName,
+      })),
+      source: 'fmp',
+      retrievedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
    * Get price target (analyst estimates)
    */
   async getPriceTarget(ticker: string): Promise<RetrieverResult<AnalystEstimate>> {

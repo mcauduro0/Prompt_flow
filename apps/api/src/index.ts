@@ -18,6 +18,7 @@ import { portfolioRouter } from './routes/portfolio.js';
 import { systemRouter } from './routes/system.js';
 import { icMemosRouter } from './routes/ic-memos.js';
 import { qaV2Router } from "./routes/qa-v2.js";
+import { manualIdeasRouter } from './routes/manual-ideas.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -45,6 +46,7 @@ app.use('/api/portfolio', portfolioRouter);
 app.use('/api/system', systemRouter);
 app.use('/api/ic-memos', icMemosRouter);
 app.use("/api/qa-v2", qaV2Router);
+app.use('/api/manual-ideas', manualIdeasRouter);
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

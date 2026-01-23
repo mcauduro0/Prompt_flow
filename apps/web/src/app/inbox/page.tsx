@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ArrowUpRight, Eye, X, ChevronRight, TrendingUp, DollarSign, Zap, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ArrowUpRight, Eye, X, ChevronRight, TrendingUp, DollarSign, Zap, Calendar, CheckCircle, XCircle, Clock, Plus } from "lucide-react";
+import { ManualIdeaInput } from "@/components/ui/ManualIdeaInput";
 import { cn } from "@/lib/utils";
 
 interface Idea {
@@ -105,32 +106,34 @@ export default function InboxPage() {
   const [stats, setStats] = useState<{ total_cost: number; avg_conviction: number } | null>(null);
   const [inboxStats, setInboxStats] = useState<InboxStats | null>(null);
   const [byDate, setByDate] = useState<Record<string, number>>({});
+  const [showManualInput, setShowManualInput] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchIdeas = async () => {
-      try {
-        const res = await fetch("/api/ideas/inbox");
-        if (res.ok) {
-          const data = await res.json();
-          const ideasData = data.ideas || [];
-          setIdeas(ideasData);
-          setInboxStats(data.stats || null);
-          setByDate(data.byDate || {});
-          
-          // Calculate stats
-          if (ideasData.length > 0) {
-            const totalCost = ideasData.reduce((sum: number, i: Idea) => sum + (i.total_cost_usd || 0), 0);
-            const avgConviction = ideasData.reduce((sum: number, i: Idea) => sum + (i.convictionScore || 0), 0) / ideasData.length;
-            setStats({ total_cost: totalCost, avg_conviction: avgConviction });
-          }
+  const fetchIdeas = async () => {
+    try {
+      const res = await fetch("/api/ideas/inbox");
+      if (res.ok) {
+        const data = await res.json();
+        const ideasData = data.ideas || [];
+        setIdeas(ideasData);
+        setInboxStats(data.stats || null);
+        setByDate(data.byDate || {});
+        
+        // Calculate stats
+        if (ideasData.length > 0) {
+          const totalCost = ideasData.reduce((sum: number, i: Idea) => sum + (i.total_cost_usd || 0), 0);
+          const avgConviction = ideasData.reduce((sum: number, i: Idea) => sum + (i.convictionScore || 0), 0) / ideasData.length;
+          setStats({ total_cost: totalCost, avg_conviction: avgConviction });
         }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchIdeas();
   }, []);
 
@@ -182,17 +185,33 @@ export default function InboxPage() {
         {/* Header */}
         <header className="border-b border-border">
           <div className="px-8 py-6">
-            <div className="flex items-baseline gap-3">
-              <h1 className="text-2xl font-medium text-foreground tracking-tight">
-                Idea Inbox
-              </h1>
-              <span className="text-sm text-muted-foreground">
-                {ideas.length} pending review
-              </span>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-baseline gap-3">
+                  <h1 className="text-2xl font-medium text-foreground tracking-tight">
+                    Idea Inbox
+                  </h1>
+                  <span className="text-sm text-muted-foreground">
+                    {ideas.length} pending review
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  All investment ideas awaiting manual review from Lane A Discovery
+                </p>
+              </div>
+              <button
+                onClick={() => setShowManualInput(!showManualInput)}
+                className={cn(
+                  "px-4 py-2 rounded-md flex items-center gap-2 transition-calm",
+                  showManualInput
+                    ? "bg-secondary text-foreground"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                )}
+              >
+                <Plus className="w-4 h-4" />
+                {showManualInput ? "Hide Manual Input" : "Add Ideas Manually"}
+              </button>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              All investment ideas awaiting manual review from Lane A Discovery
-            </p>
           </div>
 
           {/* Global Stats bar */}
@@ -278,6 +297,13 @@ export default function InboxPage() {
         {/* Main content */}
         <main className="flex-1 py-8">
           <div className="max-w-3xl mx-auto px-8">
+            {/* Manual Input Section */}
+            {showManualInput && (
+              <div className="mb-8">
+                <ManualIdeaInput onSuccess={fetchIdeas} />
+              </div>
+            )}
+
             {loading ? (
               <div className="text-center py-16">
                 <p className="text-muted-foreground animate-pulse-calm">Loading ideas...</p>
