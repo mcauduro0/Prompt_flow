@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ArrowUpRight, Eye, X, ChevronRight, TrendingUp, DollarSign, Zap, Calendar, CheckCircle, XCircle, Clock, Plus } from "lucide-react";
+import { ArrowUpRight, Eye, X, ChevronRight, TrendingUp, DollarSign, Zap, Calendar, CheckCircle, XCircle, Clock, Plus, CheckSquare, Square, Loader2 } from "lucide-react";
 import { ManualIdeaInput } from "@/components/ui/ManualIdeaInput";
 import { cn } from "@/lib/utils";
 
@@ -107,6 +107,12 @@ export default function InboxPage() {
   const [inboxStats, setInboxStats] = useState<InboxStats | null>(null);
   const [byDate, setByDate] = useState<Record<string, number>>({});
   const [showManualInput, setShowManualInput] = useState(false);
+  
+  // Selection state for bulk operations
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [bulkPromoting, setBulkPromoting] = useState(false);
+  
   const router = useRouter();
 
   const fetchIdeas = async () => {
@@ -136,6 +142,68 @@ export default function InboxPage() {
   useEffect(() => {
     fetchIdeas();
   }, []);
+
+  // Toggle selection mode
+  const toggleSelectionMode = () => {
+    if (selectionMode) {
+      // Exiting selection mode - clear selections
+      setSelectedIds(new Set());
+    }
+    setSelectionMode(!selectionMode);
+  };
+
+  // Toggle single idea selection
+  const toggleSelection = (ideaId: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(ideaId)) {
+      newSelected.delete(ideaId);
+    } else {
+      newSelected.add(ideaId);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  // Select all visible ideas
+  const selectAll = () => {
+    const allIds = new Set(sortedIdeas.map(i => i.ideaId));
+    setSelectedIds(allIds);
+  };
+
+  // Deselect all
+  const deselectAll = () => {
+    setSelectedIds(new Set());
+  };
+
+  // Bulk promote selected ideas
+  const handleBulkPromote = async () => {
+    if (selectedIds.size === 0) return;
+    
+    setBulkPromoting(true);
+    try {
+      const res = await fetch("/api/ideas/promote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ideaIds: Array.from(selectedIds) }),
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        // Remove promoted ideas from the list
+        setIdeas(ideas.filter(i => !selectedIds.has(i.ideaId)));
+        setSelectedIds(new Set());
+        setSelectionMode(false);
+        
+        // Refresh stats
+        fetchIdeas();
+      } else {
+        console.error("Bulk promote failed");
+      }
+    } catch (err) {
+      console.error("Bulk promote error:", err);
+    } finally {
+      setBulkPromoting(false);
+    }
+  };
 
   const handlePromote = async (id: string) => {
     try {
@@ -199,20 +267,81 @@ export default function InboxPage() {
                   All investment ideas awaiting manual review from Lane A Discovery
                 </p>
               </div>
-              <button
-                onClick={() => setShowManualInput(!showManualInput)}
-                className={cn(
-                  "px-4 py-2 rounded-md flex items-center gap-2 transition-calm",
-                  showManualInput
-                    ? "bg-secondary text-foreground"
-                    : "bg-primary text-primary-foreground hover:bg-primary/90"
-                )}
-              >
-                <Plus className="w-4 h-4" />
-                {showManualInput ? "Hide Manual Input" : "Add Ideas Manually"}
-              </button>
+              <div className="flex items-center gap-3">
+                {/* Selection Mode Toggle */}
+                <button
+                  onClick={toggleSelectionMode}
+                  className={cn(
+                    "px-4 py-2 rounded-md flex items-center gap-2 transition-calm",
+                    selectionMode
+                      ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                      : "bg-secondary text-foreground hover:bg-secondary/80"
+                  )}
+                >
+                  <CheckSquare className="w-4 h-4" />
+                  {selectionMode ? "Exit Selection" : "Select Multiple"}
+                </button>
+                
+                {/* Add Ideas Button */}
+                <button
+                  onClick={() => setShowManualInput(!showManualInput)}
+                  className={cn(
+                    "px-4 py-2 rounded-md flex items-center gap-2 transition-calm",
+                    showManualInput
+                      ? "bg-secondary text-foreground"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
+                  )}
+                >
+                  <Plus className="w-4 h-4" />
+                  {showManualInput ? "Hide Manual Input" : "Add Ideas Manually"}
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Selection Action Bar - Shows when in selection mode */}
+          {selectionMode && (
+            <div className="px-8 pb-4">
+              <div className="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium text-foreground">
+                    {selectedIds.size} idea{selectedIds.size !== 1 ? 's' : ''} selected
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={selectAll}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Select All ({sortedIdeas.length})
+                    </button>
+                    <span className="text-muted-foreground">|</span>
+                    <button
+                      onClick={deselectAll}
+                      className="text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                </div>
+                <button
+                  onClick={handleBulkPromote}
+                  disabled={selectedIds.size === 0 || bulkPromoting}
+                  className={cn(
+                    "px-4 py-2 rounded-md flex items-center gap-2 transition-calm",
+                    "bg-accent text-accent-foreground hover:bg-accent/90",
+                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                  )}
+                >
+                  {bulkPromoting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ArrowUpRight className="w-4 h-4" />
+                  )}
+                  Promote {selectedIds.size > 0 ? `(${selectedIds.size})` : ''} to Lane B
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Global Stats bar */}
           {inboxStats && (
@@ -323,7 +452,10 @@ export default function InboxPage() {
                     idea={idea}
                     index={index}
                     expanded={expandedId === idea.ideaId}
+                    selected={selectedIds.has(idea.ideaId)}
+                    selectionMode={selectionMode}
                     onToggle={() => setExpandedId(expandedId === idea.ideaId ? null : idea.ideaId)}
+                    onSelect={() => toggleSelection(idea.ideaId)}
                     onPromote={() => handlePromote(idea.ideaId)}
                     onReject={() => handleReject(idea.ideaId)}
                     onViewDetail={() => router.push(`/inbox/${idea.ideaId}`)}
@@ -353,35 +485,64 @@ interface IdeaCardProps {
   idea: Idea;
   index: number;
   expanded: boolean;
+  selected: boolean;
+  selectionMode: boolean;
   onToggle: () => void;
+  onSelect: () => void;
   onPromote: () => void;
   onReject: () => void;
   onViewDetail: () => void;
 }
 
-function IdeaCard({ idea, index, expanded, onToggle, onPromote, onReject, onViewDetail }: IdeaCardProps) {
+function IdeaCard({ idea, index, expanded, selected, selectionMode, onToggle, onSelect, onPromote, onReject, onViewDetail }: IdeaCardProps) {
   const valueCostRatio = idea.value_cost_ratio || 0;
   const isHighValue = valueCostRatio >= 2.0;
   const discoveryDate = formatDiscoveryDate(idea.asOf || idea.createdAt);
+  
+  const handleClick = () => {
+    if (selectionMode) {
+      onSelect();
+    } else {
+      onToggle();
+    }
+  };
   
   return (
     <article
       className={cn(
         "bg-card rounded-md transition-calm cursor-pointer animate-fade-in",
         "border border-transparent",
-        expanded ? "bg-secondary/20 border-border/40" : "hover:bg-secondary/15",
-        isHighValue && "border-l-2 border-l-amber-500/50"
+        expanded && !selectionMode ? "bg-secondary/20 border-border/40" : "hover:bg-secondary/15",
+        isHighValue && "border-l-2 border-l-amber-500/50",
+        selected && "bg-accent/10 border-accent/30 ring-1 ring-accent/20"
       )}
       style={{ 
         padding: 'var(--space-6)',
         animationDelay: `${index * 75}ms`
       }}
-      onClick={onToggle}
+      onClick={handleClick}
     >
       {/* Top metadata row */}
       <div className="flex items-center justify-between mb-4">
-        {/* Left side: Discovery Date + Novelty + Market Cap */}
+        {/* Left side: Selection checkbox + Discovery Date + Novelty + Market Cap */}
         <div className="flex items-center gap-3">
+          {/* Selection Checkbox */}
+          {selectionMode && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect();
+              }}
+              className="flex items-center justify-center"
+            >
+              {selected ? (
+                <CheckSquare className="w-5 h-5 text-accent" />
+              ) : (
+                <Square className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+              )}
+            </button>
+          )}
+          
           {/* Discovery Date Badge */}
           <span className="text-annotation px-2 py-0.5 rounded bg-secondary/50 text-muted-foreground flex items-center gap-1">
             <Calendar className="w-3 h-3" />
@@ -470,8 +631,8 @@ function IdeaCard({ idea, index, expanded, onToggle, onPromote, onReject, onView
         </div>
       )}
 
-      {/* Expanded section */}
-      {expanded && (
+      {/* Expanded section - only show when not in selection mode */}
+      {expanded && !selectionMode && (
         <div className="mt-5 pt-5 border-t border-border/30 animate-fade-in">
           {/* Institutional metrics detail */}
           <div className="grid grid-cols-4 gap-4 mb-5 p-3 bg-secondary/20 rounded-lg">
