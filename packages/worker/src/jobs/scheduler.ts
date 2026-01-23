@@ -468,6 +468,62 @@ export class JobScheduler {
       }
 
       // ========================================
+      // Lane B Batch Triggers (multiple ideas at once)
+      // ========================================
+      const laneBBatchRuns = await runsRepository.getByType('manual_lane_b_batch_trigger', 10);
+      const pendingLaneBBatchRuns = laneBBatchRuns.filter(r => r.status === 'pending');
+      
+      for (const run of pendingLaneBBatchRuns) {
+        // Check if lane is already running (manual or scheduled)
+        if (this.isLaneRunning('lane_b')) {
+          console.log(`[Scheduler] Skipping manual Lane B batch trigger ${run.runId} - lane already running`);
+          continue;
+        }
+        
+        console.log(`[Scheduler] Found manual Lane B batch trigger: ${run.runId}`);
+        const startedAt = new Date().toISOString();
+        
+        // Mark lane as running and update DB
+        this.markLaneRunning('lane_b', run.runId, 'manual');
+        await runsRepository.updateStatus(run.runId, 'running');
+        await runsRepository.updatePayload(run.runId, {
+          ...(run.payload as object || {}),
+          startedAt,
+        });
+        
+        try {
+          const payload = run.payload as { ideaIds?: string[]; maxPackets?: number } | null;
+          const ideaIds = payload?.ideaIds || [];
+          const maxPackets = payload?.maxPackets || 50;
+          
+          console.log(`[Scheduler] Processing Lane B batch for ${ideaIds.length} ideas (max: ${maxPackets})`);
+          
+          // Run Lane B with specific idea IDs
+          const result = await runLaneB({
+            ideaIds: ideaIds.slice(0, maxPackets),
+            maxPackets,
+          });
+          
+          const completedAt = new Date().toISOString();
+          await runsRepository.updateStatus(run.runId, 'completed');
+          await runsRepository.updatePayload(run.runId, {
+            ...(payload as object || {}),
+            startedAt,
+            completedAt,
+            durationMs: new Date(completedAt).getTime() - new Date(startedAt).getTime(),
+            result,
+          });
+          
+          console.log(`[Scheduler] Manual Lane B batch completed: ${run.runId}`, result);
+        } catch (error) {
+          await runsRepository.updateStatus(run.runId, 'failed', (error as Error).message);
+          console.error(`[Scheduler] Manual Lane B batch failed: ${run.runId}`, error);
+        } finally {
+          this.markLaneIdle('lane_b');
+        }
+      }
+
+      // ========================================
       // Lane C Manual Triggers (Individual IC Memo with ROIC)
       // ========================================
       const laneCRuns = await runsRepository.getByType('manual_lane_c_trigger', 10);
