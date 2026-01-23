@@ -10,7 +10,7 @@ export const ideasRouter: Router = Router();
 ideasRouter.get('/', async (req: Request, res: Response) => {
   try {
     const status = req.query.status as string | undefined;
-    const limit = parseInt(req.query.limit as string) || 100;
+    const limit = parseInt(req.query.limit as string) || 500;
     
     let ideas: any[] = [];
     if (status === 'inbox') {
@@ -249,7 +249,7 @@ ideasRouter.get('/ticker/:ticker', async (req: Request, res: Response) => {
 ideasRouter.get('/status/:status', async (req: Request, res: Response) => {
   try {
     const status = req.params.status as 'new' | 'monitoring' | 'promoted' | 'rejected';
-    const limit = parseInt(req.query.limit as string) || 100;
+    const limit = parseInt(req.query.limit as string) || 500;
     const ideas = await ideasRepository.getByStatus(status, limit);
     res.json({ ideas, status, count: ideas.length });
   } catch (error) {

@@ -61,7 +61,7 @@ export default function QueuePage() {
 
   const fetchQueue = useCallback(async () => {
     try {
-      const res = await fetch("/api/ideas?status=promoted");
+      const res = await fetch("/api/ideas?status=promoted&limit=500");
       if (res.ok) {
         const data = await res.json();
         const mapped = (data.ideas || []).map((i: any) => {

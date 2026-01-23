@@ -122,7 +122,7 @@ researchRouter.post('/start-all-queued', async (req: Request, res: Response) => 
     const { maxPackets = 10 } = req.body;
     
     // Get all promoted ideas that don't have research packets yet
-    const promotedIdeas = await ideasRepository.getByStatus('promoted', 100);
+    const promotedIdeas = await ideasRepository.getByStatus('promoted', 500);
     
     // Filter to only those without research packets
     const queuedIdeas: string[] = [];
@@ -182,7 +182,7 @@ researchRouter.post('/start-all-queued', async (req: Request, res: Response) => 
 // GET /api/research/queued - Get all queued ideas (promoted but no research packet)
 researchRouter.get('/queued', async (req: Request, res: Response) => {
   try {
-    const limit = parseInt(req.query.limit as string) || 100;
+    const limit = parseInt(req.query.limit as string) || 500;
     
     // Get all promoted ideas
     const promotedIdeas = await ideasRepository.getByStatus('promoted', limit);
