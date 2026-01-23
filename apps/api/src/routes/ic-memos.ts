@@ -118,7 +118,56 @@ icMemosRouter.get('/:memoId', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/ic-memos/approve - Approve research packets for IC Memo generation
+// POST /api/ic-memos/approve/:packetId - Approve single research packet for IC Memo generation
+icMemosRouter.post('/approve/:packetId', async (req: Request, res: Response) => {
+  try {
+    const { packetId } = req.params;
+    
+    const packet = await researchPacketsRepository.getById(packetId);
+    
+    if (!packet) {
+      return res.status(404).json({ error: 'Packet not found' });
+    }
+
+    // Check if IC Memo already exists for this packet
+    const existingMemo = await icMemosRepository.getByPacketId(packetId);
+    if (existingMemo) {
+      return res.status(400).json({ 
+        error: 'IC Memo already exists for this packet',
+        memoId: existingMemo.memoId,
+      });
+    }
+
+    // Create IC Memo
+    const idea = await ideasRepository.getById(packet.ideaId);
+    const decisionBrief = packet.decisionBrief as any || {};
+    
+    const memoId = await icMemosRepository.create({
+      packetId,
+      ideaId: packet.ideaId,
+      ticker: packet.ticker,
+      companyName: idea?.companyName || packet.ticker,
+      styleTag: decisionBrief.style_tag || 'quality_compounder',
+      asOf: new Date().toISOString(),
+      status: 'pending',
+      generationProgress: 0,
+    });
+
+    console.log(`[IC Memos API] Approved packet ${packetId} for IC Memo generation (Memo: ${memoId})`);
+
+    res.json({
+      success: true,
+      message: 'Packet approved for IC Memo generation',
+      packetId,
+      memoId,
+    });
+  } catch (error) {
+    console.error('Error approving packet:', error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// POST /api/ic-memos/approve - Approve research packets for IC Memo generation (batch)
 icMemosRouter.post('/approve', async (req: Request, res: Response) => {
   try {
     const { packetIds } = req.body;
