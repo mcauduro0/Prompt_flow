@@ -21,6 +21,7 @@ import { qaV2Router } from "./routes/qa-v2.js";
 import { manualIdeasRouter } from './routes/manual-ideas.js';
 import { portfolioSystematicRouter } from './routes/portfolio-systematic.js';
 import { portfolioRulesRouter } from './routes/portfolio-rules.js';
+import { portfolioPositionsRouter } from './routes/portfolio-positions.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -51,6 +52,7 @@ app.use("/api/qa-v2", qaV2Router);
 app.use('/api/manual-ideas', manualIdeasRouter);
 app.use('/api/portfolio/systematic', portfolioSystematicRouter);
 app.use('/api/portfolio/rules', portfolioRulesRouter);
+app.use('/api/portfolio/positions', portfolioPositionsRouter);
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

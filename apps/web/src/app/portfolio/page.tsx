@@ -8,6 +8,7 @@ import {
   RefreshCw, Download, BookOpen, Zap, Scale
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PositionsTab } from "@/components/portfolio/PositionsTab";
 
 // ============================================================================
 // TYPES
@@ -376,7 +377,7 @@ export default function PortfolioPage() {
               />
             )}
             {activeTab === 'positions' && (
-              <PositionsTab positions={positions} />
+              <PositionsTab />
             )}
             {activeTab === 'risk' && (
               <RiskTab metrics={riskMetrics} alerts={alerts} positions={positions} />
@@ -928,63 +929,7 @@ interface PositionsTabProps {
   positions: Position[];
 }
 
-function PositionsTab({ positions }: PositionsTabProps) {
-  if (positions.length === 0) {
-    return (
-      <div className="text-center py-16 bg-card border border-border rounded-lg">
-        <PieChart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-        <p className="text-muted-foreground">No positions in portfolio.</p>
-        <p className="text-sm text-muted-foreground/60 mt-2">
-          Use the Systematic tab to generate a portfolio based on IC Memos.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden">
-      <div className="grid grid-cols-7 gap-4 px-4 py-3 bg-secondary/30 border-b border-border text-sm font-medium text-muted-foreground">
-        <div className="col-span-2">Position</div>
-        <div>Weight</div>
-        <div>P&L</div>
-        <div>Conviction</div>
-        <div>Style</div>
-        <div>Entry Date</div>
-      </div>
-
-      <div className="divide-y divide-border/50">
-        {positions.map((pos) => (
-          <div key={pos.id} className="grid grid-cols-7 gap-4 px-4 py-3 text-sm hover:bg-secondary/10">
-            <div className="col-span-2">
-              <span className="font-mono font-medium text-foreground">{pos.ticker}</span>
-              <span className="text-muted-foreground ml-2">{pos.company_name}</span>
-            </div>
-            <div className="text-foreground">{pos.weight_percent.toFixed(1)}%</div>
-            <div className={cn(
-              pos.pnl_percent >= 0 ? "text-emerald-400" : "text-red-400"
-            )}>
-              {pos.pnl_percent >= 0 ? '+' : ''}{pos.pnl_percent.toFixed(2)}%
-            </div>
-            <div className={cn(
-              pos.conviction >= 8 ? "text-emerald-400" :
-              pos.conviction >= 6 ? "text-amber-400" : "text-muted-foreground"
-            )}>
-              {pos.conviction}/10
-            </div>
-            <div>
-              <span className={cn("px-2 py-0.5 rounded text-xs", styleColors[pos.style])}>
-                {styleLabels[pos.style] || pos.style}
-              </span>
-            </div>
-            <div className="text-muted-foreground">
-              {new Date(pos.entry_date).toLocaleDateString()}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+// PositionsTab is now imported from @/components/portfolio/PositionsTab
 
 // ============================================================================
 // RISK TAB
