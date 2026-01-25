@@ -25,7 +25,7 @@ import {
 } from '@arc/shared';
 import { createFMPClient, createPolygonClient, getDataRetrieverHub, type SocialSentimentData } from '@arc/retriever';
 import { createResilientClient, type LLMClient } from '@arc/llm-client';
-import { ideasRepository, runsRepository, memoryRepository } from '@arc/database';
+import { ideasRepository, runsRepository, memoryRepository, icMemosRepository, researchPacketsRepository } from '@arc/database';
 import {
   isPromptLibraryEnabled,
   executeLaneAWithLibrary,
@@ -96,10 +96,79 @@ interface EnrichedStock {
 // ============================================================================
 
 /**
+ * Get tickers that already have IC Memos or Research Packets in the last N days
+ */
+async function getRecentlyProcessedTickers(days: number = 30): Promise<Set<string>> {
+  const processed = new Set<string>();
+  
+  try {
+    // Get tickers with IC Memos in last N days
+    const recentMemos = await icMemosRepository.getRecent(days);
+    for (const memo of recentMemos) {
+      if (memo.ticker) processed.add(memo.ticker.toUpperCase());
+    }
+    
+    // Get tickers with Research Packets in last N days
+    const recentPackets = await researchPacketsRepository.getRecentPackets(days);
+    for (const packet of recentPackets) {
+      if (packet.ticker) processed.add(packet.ticker.toUpperCase());
+    }
+    
+    console.log(`[Lane A] Found ${processed.size} tickers with recent IC Memos or Research Packets (last ${days} days)`);
+  } catch (error) {
+    console.warn('[Lane A] Error fetching recently processed tickers:', (error as Error).message);
+  }
+  
+  return processed;
+}
+
+/**
+ * Check if a stock is a fund/ETF based on FMP profile
+ */
+function isFundOrETF(profile: any): boolean {
+  if (!profile) return false;
+  
+  // Check explicit flags
+  if (profile.isEtf === true || profile.isFund === true) return true;
+  
+  // Check sector/industry for fund-like characteristics
+  const sector = (profile.sector || '').toLowerCase();
+  const industry = (profile.industry || '').toLowerCase();
+  const name = (profile.companyName || '').toLowerCase();
+  
+  // Common fund/ETF indicators
+  const fundIndicators = [
+    'etf', 'fund', 'trust', 'reit', 'investment', 'asset management',
+    'closed-end', 'open-end', 'mutual', 'index', 'spdr', 'ishares',
+    'vanguard', 'proshares', 'invesco', 'schwab', 'fidelity'
+  ];
+  
+  for (const indicator of fundIndicators) {
+    if (sector.includes(indicator) || industry.includes(indicator) || name.includes(indicator)) {
+      return true;
+    }
+  }
+  
+  // Check if it's a financial services company that's actually a fund
+  if (sector === 'financial services' && 
+      (industry.includes('asset') || industry.includes('investment') || industry.includes('fund'))) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
  * Fetch universe of stocks to analyze using FMP screener
+ * Filters out:
+ * - Funds/ETFs (only individual company stocks)
+ * - Tickers with recent IC Memos or Research Packets (avoid duplicates)
  */
 async function fetchUniverse(): Promise<string[]> {
   const fmp = createFMPClient();
+  
+  // Get tickers that were recently processed (IC Memos or Research Packets)
+  const recentlyProcessed = await getRecentlyProcessedTickers(30);
   
   // Get US stocks with market cap between $500M and $50B (mid-cap focus)
   const result = await fmp.screenStocks({
@@ -115,12 +184,47 @@ async function fetchUniverse(): Promise<string[]> {
     return [];
   }
 
-  // Extract ticker symbols from screener results
-  const tickers = result.data.map((stock: any) => stock.symbol).filter(Boolean);
+  // Extract ticker symbols and filter out funds/ETFs
+  const allTickers = result.data.map((stock: any) => stock.symbol).filter(Boolean);
+  console.log(`[Lane A] Screener returned ${allTickers.length} tickers`);
   
-  // Shuffle and take a sample for daily analysis
-  const shuffled = tickers.sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 30); // Analyze 30 stocks per day
+  // Filter out recently processed tickers
+  const newTickers = allTickers.filter((ticker: string) => !recentlyProcessed.has(ticker.toUpperCase()));
+  console.log(`[Lane A] After filtering duplicates: ${newTickers.length} tickers (${allTickers.length - newTickers.length} filtered out)`);
+  
+  // Shuffle and take a larger sample to account for fund filtering
+  const shuffled = newTickers.sort(() => Math.random() - 0.5);
+  const sample = shuffled.slice(0, 60); // Take more to filter funds later
+  
+  // Filter out funds/ETFs by checking profiles
+  const validTickers: string[] = [];
+  let fundsFiltered = 0;
+  
+  for (const ticker of sample) {
+    try {
+      const profileResult = await fmp.getProfile(ticker);
+      if (profileResult.success && profileResult.data) {
+        if (isFundOrETF(profileResult.data)) {
+          console.log(`[Lane A] Filtered out ${ticker} - is a fund/ETF`);
+          fundsFiltered++;
+        } else {
+          validTickers.push(ticker);
+        }
+      }
+      
+      // Stop if we have enough valid tickers
+      if (validTickers.length >= 30) break;
+      
+      // Rate limiting
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } catch (error) {
+      // On error, include the ticker (will be filtered later if needed)
+      validTickers.push(ticker);
+    }
+  }
+  
+  console.log(`[Lane A] Final universe: ${validTickers.length} company stocks (${fundsFiltered} funds/ETFs filtered)`);
+  return validTickers.slice(0, 30); // Analyze 30 stocks per day
 }
 
 /**
