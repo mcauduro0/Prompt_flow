@@ -94,11 +94,12 @@ export class FMPIngestor {
         return ideas;
       }
 
-      const tickers = screenResult.data;
-      console.log(`[FMPIngestor] Found ${tickers.length} stocks matching criteria`);
+      // Extract ticker symbols from screener results (screenResult.data contains objects with 'symbol' property)
+      const tickerSymbols = screenResult.data.map((stock: any) => stock.symbol).filter(Boolean);
+      console.log(`[FMPIngestor] Found ${tickerSymbols.length} stocks matching criteria`);
 
       // Shuffle and take a sample
-      const shuffled = tickers.sort(() => Math.random() - 0.5);
+      const shuffled = tickerSymbols.sort(() => Math.random() - 0.5);
       const sample = shuffled.slice(0, this.config.maxStocks);
 
       // Step 2: Get detailed metrics for each stock
