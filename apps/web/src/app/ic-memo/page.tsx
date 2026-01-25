@@ -15,7 +15,9 @@ import {
   FileText,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Building2,
+  Filter
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -122,6 +124,65 @@ const calculateQuintile = (score: number | null): string | null => {
   return "Q1";
 };
 
+// Check if a memo is a fund/ETF (not a company)
+const isFundOrETF = (memo: ICMemo): boolean => {
+  const fundPatterns = [
+    /\bFund\b/i,
+    /\bETF\b/i,
+    /\bIndex\b/i,
+    /\bVanguard\b/i,
+    /\bFidelity\b/i,
+    /\biShares\b/i,
+    /\bSPDR\b/i,
+    /\bAdmiral\b/i,
+    /\bInvestor\s+(Class|Shares)\b/i,
+    /\bPortfolio\b/i,
+    /\bIncome\s+Fund\b/i,
+    /\bSecurities\s+Fund\b/i,
+    /\bBond\b/i,
+    /\bTreasury\b/i,
+    /\bFreedom\b/i,
+    /\bGrowth\s+Fund\b/i,
+    /\bCore\s+Equity\b/i,
+    /\bClass\s+[A-Z0-9-]+$/i,
+    /\bShares$/i,
+    /\bInstitutional\b/i,
+    /\bPremium\s+Income\b/i,
+    /\bProtected\s+Securities\b/i,
+    /\bGovernment\s+Securities\b/i,
+    /\bInvestment\s+Grade\b/i,
+    /\bTotal\s+Market\b/i,
+    /\bSelect\s+Income\b/i,
+    /\bETP\b/i,
+  ];
+  
+  // Check ticker patterns for funds
+  const fundTickerPatterns = [
+    /^V[A-Z]{3,4}X?$/,  // Vanguard funds like VWUSX, VEUSX, VFTNX
+    /^F[A-Z]{3,4}X$/,   // Fidelity funds like FZTKX, FIPFX
+    /^[A-Z]{4,5}X$/,    // Most mutual funds end in X
+  ];
+  
+  const companyName = memo.company_name || '';
+  const ticker = memo.ticker || '';
+  
+  // Check company name against fund patterns
+  for (const pattern of fundPatterns) {
+    if (pattern.test(companyName)) {
+      return true;
+    }
+  }
+  
+  // Check ticker against fund patterns
+  for (const pattern of fundTickerPatterns) {
+    if (pattern.test(ticker) && ticker.length >= 5) {
+      return true;
+    }
+  }
+  
+  return false;
+};
+
 export default function ICMemoPage() {
   const [memos, setMemos] = useState<ICMemo[]>([]);
   const [stats, setStats] = useState<ICMemoStats | null>(null);
@@ -134,8 +195,9 @@ export default function ICMemoPage() {
 
   const fetchData = useCallback(async () => {
     try {
+      // Fetch all memos without limit
       const [memosRes, statsRes] = await Promise.all([
-        fetch("/api/ic-memos"),
+        fetch("/api/ic-memos?limit=1000"),
         fetch("/api/ic-memos/stats"),
       ]);
 
@@ -206,10 +268,15 @@ export default function ICMemoPage() {
       : <ArrowDown className="w-3 h-3" />;
   };
 
+  // Filter out funds/ETFs and apply status filter, then sort
   const sortedAndFilteredMemos = useMemo(() => {
-    let filtered = statusFilter === "all" 
-      ? memos 
-      : memos.filter(m => m.status === statusFilter);
+    // First, filter out funds/ETFs - only keep companies
+    let filtered = memos.filter(m => !isFundOrETF(m));
+    
+    // Then apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(m => m.status === statusFilter);
+    }
 
     return filtered.sort((a, b) => {
       let aValue: string | number | null;
@@ -274,6 +341,25 @@ export default function ICMemoPage() {
     });
   }, [memos, statusFilter, sortField, sortDirection]);
 
+  // Calculate stats for companies only
+  const companyStats = useMemo(() => {
+    const companies = memos.filter(m => !isFundOrETF(m));
+    const fundsRemoved = memos.length - companies.length;
+    
+    const byStatus = {
+      pending: companies.filter(m => m.status === 'pending').length,
+      generating: companies.filter(m => m.status === 'generating').length,
+      complete: companies.filter(m => m.status === 'complete').length,
+      failed: companies.filter(m => m.status === 'failed').length,
+    };
+    
+    return {
+      total: companies.length,
+      fundsRemoved,
+      by_status: byStatus,
+    };
+  }, [memos]);
+
   const SortableHeader = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
     <th 
       className={cn(
@@ -305,12 +391,19 @@ export default function ICMemoPage() {
             <div>
               <h1 className="text-2xl font-medium text-foreground">IC Memo</h1>
               <p className="text-sm text-muted-foreground">
-                Investment Committee Memos - Lane C
+                Investment Committee Memos - Companies Only
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-500/10 border border-blue-500/20">
+              <Building2 className="w-4 h-4 text-blue-400" />
+              <span className="text-xs text-blue-400">
+                {companyStats.fundsRemoved} funds filtered out
+              </span>
+            </div>
+            
             <button
               onClick={handleRefresh}
               disabled={refreshing}
@@ -327,12 +420,12 @@ export default function ICMemoPage() {
 
             <button
               onClick={handleTriggerRun}
-              disabled={triggeringRun || (stats?.by_status?.pending || 0) === 0}
+              disabled={triggeringRun || (companyStats.by_status?.pending || 0) === 0}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-md",
                 "bg-accent text-accent-foreground text-sm",
                 "hover:bg-accent/90 transition-calm",
-                (triggeringRun || (stats?.by_status?.pending || 0) === 0) && "opacity-50 cursor-not-allowed"
+                (triggeringRun || (companyStats.by_status?.pending || 0) === 0) && "opacity-50 cursor-not-allowed"
               )}
             >
               {triggeringRun ? (
@@ -351,8 +444,11 @@ export default function ICMemoPage() {
             "p-4 rounded-lg border border-border",
             "bg-card"
           )}>
-            <p className="text-sm text-muted-foreground mb-1">Total</p>
-            <p className="text-2xl font-medium">{stats?.total || 0}</p>
+            <div className="flex items-center gap-2 mb-1">
+              <Building2 className="w-4 h-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Companies</p>
+            </div>
+            <p className="text-2xl font-medium">{companyStats.total}</p>
           </div>
           
           <div className={cn(
@@ -361,7 +457,7 @@ export default function ICMemoPage() {
           )}>
             <p className="text-sm text-yellow-600 mb-1">Pending</p>
             <p className="text-2xl font-medium text-yellow-600">
-              {stats?.by_status?.pending || 0}
+              {companyStats.by_status?.pending || 0}
             </p>
           </div>
           
@@ -371,7 +467,7 @@ export default function ICMemoPage() {
           )}>
             <p className="text-sm text-blue-600 mb-1">Generating</p>
             <p className="text-2xl font-medium text-blue-600">
-              {stats?.by_status?.generating || 0}
+              {companyStats.by_status?.generating || 0}
             </p>
           </div>
           
@@ -381,7 +477,7 @@ export default function ICMemoPage() {
           )}>
             <p className="text-sm text-green-600 mb-1">Complete</p>
             <p className="text-2xl font-medium text-green-600">
-              {stats?.by_status?.complete || 0}
+              {companyStats.by_status?.complete || 0}
             </p>
           </div>
         </div>
@@ -400,9 +496,9 @@ export default function ICMemoPage() {
               )}
             >
               {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              {filter !== "all" && stats?.by_status?.[filter as keyof typeof stats.by_status] !== undefined && (
+              {filter !== "all" && companyStats.by_status?.[filter as keyof typeof companyStats.by_status] !== undefined && (
                 <span className="ml-2 text-xs opacity-70">
-                  ({stats.by_status[filter as keyof typeof stats.by_status]})
+                  ({companyStats.by_status[filter as keyof typeof companyStats.by_status]})
                 </span>
               )}
             </button>
@@ -437,150 +533,160 @@ export default function ICMemoPage() {
           </div>
         ) : (
           <div className="border border-border rounded-lg overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-muted/30">
-                <tr>
-                  <SortableHeader field="ticker">Company</SortableHeader>
-                  <SortableHeader field="style_tag">Style</SortableHeader>
-                  <SortableHeader field="status">Status</SortableHeader>
-                  <SortableHeader field="recommendation">Recommendation</SortableHeader>
-                  <SortableHeader field="conviction">Conviction</SortableHeader>
-                  <SortableHeader field="score">Score</SortableHeader>
-                  <SortableHeader field="quintile">Quintile</SortableHeader>
-                  <SortableHeader field="approved_at">Approved</SortableHeader>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {sortedAndFilteredMemos.map((memo) => {
-                  const statusInfo = statusConfig[memo.status];
-                  const StatusIcon = statusInfo.icon;
-                  const score = calculateScore(memo.conviction);
-                  const quintile = calculateQuintile(score);
-                  
-                  return (
-                    <tr key={memo.id} className="hover:bg-muted/20 transition-calm">
-                      <td className="px-4 py-4">
-                        <div>
-                          <p className="font-medium text-foreground">{memo.ticker}</p>
-                          <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                            {memo.company_name}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className={cn(
-                          "px-2 py-1 rounded text-xs font-medium",
-                          "bg-muted text-muted-foreground"
-                        )}>
-                          {memo.style_tag}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className={cn(
-                            "flex items-center gap-1.5 px-2 py-1 rounded",
-                            statusInfo.bgColor
-                          )}>
-                            <StatusIcon className={cn(
-                              "w-3.5 h-3.5",
-                              statusInfo.color,
-                              memo.status === "generating" && "animate-spin"
-                            )} />
-                            <span className={cn("text-xs font-medium", statusInfo.color)}>
-                              {statusInfo.label}
-                            </span>
+            <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
+              <table className="w-full">
+                <thead className="bg-muted/30 sticky top-0 z-10">
+                  <tr>
+                    <SortableHeader field="ticker">Company</SortableHeader>
+                    <SortableHeader field="style_tag">Style</SortableHeader>
+                    <SortableHeader field="status">Status</SortableHeader>
+                    <SortableHeader field="recommendation">Recommendation</SortableHeader>
+                    <SortableHeader field="conviction">Conviction</SortableHeader>
+                    <SortableHeader field="score">Score</SortableHeader>
+                    <SortableHeader field="quintile">Quintile</SortableHeader>
+                    <SortableHeader field="approved_at">Approved</SortableHeader>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {sortedAndFilteredMemos.map((memo) => {
+                    const statusInfo = statusConfig[memo.status];
+                    const StatusIcon = statusInfo.icon;
+                    const score = calculateScore(memo.conviction);
+                    const quintile = calculateQuintile(score);
+                    
+                    return (
+                      <tr key={memo.id} className="hover:bg-muted/20 transition-calm">
+                        <td className="px-4 py-4">
+                          <div>
+                            <p className="font-medium text-foreground">{memo.ticker}</p>
+                            <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                              {memo.company_name}
+                            </p>
                           </div>
-                          {memo.status === "generating" && (
-                            <span className="text-xs text-muted-foreground">
-                              {memo.generation_progress}%
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        {memo.recommendation ? (
-                          <span className={cn(
-                            "px-2 py-1 rounded text-xs font-medium uppercase",
-                            recommendationColors[memo.recommendation] || "bg-muted text-muted-foreground"
-                          )}>
-                            {memo.recommendation}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        {memo.conviction !== null ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                              <div 
-                                className={cn(
-                                  "h-full rounded-full",
-                                  memo.conviction >= 35 ? "bg-green-500" :
-                                  memo.conviction >= 25 ? "bg-yellow-500" : "bg-red-500"
-                                )}
-                                style={{ width: `${(memo.conviction / 50) * 100}%` }}
-                              />
-                            </div>
-                            <span className="text-sm text-muted-foreground">
-                              {memo.conviction}/50
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        {score !== null ? (
-                          <span className={cn(
-                            "font-medium",
-                            score >= 80 ? "text-green-400" :
-                            score >= 60 ? "text-green-300" :
-                            score >= 40 ? "text-yellow-400" :
-                            score >= 20 ? "text-orange-400" : "text-red-400"
-                          )}>
-                            {score.toFixed(1)}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        {quintile ? (
+                        </td>
+                        <td className="px-4 py-4">
                           <span className={cn(
                             "px-2 py-1 rounded text-xs font-medium",
-                            quintileColors[quintile]
+                            "bg-muted text-muted-foreground"
                           )}>
-                            {quintile}
+                            {memo.style_tag}
                           </span>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-muted-foreground">
-                        {formatDate(memo.approved_at)}
-                      </td>
-                      <td className="px-4 py-4">
-                        <Link
-                          href={`/ic-memo/${memo.id}`}
-                          className={cn(
-                            "flex items-center gap-1.5 px-3 py-1.5 rounded",
-                            "text-sm text-accent hover:bg-accent/10 transition-calm",
-                            !memo.has_content && memo.status !== "complete" && "opacity-50 pointer-events-none"
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              "flex items-center gap-1.5 px-2 py-1 rounded",
+                              statusInfo.bgColor
+                            )}>
+                              <StatusIcon className={cn(
+                                "w-3.5 h-3.5",
+                                statusInfo.color,
+                                memo.status === "generating" && "animate-spin"
+                              )} />
+                              <span className={cn("text-xs font-medium", statusInfo.color)}>
+                                {statusInfo.label}
+                              </span>
+                            </div>
+                            {memo.status === "generating" && (
+                              <span className="text-xs text-muted-foreground">
+                                {memo.generation_progress}%
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          {memo.recommendation ? (
+                            <span className={cn(
+                              "px-2 py-1 rounded text-xs font-medium uppercase",
+                              recommendationColors[memo.recommendation.toLowerCase()] || "bg-muted text-muted-foreground"
+                            )}>
+                              {memo.recommendation}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
                           )}
-                        >
-                          <Eye className="w-4 h-4" />
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td className="px-4 py-4">
+                          {memo.conviction !== null ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                  className={cn(
+                                    "h-full rounded-full",
+                                    memo.conviction >= 35 ? "bg-green-500" :
+                                    memo.conviction >= 25 ? "bg-yellow-500" : "bg-red-500"
+                                  )}
+                                  style={{ width: `${(memo.conviction / 50) * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {memo.conviction}/50
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          {score !== null ? (
+                            <span className={cn(
+                              "font-medium",
+                              score >= 80 ? "text-green-400" :
+                              score >= 60 ? "text-green-300" :
+                              score >= 40 ? "text-yellow-400" :
+                              score >= 20 ? "text-orange-400" : "text-red-400"
+                            )}>
+                              {score.toFixed(1)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          {quintile ? (
+                            <span className={cn(
+                              "px-2 py-1 rounded text-xs font-medium",
+                              quintileColors[quintile]
+                            )}>
+                              {quintile}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-muted-foreground">
+                          {formatDate(memo.approved_at)}
+                        </td>
+                        <td className="px-4 py-4">
+                          <Link
+                            href={`/ic-memo/${memo.id}`}
+                            className={cn(
+                              "flex items-center gap-1.5 px-3 py-1.5 rounded",
+                              "text-sm text-accent hover:bg-accent/10 transition-calm",
+                              !memo.has_content && memo.status !== "complete" && "opacity-50 pointer-events-none"
+                            )}
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Footer with count */}
+            <div className="px-4 py-3 bg-muted/20 border-t border-border">
+              <p className="text-sm text-muted-foreground">
+                Showing {sortedAndFilteredMemos.length} companies
+                {statusFilter !== "all" && ` (${statusFilter})`}
+              </p>
+            </div>
           </div>
         )}
       </div>
