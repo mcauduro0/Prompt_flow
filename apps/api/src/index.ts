@@ -45,14 +45,15 @@ app.use('/api/qa', qaRouter);
 app.use('/api/memory', memoryRouter);
 app.use('/api/telemetry', telemetryRouter);
 app.use('/api/prompts', promptsRouter);
-app.use('/api/portfolio', portfolioRouter);
 app.use('/api/system', systemRouter);
 app.use('/api/ic-memos', icMemosRouter);
 app.use("/api/qa-v2", qaV2Router);
 app.use('/api/manual-ideas', manualIdeasRouter);
+// Portfolio routes - more specific routes MUST come before generic /api/portfolio
 app.use('/api/portfolio/systematic', portfolioSystematicRouter);
 app.use('/api/portfolio/rules', portfolioRulesRouter);
 app.use('/api/portfolio/positions', portfolioPositionsRouter);
+app.use('/api/portfolio', portfolioRouter);
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
