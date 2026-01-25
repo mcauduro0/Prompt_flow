@@ -80,11 +80,14 @@ const statusConfig = {
 };
 
 const recommendationColors: Record<string, string> = {
-  buy: "text-green-600 bg-green-500/10",
+  "strong buy": "text-emerald-400 bg-emerald-500/20",
+  buy: "text-green-400 bg-green-500/15",
+  hold: "text-yellow-400 bg-yellow-500/15",
+  reduce: "text-orange-400 bg-orange-500/15",
+  sell: "text-red-400 bg-red-500/15",
+  // Legacy values for backward compatibility
   invest: "text-green-500 bg-green-500/10",
   increase: "text-green-400 bg-green-400/10",
-  hold: "text-yellow-500 bg-yellow-500/10",
-  reduce: "text-orange-500 bg-orange-500/10",
   wait: "text-gray-500 bg-gray-500/10",
   reject: "text-red-500 bg-red-500/10",
 };
@@ -122,6 +125,16 @@ const calculateQuintile = (score: number | null): string | null => {
   if (score >= 40) return "Q3";
   if (score >= 20) return "Q2";
   return "Q1";
+};
+
+// Get recommendation based on Score (Conviction Score 2.0)
+const getScoreBasedRecommendation = (score: number | null): string | null => {
+  if (score === null) return null;
+  if (score >= 80) return "STRONG BUY";  // Q5 - Top performers
+  if (score >= 65) return "BUY";         // Upper Q4
+  if (score >= 50) return "HOLD";        // Lower Q4 / Upper Q3
+  if (score >= 35) return "REDUCE";      // Lower Q3 / Q2
+  return "SELL";                          // Q1 - Bottom performers
 };
 
 // Check if a memo is a fund/ETF (not a company)
@@ -556,6 +569,7 @@ export default function ICMemoPage() {
                     const StatusIcon = statusInfo.icon;
                     const score = calculateScore(memo.conviction);
                     const quintile = calculateQuintile(score);
+                    const scoreRecommendation = getScoreBasedRecommendation(score);
                     
                     return (
                       <tr key={memo.id} className="hover:bg-muted/20 transition-calm">
@@ -598,12 +612,12 @@ export default function ICMemoPage() {
                           </div>
                         </td>
                         <td className="px-4 py-4">
-                          {memo.recommendation ? (
+                          {scoreRecommendation ? (
                             <span className={cn(
                               "px-2 py-1 rounded text-xs font-medium uppercase",
-                              recommendationColors[memo.recommendation.toLowerCase()] || "bg-muted text-muted-foreground"
+                              recommendationColors[scoreRecommendation.toLowerCase()] || "bg-muted text-muted-foreground"
                             )}>
-                              {memo.recommendation}
+                              {scoreRecommendation}
                             </span>
                           ) : (
                             <span className="text-muted-foreground text-sm">-</span>
