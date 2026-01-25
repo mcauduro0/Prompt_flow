@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { 
   ClipboardCheck, 
@@ -12,7 +12,10 @@ import {
   XCircle,
   Clock,
   AlertCircle,
-  FileText
+  FileText,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -43,6 +46,9 @@ interface ICMemoStats {
     failed?: number;
   };
 }
+
+type SortField = 'ticker' | 'company_name' | 'style_tag' | 'status' | 'recommendation' | 'conviction' | 'score' | 'quintile' | 'approved_at';
+type SortDirection = 'asc' | 'desc';
 
 const statusConfig = {
   pending: { 
@@ -81,6 +87,14 @@ const recommendationColors: Record<string, string> = {
   reject: "text-red-500 bg-red-500/10",
 };
 
+const quintileColors: Record<string, string> = {
+  Q5: "text-green-400 bg-green-500/20",
+  Q4: "text-green-300 bg-green-400/15",
+  Q3: "text-yellow-400 bg-yellow-500/15",
+  Q2: "text-orange-400 bg-orange-500/15",
+  Q1: "text-red-400 bg-red-500/15",
+};
+
 const formatDate = (dateStr: string | null): string => {
   if (!dateStr) return "-";
   const date = new Date(dateStr);
@@ -92,6 +106,22 @@ const formatDate = (dateStr: string | null): string => {
   });
 };
 
+// Calculate Score from Conviction (conviction is 0-50, score is 0-100)
+const calculateScore = (conviction: number | null): number | null => {
+  if (conviction === null) return null;
+  return Math.round((conviction / 50) * 100 * 10) / 10;
+};
+
+// Calculate Quintile based on Score
+const calculateQuintile = (score: number | null): string | null => {
+  if (score === null) return null;
+  if (score >= 80) return "Q5";
+  if (score >= 60) return "Q4";
+  if (score >= 40) return "Q3";
+  if (score >= 20) return "Q2";
+  return "Q1";
+};
+
 export default function ICMemoPage() {
   const [memos, setMemos] = useState<ICMemo[]>([]);
   const [stats, setStats] = useState<ICMemoStats | null>(null);
@@ -99,6 +129,8 @@ export default function ICMemoPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [triggeringRun, setTriggeringRun] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortField, setSortField] = useState<SortField>('score');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const fetchData = useCallback(async () => {
     try {
@@ -156,9 +188,106 @@ export default function ICMemoPage() {
     }
   };
 
-  const filteredMemos = statusFilter === "all" 
-    ? memos 
-    : memos.filter(m => m.status === statusFilter);
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="w-3 h-3 opacity-50" />;
+    }
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="w-3 h-3" />
+      : <ArrowDown className="w-3 h-3" />;
+  };
+
+  const sortedAndFilteredMemos = useMemo(() => {
+    let filtered = statusFilter === "all" 
+      ? memos 
+      : memos.filter(m => m.status === statusFilter);
+
+    return filtered.sort((a, b) => {
+      let aValue: string | number | null;
+      let bValue: string | number | null;
+
+      switch (sortField) {
+        case 'ticker':
+          aValue = a.ticker;
+          bValue = b.ticker;
+          break;
+        case 'company_name':
+          aValue = a.company_name;
+          bValue = b.company_name;
+          break;
+        case 'style_tag':
+          aValue = a.style_tag;
+          bValue = b.style_tag;
+          break;
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        case 'recommendation':
+          aValue = a.recommendation || '';
+          bValue = b.recommendation || '';
+          break;
+        case 'conviction':
+          aValue = a.conviction ?? -1;
+          bValue = b.conviction ?? -1;
+          break;
+        case 'score':
+          aValue = calculateScore(a.conviction) ?? -1;
+          bValue = calculateScore(b.conviction) ?? -1;
+          break;
+        case 'quintile':
+          const quintileOrder = { Q5: 5, Q4: 4, Q3: 3, Q2: 2, Q1: 1 };
+          const aQuintile = calculateQuintile(calculateScore(a.conviction));
+          const bQuintile = calculateQuintile(calculateScore(b.conviction));
+          aValue = aQuintile ? quintileOrder[aQuintile as keyof typeof quintileOrder] : 0;
+          bValue = bQuintile ? quintileOrder[bQuintile as keyof typeof quintileOrder] : 0;
+          break;
+        case 'approved_at':
+          aValue = a.approved_at ? new Date(a.approved_at).getTime() : 0;
+          bValue = b.approved_at ? new Date(b.approved_at).getTime() : 0;
+          break;
+        default:
+          aValue = '';
+          bValue = '';
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+
+      return 0;
+    });
+  }, [memos, statusFilter, sortField, sortDirection]);
+
+  const SortableHeader = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
+    <th 
+      className={cn(
+        "text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-muted/50 transition-calm select-none",
+        className
+      )}
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-1.5">
+        {children}
+        {getSortIcon(field)}
+      </div>
+    </th>
+  );
 
   return (
     <AppLayout>
@@ -285,7 +414,7 @@ export default function ICMemoPage() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
-        ) : filteredMemos.length === 0 ? (
+        ) : sortedAndFilteredMemos.length === 0 ? (
           <div className="text-center py-20">
             <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
@@ -311,33 +440,25 @@ export default function ICMemoPage() {
             <table className="w-full">
               <thead className="bg-muted/30">
                 <tr>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
-                    Company
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
-                    Style
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
-                    Status
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
-                    Recommendation
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
-                    Conviction
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
-                    Approved
-                  </th>
+                  <SortableHeader field="ticker">Company</SortableHeader>
+                  <SortableHeader field="style_tag">Style</SortableHeader>
+                  <SortableHeader field="status">Status</SortableHeader>
+                  <SortableHeader field="recommendation">Recommendation</SortableHeader>
+                  <SortableHeader field="conviction">Conviction</SortableHeader>
+                  <SortableHeader field="score">Score</SortableHeader>
+                  <SortableHeader field="quintile">Quintile</SortableHeader>
+                  <SortableHeader field="approved_at">Approved</SortableHeader>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredMemos.map((memo) => {
+                {sortedAndFilteredMemos.map((memo) => {
                   const statusInfo = statusConfig[memo.status];
                   const StatusIcon = statusInfo.icon;
+                  const score = calculateScore(memo.conviction);
+                  const quintile = calculateQuintile(score);
                   
                   return (
                     <tr key={memo.id} className="hover:bg-muted/20 transition-calm">
@@ -398,16 +519,43 @@ export default function ICMemoPage() {
                               <div 
                                 className={cn(
                                   "h-full rounded-full",
-                                  memo.conviction >= 70 ? "bg-green-500" :
-                                  memo.conviction >= 50 ? "bg-yellow-500" : "bg-red-500"
+                                  memo.conviction >= 35 ? "bg-green-500" :
+                                  memo.conviction >= 25 ? "bg-yellow-500" : "bg-red-500"
                                 )}
-                                style={{ width: `${memo.conviction}%` }}
+                                style={{ width: `${(memo.conviction / 50) * 100}%` }}
                               />
                             </div>
                             <span className="text-sm text-muted-foreground">
-                              {memo.conviction}
+                              {memo.conviction}/50
                             </span>
                           </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {score !== null ? (
+                          <span className={cn(
+                            "font-medium",
+                            score >= 80 ? "text-green-400" :
+                            score >= 60 ? "text-green-300" :
+                            score >= 40 ? "text-yellow-400" :
+                            score >= 20 ? "text-orange-400" : "text-red-400"
+                          )}>
+                            {score.toFixed(1)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {quintile ? (
+                          <span className={cn(
+                            "px-2 py-1 rounded text-xs font-medium",
+                            quintileColors[quintile]
+                          )}>
+                            {quintile}
+                          </span>
                         ) : (
                           <span className="text-muted-foreground text-sm">-</span>
                         )}
