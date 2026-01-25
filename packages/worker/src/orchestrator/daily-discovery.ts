@@ -115,8 +115,11 @@ async function fetchUniverse(): Promise<string[]> {
     return [];
   }
 
+  // Extract ticker symbols from screener results
+  const tickers = result.data.map((stock: any) => stock.symbol).filter(Boolean);
+  
   // Shuffle and take a sample for daily analysis
-  const shuffled = result.data.sort(() => Math.random() - 0.5);
+  const shuffled = tickers.sort(() => Math.random() - 0.5);
   return shuffled.slice(0, 30); // Analyze 30 stocks per day
 }
 
