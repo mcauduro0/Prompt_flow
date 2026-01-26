@@ -1,0 +1,122 @@
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#10b981', 'primaryTextColor': '#fff', 'primaryBorderColor': '#059669', 'lineColor': '#6b7280', 'secondaryColor': '#3b82f6', 'tertiaryColor': '#8b5cf6'}}}%%
+flowchart TB
+    subgraph SOURCES["📥 DATA SOURCES"]
+        direction LR
+        SS[("🔖 Substack<br/>Newsletters")]
+        RD[("🔴 Reddit<br/>r/investing")]
+        FMP[("📊 FMP Screener<br/>Stock Universe")]
+    end
+
+    subgraph LANE0["⚡ LANE 0: Ingestion"]
+        direction TB
+        L0_DESC["Substack + Reddit + FMP Ingestion"]
+        L0_PROC["Parse & Extract<br/>Ticker Mentions"]
+        L0_FILTER["Filter Duplicates<br/>& Funds/ETFs"]
+        L0_OUT[("Raw Ideas<br/>Pool")]
+    end
+
+    subgraph LANEA["🔍 LANE A: Daily Discovery"]
+        direction TB
+        LA_DESC["Daily Discovery & Screening"]
+        LA_FETCH["Fetch Universe<br/>(30 random stocks)"]
+        LA_ENRICH["Enrich with<br/>Market Data"]
+        LA_LLM["LLM Analysis<br/>(Pass/Fail Filter)"]
+        LA_NOVELTY["Novelty Filter<br/>(No duplicates)"]
+        LA_OUT[("📥 INBOX<br/>Score: Pending")]
+    end
+
+    subgraph LANEB["📚 LANE B: Deep Research"]
+        direction TB
+        LB_DESC["Deep Fundamental Research"]
+        LB_SELECT["Select Ideas<br/>from Queue"]
+        LB_RESEARCH["Execute Research<br/>Prompts"]
+        LB_PACKET["Generate Research<br/>Packet"]
+        LB_OUT[("📋 QUEUE<br/>Score: Pending")]
+    end
+
+    subgraph LANEC["🏛️ LANE C: IC Memo"]
+        direction TB
+        LC_DESC["Investment Committee Bundle"]
+        LC_SELECT["Select Approved<br/>Research Packets"]
+        LC_SUPPORT["Execute Supporting<br/>Prompts"]
+        LC_MEMO["Generate<br/>IC Memo"]
+        LC_SCORE["Calculate<br/>CONVICTION SCORE"]
+        LC_UPDATE["Update Idea<br/>with Final Score"]
+        LC_OUT[("📄 IC MEMO<br/>Score: 10-95")]
+    end
+
+    subgraph SCORE_CALC["📊 CONVICTION SCORE CALCULATION"]
+        direction LR
+        S1["Variant<br/>Perception"]
+        S2["Bull/Bear<br/>Analysis"]
+        S3["Valuation<br/>Assessment"]
+        S4["Risk<br/>Factors"]
+        S5["Pre-Mortem<br/>Analysis"]
+        S_FINAL["FINAL SCORE<br/>(10-95)"]
+    end
+
+    subgraph OUTPUT["📤 OUTPUT"]
+        direction LR
+        IC_TAB["IC Memo Tab<br/>(with Score)"]
+        PORTFOLIO["Portfolio<br/>Recommendations"]
+        PDF["PDF Export"]
+    end
+
+    %% Connections
+    SS --> L0_PROC
+    RD --> L0_PROC
+    FMP --> L0_PROC
+    L0_PROC --> L0_FILTER
+    L0_FILTER --> L0_OUT
+
+    L0_OUT --> LA_FETCH
+    LA_FETCH --> LA_ENRICH
+    LA_ENRICH --> LA_LLM
+    LA_LLM --> LA_NOVELTY
+    LA_NOVELTY --> LA_OUT
+
+    LA_OUT -->|"Manual Promotion"| LB_SELECT
+    LB_SELECT --> LB_RESEARCH
+    LB_RESEARCH --> LB_PACKET
+    LB_PACKET --> LB_OUT
+
+    LB_OUT -->|"Manual Approval"| LC_SELECT
+    LC_SELECT --> LC_SUPPORT
+    LC_SUPPORT --> LC_MEMO
+    LC_MEMO --> LC_SCORE
+
+    LC_SCORE --> S1
+    LC_SCORE --> S2
+    LC_SCORE --> S3
+    LC_SCORE --> S4
+    LC_SCORE --> S5
+    S1 --> S_FINAL
+    S2 --> S_FINAL
+    S3 --> S_FINAL
+    S4 --> S_FINAL
+    S5 --> S_FINAL
+
+    S_FINAL --> LC_UPDATE
+    LC_UPDATE -->|"Propagate Score"| LA_OUT
+    LC_UPDATE --> LC_OUT
+
+    LC_OUT --> IC_TAB
+    LC_OUT --> PORTFOLIO
+    LC_OUT --> PDF
+
+    %% Styling
+    classDef sources fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px
+    classDef lane0 fill:#064e3b,stroke:#10b981,stroke-width:2px
+    classDef laneA fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px
+    classDef laneB fill:#4c1d95,stroke:#8b5cf6,stroke-width:2px
+    classDef laneC fill:#7c2d12,stroke:#f97316,stroke-width:2px
+    classDef score fill:#166534,stroke:#22c55e,stroke-width:3px
+    classDef output fill:#1f2937,stroke:#6b7280,stroke-width:2px
+
+    class SS,RD,FMP sources
+    class L0_DESC,L0_PROC,L0_FILTER,L0_OUT lane0
+    class LA_DESC,LA_FETCH,LA_ENRICH,LA_LLM,LA_NOVELTY,LA_OUT laneA
+    class LB_DESC,LB_SELECT,LB_RESEARCH,LB_PACKET,LB_OUT laneB
+    class LC_DESC,LC_SELECT,LC_SUPPORT,LC_MEMO,LC_SCORE,LC_UPDATE,LC_OUT laneC
+    class S1,S2,S3,S4,S5,S_FINAL score
+    class IC_TAB,PORTFOLIO,PDF output

@@ -17,6 +17,7 @@ import { createResilientClient, type LLMClient, type LLMRequest } from '@arc/llm
 import { createDataAggregator, type AggregatedCompanyData } from '@arc/retriever';
 import { telemetry } from '@arc/database';
 import { runROICDecompositionForICMemo } from './roic-decomposition-runner.js';
+import { calculateConvictionScoreV2, type ConvictionScoreV2Result } from '../scoring/conviction-score-v2.js';
 
 // Supporting prompt definitions (hardcoded to avoid schema validation issues)
 const SUPPORTING_PROMPT_TEMPLATES: Record<string, string> = {
@@ -998,13 +999,21 @@ async function processICMemo(
 
     await icMemosRepository.updateProgress(memoId, 90);
 
-    // Extract recommendation from the memo
-    const recommendation = memoContent?.decision?.recommendation || 'hold';
+    // Extract recommendation from the memo (will be overridden by v2.0)
+    const memoRecommendation = memoContent?.decision?.recommendation || 'hold';
     
-    // Calculate dynamic conviction based on analysis
-    const conviction = calculateConviction(memoContent, supportingAnalyses, liveData);
+    // Calculate Conviction Score v2.0 (quantitative + fundamental + sentiment)
+    console.log(`[Lane C] Calculating Conviction Score v2.0 for ${ticker}...`);
+    const scoreV2 = await calculateConvictionScoreV2(ticker, memoContent, supportingAnalyses);
+    const conviction = scoreV2.total;
+    const recommendation = scoreV2.recommendation.toLowerCase().replace(' ', '_'); // e.g., 'strong_buy'
     
-    console.log(`[Lane C] Calculated conviction for ${ticker}: ${conviction} (recommendation: ${recommendation})`);
+    console.log(`[Lane C] Conviction Score v2.0 for ${ticker}: Total=${conviction}, ` +
+      `Fund=${scoreV2.fundamental_score}, Quant=${scoreV2.quant_score}, Sent=${scoreV2.sentiment_score}, ` +
+      `Prob=${scoreV2.prob_outperformance}%, Rec=${scoreV2.recommendation}`);
+    
+    // Add v2.0 score breakdown to memo content
+    memoContent._conviction_score_v2 = scoreV2;
 
     await icMemosRepository.updateProgress(memoId, 95);
 
@@ -1036,33 +1045,33 @@ async function processICMemo(
       conviction
     );
 
-    // Update the original idea with the final Conviction Score from Lane C
+    // Update the original idea with the final Conviction Score v2.0 from Lane C
     // This ensures the score is visible in Inbox/Queue/IC Memo views
     if (packet.ideaId) {
       try {
         await ideasRepository.updateScores(
           packet.ideaId,
           {
-            total: conviction,
-            edge_clarity: 0,
-            business_quality_prior: 0,
-            financial_resilience_prior: 0,
-            valuation_tension: 0,
-            catalyst_clarity: 0,
-            information_availability: 0,
+            total: scoreV2.total,
+            edge_clarity: scoreV2.components.moat_analysis,
+            business_quality_prior: scoreV2.fundamental_score,
+            financial_resilience_prior: scoreV2.quant_score,
+            valuation_tension: scoreV2.sentiment_score,
+            catalyst_clarity: scoreV2.prob_outperformance,
+            information_availability: scoreV2.data_quality.data_completeness,
             complexity_penalty: 0,
             disclosure_friction_penalty: 0,
           },
-          String(conviction),
-          String(conviction)
+          String(scoreV2.total),
+          String(scoreV2.total)
         );
-        console.log(`[Lane C] Updated idea ${packet.ideaId} with final conviction score: ${conviction}`);
+        console.log(`[Lane C] Updated idea ${packet.ideaId} with Conviction Score v2.0: ${scoreV2.total}`);
       } catch (scoreError) {
         console.warn(`[Lane C] Failed to update idea score:`, scoreError);
       }
     }
 
-    console.log(`[Lane C] IC Memo completed for ${ticker} with conviction ${conviction}`);
+    console.log(`[Lane C] IC Memo completed for ${ticker} with Conviction Score v2.0: ${conviction} (${scoreV2.recommendation})`);
     return { success: true };
   } catch (error) {
     console.error(`[Lane C] Error processing IC Memo for ${ticker}:`, error);
