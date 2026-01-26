@@ -33,6 +33,14 @@ interface ICMemo {
   generation_progress: number;
   recommendation: string | null;
   conviction: number | null;
+  // Score v4.0 (Contrarian/Turnaround Model) - Best performer in backtest
+  score_v4: number | null;
+  score_v4_quintile: string | null;
+  score_v4_recommendation: string | null;
+  // Turnaround Score
+  turnaround_score: number | null;
+  turnaround_quintile: number | null;
+  turnaround_recommendation: string | null;
   approved_at: string | null;
   created_at: string;
   completed_at: string | null;
@@ -49,7 +57,7 @@ interface ICMemoStats {
   };
 }
 
-type SortField = 'ticker' | 'company_name' | 'style_tag' | 'status' | 'recommendation' | 'conviction' | 'score' | 'quintile' | 'approved_at';
+type SortField = 'ticker' | 'company_name' | 'style_tag' | 'status' | 'recommendation' | 'conviction' | 'score' | 'quintile' | 'score_v4' | 'score_v4_quintile' | 'turnaround_score' | 'turnaround_quintile' | 'approved_at';
 type SortDirection = 'asc' | 'desc';
 
 const statusConfig = {
@@ -333,6 +341,23 @@ export default function ICMemoPage() {
           aValue = aQuintile ? quintileOrder[aQuintile as keyof typeof quintileOrder] : 0;
           bValue = bQuintile ? quintileOrder[bQuintile as keyof typeof quintileOrder] : 0;
           break;
+        case 'score_v4':
+          aValue = a.score_v4 !== null ? Number(a.score_v4) : -1;
+          bValue = b.score_v4 !== null ? Number(b.score_v4) : -1;
+          break;
+        case 'score_v4_quintile':
+          const v4QuintileOrder = { Q5: 5, Q4: 4, Q3: 3, Q2: 2, Q1: 1 };
+          aValue = a.score_v4_quintile ? v4QuintileOrder[a.score_v4_quintile as keyof typeof v4QuintileOrder] : 0;
+          bValue = b.score_v4_quintile ? v4QuintileOrder[b.score_v4_quintile as keyof typeof v4QuintileOrder] : 0;
+          break;
+        case 'turnaround_score':
+          aValue = a.turnaround_score !== null ? Number(a.turnaround_score) : -1;
+          bValue = b.turnaround_score !== null ? Number(b.turnaround_score) : -1;
+          break;
+        case 'turnaround_quintile':
+          aValue = a.turnaround_quintile !== null ? Number(a.turnaround_quintile) : 0;
+          bValue = b.turnaround_quintile !== null ? Number(b.turnaround_quintile) : 0;
+          break;
         case 'approved_at':
           aValue = a.approved_at ? new Date(a.approved_at).getTime() : 0;
           bValue = b.approved_at ? new Date(b.approved_at).getTime() : 0;
@@ -555,10 +580,11 @@ export default function ICMemoPage() {
                     <SortableHeader field="ticker">Company</SortableHeader>
                     <SortableHeader field="style_tag">Style</SortableHeader>
                     <SortableHeader field="status">Status</SortableHeader>
+                    <SortableHeader field="score_v4">Score v4.0</SortableHeader>
+                    <SortableHeader field="score_v4_quintile">v4 Quintile</SortableHeader>
+                    <SortableHeader field="turnaround_score">Turnaround</SortableHeader>
+                    <SortableHeader field="turnaround_quintile">T Quintile</SortableHeader>
                     <SortableHeader field="recommendation">Recommendation</SortableHeader>
-                    <SortableHeader field="conviction">Conviction</SortableHeader>
-                    <SortableHeader field="score">Score</SortableHeader>
-                    <SortableHeader field="quintile">Quintile</SortableHeader>
                     <SortableHeader field="approved_at">Approved</SortableHeader>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
                       Actions
@@ -613,61 +639,92 @@ export default function ICMemoPage() {
                             )}
                           </div>
                         </td>
+                        {/* Score v4.0 Column */}
                         <td className="px-4 py-4">
-                          {scoreRecommendation ? (
-                            <span className={cn(
-                              "px-2 py-1 rounded text-xs font-medium uppercase",
-                              recommendationColors[scoreRecommendation.toLowerCase()] || "bg-muted text-muted-foreground"
-                            )}>
-                              {scoreRecommendation}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4">
-                          {memo.conviction !== null ? (
+                          {memo.score_v4 !== null ? (
                             <div className="flex items-center gap-2">
-                              <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                              <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
                                 <div 
                                   className={cn(
                                     "h-full rounded-full",
-                                    memo.conviction >= 70 ? "bg-green-500" :
-                                    memo.conviction >= 50 ? "bg-yellow-500" : "bg-red-500"
+                                    memo.score_v4 >= 60 ? "bg-green-500" :
+                                    memo.score_v4 >= 40 ? "bg-yellow-500" : "bg-red-500"
                                   )}
-                                  style={{ width: `${memo.conviction}%` }}
+                                  style={{ width: `${memo.score_v4}%` }}
                                 />
                               </div>
-                              <span className="text-sm text-muted-foreground">
-                                {memo.conviction}
+                              <span className={cn(
+                                "text-sm font-medium",
+                                memo.score_v4 >= 60 ? "text-green-400" :
+                                memo.score_v4 >= 40 ? "text-yellow-400" : "text-red-400"
+                              )}>
+                                {Number(memo.score_v4).toFixed(1)}
                               </span>
                             </div>
                           ) : (
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
                         </td>
+                        {/* Score v4.0 Quintile Column */}
                         <td className="px-4 py-4">
-                          {score !== null ? (
+                          {memo.score_v4_quintile ? (
                             <span className={cn(
-                              "font-medium",
-                              score >= 80 ? "text-green-400" :
-                              score >= 60 ? "text-green-300" :
-                              score >= 40 ? "text-yellow-400" :
-                              score >= 20 ? "text-orange-400" : "text-red-400"
+                              "px-2 py-1 rounded text-xs font-medium",
+                              quintileColors[memo.score_v4_quintile] || "bg-muted text-muted-foreground"
                             )}>
-                              {score.toFixed(1)}
+                              {memo.score_v4_quintile}
                             </span>
                           ) : (
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
                         </td>
+                        {/* Turnaround Score Column */}
                         <td className="px-4 py-4">
-                          {quintile ? (
+                          {memo.turnaround_score !== null ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                  className={cn(
+                                    "h-full rounded-full",
+                                    memo.turnaround_score >= 60 ? "bg-blue-500" :
+                                    memo.turnaround_score >= 40 ? "bg-yellow-500" : "bg-orange-500"
+                                  )}
+                                  style={{ width: `${memo.turnaround_score}%` }}
+                                />
+                              </div>
+                              <span className={cn(
+                                "text-sm font-medium",
+                                memo.turnaround_score >= 60 ? "text-blue-400" :
+                                memo.turnaround_score >= 40 ? "text-yellow-400" : "text-orange-400"
+                              )}>
+                                {Number(memo.turnaround_score).toFixed(1)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </td>
+                        {/* Turnaround Quintile Column */}
+                        <td className="px-4 py-4">
+                          {memo.turnaround_quintile !== null ? (
                             <span className={cn(
                               "px-2 py-1 rounded text-xs font-medium",
-                              quintileColors[quintile]
+                              quintileColors[`Q${memo.turnaround_quintile}`] || "bg-muted text-muted-foreground"
                             )}>
-                              {quintile}
+                              Q{memo.turnaround_quintile}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </td>
+                        {/* Recommendation Column */}
+                        <td className="px-4 py-4">
+                          {memo.score_v4_recommendation ? (
+                            <span className={cn(
+                              "px-2 py-1 rounded text-xs font-medium uppercase",
+                              recommendationColors[memo.score_v4_recommendation.toLowerCase()] || "bg-muted text-muted-foreground"
+                            )}>
+                              {memo.score_v4_recommendation}
                             </span>
                           ) : (
                             <span className="text-muted-foreground text-sm">-</span>

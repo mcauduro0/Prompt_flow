@@ -238,20 +238,48 @@ export const icMemosRepository = {
     memoContent: ICMemo['memoContent'],
     supportingAnalyses: ICMemo['supportingAnalyses'],
     recommendation: ICMemo['recommendation'],
-    conviction: number
+    conviction: number,
+    scores?: {
+      scoreV4?: number;
+      scoreV4Quintile?: string;
+      scoreV4Recommendation?: string;
+      scoreV4Components?: any;
+      turnaroundScore?: number;
+      turnaroundQuintile?: number;
+      turnaroundRecommendation?: string;
+      turnaroundComponents?: any;
+    }
   ): Promise<ICMemo | undefined> {
+    const updateData: any = {
+      memoContent: normalizeJsonbField(memoContent) as any,
+      supportingAnalyses: normalizeJsonbField(supportingAnalyses) as any,
+      recommendation,
+      conviction,
+      status: 'complete',
+      generationProgress: 100,
+      completedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    // Add Score v4.0 if provided
+    if (scores?.scoreV4 !== undefined) {
+      updateData.scoreV4 = String(scores.scoreV4);
+      updateData.scoreV4Quintile = scores.scoreV4Quintile;
+      updateData.scoreV4Recommendation = scores.scoreV4Recommendation;
+      updateData.scoreV4Components = normalizeJsonbField(scores.scoreV4Components);
+    }
+    
+    // Add Turnaround Score if provided
+    if (scores?.turnaroundScore !== undefined) {
+      updateData.turnaroundScore = String(scores.turnaroundScore);
+      updateData.turnaroundQuintile = scores.turnaroundQuintile;
+      updateData.turnaroundRecommendation = scores.turnaroundRecommendation;
+      updateData.turnaroundComponents = normalizeJsonbField(scores.turnaroundComponents);
+    }
+    
     const [result] = await db
       .update(icMemos)
-      .set({
-        memoContent: normalizeJsonbField(memoContent) as any,
-        supportingAnalyses: normalizeJsonbField(supportingAnalyses) as any,
-        recommendation,
-        conviction,
-        status: 'complete',
-        generationProgress: 100,
-        completedAt: new Date(),
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(icMemos.memoId, memoId))
       .returning();
     return result;
@@ -331,5 +359,35 @@ export const icMemosRepository = {
       .delete(icMemos)
       .where(eq(icMemos.memoId, memoId));
     return true;
+  },
+
+  /**
+   * Update Score v4.0 and Turnaround Score
+   */
+  async updateScoresV4(
+    memoId: string,
+    scores: {
+      scoreV4: string;
+      scoreV4Quintile: string;
+      scoreV4Recommendation: string;
+      turnaroundScore: string;
+      turnaroundQuintile: number;
+      turnaroundRecommendation: string;
+    }
+  ): Promise<ICMemo | undefined> {
+    const [result] = await db
+      .update(icMemos)
+      .set({
+        scoreV4: scores.scoreV4,
+        scoreV4Quintile: scores.scoreV4Quintile,
+        scoreV4Recommendation: scores.scoreV4Recommendation,
+        turnaroundScore: scores.turnaroundScore,
+        turnaroundQuintile: scores.turnaroundQuintile,
+        turnaroundRecommendation: scores.turnaroundRecommendation,
+        updatedAt: new Date(),
+      })
+      .where(eq(icMemos.memoId, memoId))
+      .returning();
+    return result;
   },
 };

@@ -44,6 +44,14 @@ icMemosRouter.get('/', async (req: Request, res: Response) => {
           generation_progress: memo.generationProgress,
           recommendation: memo.recommendation,
           conviction: memo.conviction,
+          // Score v4.0 (Contrarian/Turnaround Model)
+          score_v4: (memo as any).scoreV4 || null,
+          score_v4_quintile: (memo as any).scoreV4Quintile || null,
+          score_v4_recommendation: (memo as any).scoreV4Recommendation || null,
+          // Turnaround Score
+          turnaround_score: (memo as any).turnaroundScore || null,
+          turnaround_quintile: (memo as any).turnaroundQuintile || null,
+          turnaround_recommendation: (memo as any).turnaroundRecommendation || null,
           approved_at: memo.approvedAt,
           created_at: memo.createdAt,
           completed_at: memo.completedAt,

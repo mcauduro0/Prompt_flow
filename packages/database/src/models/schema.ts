@@ -460,6 +460,33 @@ export const icMemos = pgTable('ic_memos', {
   recommendation: icMemoRecommendationEnum('recommendation'),
   conviction: integer('conviction'), // 1-10
   
+  // Conviction Score v4.0 (Contrarian/Turnaround Model)
+  scoreV4: numeric('score_v4', { precision: 5, scale: 2 }), // 0-100
+  scoreV4Quintile: text('score_v4_quintile'), // Q1-Q5
+  scoreV4Recommendation: text('score_v4_recommendation'), // STRONG BUY, BUY, HOLD, AVOID
+  scoreV4Components: jsonb('score_v4_components').$type<{
+    contrarian_signal: number;
+    turnaround_signal: number;
+    quality_floor: number;
+    momentum_12m: number;
+    momentum_3m: number;
+    volatility: number;
+    rsi: number;
+    distance_52w_high: number;
+    current_ratio: number;
+    debt_equity: number;
+  }>(),
+  
+  // Turnaround Score
+  turnaroundScore: numeric('turnaround_score', { precision: 5, scale: 2 }), // 0-100
+  turnaroundQuintile: integer('turnaround_quintile'), // 1-5
+  turnaroundRecommendation: text('turnaround_recommendation'), // STRONG BUY, BUY, HOLD, AVOID
+  turnaroundComponents: jsonb('turnaround_components').$type<{
+    fundamental_improvement: number;
+    price_dislocation: number;
+    momentum_confirmation: number;
+  }>(),
+  
   // Status tracking
   status: icMemoStatusEnum('status').default('pending').notNull(),
   generationProgress: integer('generation_progress').default(0).notNull(), // 0-100

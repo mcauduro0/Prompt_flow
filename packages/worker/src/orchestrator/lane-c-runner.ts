@@ -20,6 +20,7 @@ import { runROICDecompositionForICMemo } from './roic-decomposition-runner.js';
 import { calculateConvictionScoreV2, type ConvictionScoreV2Result } from '../scoring/conviction-score-v2.js';
 import { calculatePiotroskiFScore, getPiotroskiInterpretation } from '../scoring/piotroski-fscore.js';
 import { calculateTurnaroundScore, getCombinedRecommendation } from '../scoring/turnaround-score.js';
+import { calculateConvictionScoreV4, type ConvictionV4Result } from '../scoring/conviction-score-v4.js';
 
 // Supporting prompt definitions (hardcoded to avoid schema validation issues)
 const SUPPORTING_PROMPT_TEMPLATES: Record<string, string> = {
@@ -1020,6 +1021,14 @@ async function processICMemo(
     const turnaroundScore = turnaroundResult?.score ?? 50;
     const turnaroundQuintile = turnaroundResult?.quintile ?? 3;
     
+    // Calculate Conviction Score v4.0 (Contrarian/Turnaround Model)
+    // Based on backtest: Q4 (scores 60-80) generated +3,577% cumulative return
+    console.log(`[Lane C] Calculating Conviction Score v4.0 for ${ticker}...`);
+    const scoreV4Result = await calculateConvictionScoreV4(ticker);
+    const scoreV4 = scoreV4Result.score;
+    const scoreV4Quintile = scoreV4Result.quintile;
+    const scoreV4Recommendation = scoreV4Result.recommendation;
+    
     // Get combined recommendation based on backtest findings
     // Low Piotroski + High Turnaround = BEST
     const combinedRecommendation = getCombinedRecommendation(piotroskiFScore, turnaroundQuintile);
@@ -1030,6 +1039,7 @@ async function processICMemo(
     
     console.log(`[Lane C] Scores for ${ticker}:`);
     console.log(`  - Conviction Score v2.0: ${scoreV2.total}`);
+    console.log(`  - Conviction Score v4.0: ${scoreV4} (${scoreV4Quintile}) - ${scoreV4Recommendation}`);
     console.log(`  - Piotroski F-Score: ${piotroskiFScore}/9 (${piotroskiInterpretation})`);
     console.log(`  - Turnaround Score: ${turnaroundScore} (Q${turnaroundQuintile})`);
     console.log(`  - Combined Recommendation: ${combinedRecommendation}`);
@@ -1048,6 +1058,12 @@ async function processICMemo(
       components: turnaroundResult?.components ?? null,
       details: turnaroundResult?.details ?? null,
       recommendation: turnaroundResult?.recommendation ?? 'HOLD'
+    };
+    memoContent._conviction_score_v4 = {
+      score: scoreV4,
+      quintile: scoreV4Quintile,
+      recommendation: scoreV4Recommendation,
+      components: scoreV4Result.components
     };
 
     await icMemosRepository.updateProgress(memoId, 95);
@@ -1077,7 +1093,30 @@ async function processICMemo(
       memoContent,
       supportingAnalysesObj,
       recommendation as any,
-      conviction
+      conviction,
+      {
+        // Score v4.0 (Contrarian/Turnaround Model) - Best performer in backtest
+        scoreV4: scoreV4,
+        scoreV4Quintile: scoreV4Quintile,
+        scoreV4Recommendation: scoreV4Recommendation,
+        scoreV4Components: {
+          contrarian_signal: scoreV4Result.components.contrarian_signal,
+          turnaround_signal: scoreV4Result.components.turnaround_signal,
+          quality_floor: scoreV4Result.components.quality_floor,
+          momentum_12m: scoreV4Result.components.momentum_12m,
+          momentum_3m: scoreV4Result.components.momentum_3m,
+          volatility: scoreV4Result.components.volatility,
+          rsi: scoreV4Result.components.rsi,
+          distance_52w_high: scoreV4Result.components.distance_52w_high,
+          current_ratio: scoreV4Result.components.current_ratio,
+          debt_equity: scoreV4Result.components.debt_equity,
+        },
+        // Turnaround Score
+        turnaroundScore: turnaroundScore,
+        turnaroundQuintile: turnaroundQuintile,
+        turnaroundRecommendation: turnaroundResult?.recommendation ?? 'HOLD',
+        turnaroundComponents: turnaroundResult?.components ?? null,
+      }
     );
 
     // Update the original idea with the final Conviction Score v2.0 from Lane C

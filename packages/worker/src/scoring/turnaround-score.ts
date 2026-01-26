@@ -304,3 +304,22 @@ export function getCombinedRecommendation(piotroskiScore: number, turnaroundQuin
   if (piotroskiScore >= 7 && turnaroundQuintile <= 2) return 'AVOID';
   return 'HOLD';
 }
+
+
+export function getTurnaroundQuintile(score: number): number {
+  if (score >= 80) return 5;
+  if (score >= 60) return 4;
+  if (score >= 40) return 3;
+  if (score >= 20) return 2;
+  return 1;
+}
+
+export function getTurnaroundRecommendation(quintile: number): string {
+  switch (quintile) {
+    case 5: return 'STRONG BUY';
+    case 4: return 'BUY';
+    case 3: return 'HOLD';
+    case 2: return 'REDUCE';
+    default: return 'AVOID';
+  }
+}

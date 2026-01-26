@@ -9,3 +9,4 @@ export * from './ranking.js';
 export * from './conviction-score-v2.js';
 export * from './piotroski-fscore.js';
 export * from './turnaround-score.js';
+export * from './conviction-score-v4.js';
