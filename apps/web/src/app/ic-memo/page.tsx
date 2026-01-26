@@ -632,14 +632,14 @@ export default function ICMemoPage() {
                                 <div 
                                   className={cn(
                                     "h-full rounded-full",
-                                    memo.conviction >= 35 ? "bg-green-500" :
-                                    memo.conviction >= 25 ? "bg-yellow-500" : "bg-red-500"
+                                    memo.conviction >= 70 ? "bg-green-500" :
+                                    memo.conviction >= 50 ? "bg-yellow-500" : "bg-red-500"
                                   )}
-                                  style={{ width: `${(memo.conviction / 50) * 100}%` }}
+                                  style={{ width: `${memo.conviction}%` }}
                                 />
                               </div>
                               <span className="text-sm text-muted-foreground">
-                                {memo.conviction}/50
+                                {memo.conviction}
                               </span>
                             </div>
                           ) : (
