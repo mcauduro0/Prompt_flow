@@ -390,4 +390,56 @@ export const icMemosRepository = {
       .returning();
     return result;
   },
+
+  /**
+   * Update all 3 scores (v4.0, Turnaround, Piotroski)
+   */
+  async updateAllScores(
+    memoId: string,
+    scores: {
+      scoreV4: string | null;
+      scoreV4Quintile: string | null;
+      scoreV4Recommendation: string | null;
+      scoreV4Components: any | null;
+      turnaroundScore: string | null;
+      turnaroundQuintile: number | null;
+      turnaroundRecommendation: string | null;
+      turnaroundComponents: any | null;
+      piotroskiScore: number | null;
+      piotroskiDetails: any | null;
+    }
+  ): Promise<ICMemo | undefined> {
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
+
+    // Score v4.0
+    if (scores.scoreV4 !== null) {
+      updateData.scoreV4 = scores.scoreV4;
+      updateData.scoreV4Quintile = scores.scoreV4Quintile;
+      updateData.scoreV4Recommendation = scores.scoreV4Recommendation;
+      updateData.scoreV4Components = normalizeJsonbField(scores.scoreV4Components);
+    }
+
+    // Turnaround Score
+    if (scores.turnaroundScore !== null) {
+      updateData.turnaroundScore = scores.turnaroundScore;
+      updateData.turnaroundQuintile = scores.turnaroundQuintile;
+      updateData.turnaroundRecommendation = scores.turnaroundRecommendation;
+      updateData.turnaroundComponents = normalizeJsonbField(scores.turnaroundComponents);
+    }
+
+    // Piotroski F-Score
+    if (scores.piotroskiScore !== null) {
+      updateData.piotroskiScore = scores.piotroskiScore;
+      updateData.piotroskiDetails = normalizeJsonbField(scores.piotroskiDetails);
+    }
+
+    const [result] = await db
+      .update(icMemos)
+      .set(updateData)
+      .where(eq(icMemos.memoId, memoId))
+      .returning();
+    return result;
+  },
 };

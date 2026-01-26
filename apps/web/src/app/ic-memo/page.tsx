@@ -41,6 +41,8 @@ interface ICMemo {
   turnaround_score: number | null;
   turnaround_quintile: number | null;
   turnaround_recommendation: string | null;
+  // Piotroski F-Score
+  piotroski_score: number | null;
   approved_at: string | null;
   created_at: string;
   completed_at: string | null;
@@ -57,7 +59,7 @@ interface ICMemoStats {
   };
 }
 
-type SortField = 'ticker' | 'company_name' | 'style_tag' | 'status' | 'recommendation' | 'conviction' | 'score' | 'quintile' | 'score_v4' | 'score_v4_quintile' | 'turnaround_score' | 'turnaround_quintile' | 'approved_at';
+type SortField = 'ticker' | 'company_name' | 'style_tag' | 'status' | 'score_v4' | 'turnaround_score' | 'piotroski_score' | 'score_v4_quintile' | 'approved_at';
 type SortDirection = 'asc' | 'desc';
 
 const statusConfig = {
@@ -92,12 +94,8 @@ const recommendationColors: Record<string, string> = {
   buy: "text-green-400 bg-green-500/15",
   hold: "text-yellow-400 bg-yellow-500/15",
   reduce: "text-orange-400 bg-orange-500/15",
+  avoid: "text-red-400 bg-red-500/15",
   sell: "text-red-400 bg-red-500/15",
-  // Legacy values for backward compatibility
-  invest: "text-green-500 bg-green-500/10",
-  increase: "text-green-400 bg-green-400/10",
-  wait: "text-gray-500 bg-gray-500/10",
-  reject: "text-red-500 bg-red-500/10",
 };
 
 const quintileColors: Record<string, string> = {
@@ -119,16 +117,8 @@ const formatDate = (dateStr: string | null): string => {
   });
 };
 
-// Calculate Score from Conviction
-// Conviction Score v2.0 is already stored as 0-100 scale
-const calculateScore = (conviction: number | null): number | null => {
-  if (conviction === null) return null;
-  // Conviction is now stored directly as 0-100 (Conviction Score v2.0)
-  return Math.round(conviction * 10) / 10;
-};
-
-// Calculate Quintile based on Score
-const calculateQuintile = (score: number | null): string | null => {
+// Get quintile based on Score v4.0
+const getQuintileFromV4 = (score: number | null): string | null => {
   if (score === null) return null;
   if (score >= 80) return "Q5";
   if (score >= 60) return "Q4";
@@ -137,14 +127,17 @@ const calculateQuintile = (score: number | null): string | null => {
   return "Q1";
 };
 
-// Get recommendation based on Score (Conviction Score 2.0)
-const getScoreBasedRecommendation = (score: number | null): string | null => {
-  if (score === null) return null;
-  if (score >= 80) return "STRONG BUY";  // Q5 - Top performers
-  if (score >= 65) return "BUY";         // Upper Q4
-  if (score >= 50) return "HOLD";        // Lower Q4 / Upper Q3
-  if (score >= 35) return "REDUCE";      // Lower Q3 / Q2
-  return "SELL";                          // Q1 - Bottom performers
+// Get recommendation based on Score v4.0 quintile (Q4 is the sweet spot)
+const getRecommendationFromV4 = (quintile: string | null): string | null => {
+  if (!quintile) return null;
+  switch (quintile) {
+    case 'Q5': return 'HOLD';
+    case 'Q4': return 'STRONG BUY';
+    case 'Q3': return 'BUY';
+    case 'Q2': return 'REDUCE';
+    case 'Q1': return 'AVOID';
+    default: return 'HOLD';
+  }
 };
 
 // Check if a memo is a fund/ETF (not a company)
@@ -206,6 +199,24 @@ const isFundOrETF = (memo: ICMemo): boolean => {
   return false;
 };
 
+// Get Piotroski color based on score (0-9)
+const getPiotroskiColor = (score: number | null): string => {
+  if (score === null) return "text-muted-foreground";
+  if (score >= 7) return "text-green-400";
+  if (score >= 5) return "text-yellow-400";
+  if (score >= 3) return "text-orange-400";
+  return "text-red-400";
+};
+
+// Get Piotroski background color based on score (0-9)
+const getPiotroskiBgColor = (score: number | null): string => {
+  if (score === null) return "bg-muted";
+  if (score >= 7) return "bg-green-500";
+  if (score >= 5) return "bg-yellow-500";
+  if (score >= 3) return "bg-orange-500";
+  return "bg-red-500";
+};
+
 export default function ICMemoPage() {
   const [memos, setMemos] = useState<ICMemo[]>([]);
   const [stats, setStats] = useState<ICMemoStats | null>(null);
@@ -213,7 +224,7 @@ export default function ICMemoPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [triggeringRun, setTriggeringRun] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<SortField>('score');
+  const [sortField, setSortField] = useState<SortField>('score_v4');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const fetchData = useCallback(async () => {
@@ -322,41 +333,24 @@ export default function ICMemoPage() {
           aValue = a.status;
           bValue = b.status;
           break;
-        case 'recommendation':
-          aValue = a.recommendation || '';
-          bValue = b.recommendation || '';
-          break;
-        case 'conviction':
-          aValue = a.conviction ?? -1;
-          bValue = b.conviction ?? -1;
-          break;
-        case 'score':
-          aValue = calculateScore(a.conviction) ?? -1;
-          bValue = calculateScore(b.conviction) ?? -1;
-          break;
-        case 'quintile':
-          const quintileOrder = { Q5: 5, Q4: 4, Q3: 3, Q2: 2, Q1: 1 };
-          const aQuintile = calculateQuintile(calculateScore(a.conviction));
-          const bQuintile = calculateQuintile(calculateScore(b.conviction));
-          aValue = aQuintile ? quintileOrder[aQuintile as keyof typeof quintileOrder] : 0;
-          bValue = bQuintile ? quintileOrder[bQuintile as keyof typeof quintileOrder] : 0;
-          break;
         case 'score_v4':
           aValue = a.score_v4 !== null ? Number(a.score_v4) : -1;
           bValue = b.score_v4 !== null ? Number(b.score_v4) : -1;
-          break;
-        case 'score_v4_quintile':
-          const v4QuintileOrder = { Q5: 5, Q4: 4, Q3: 3, Q2: 2, Q1: 1 };
-          aValue = a.score_v4_quintile ? v4QuintileOrder[a.score_v4_quintile as keyof typeof v4QuintileOrder] : 0;
-          bValue = b.score_v4_quintile ? v4QuintileOrder[b.score_v4_quintile as keyof typeof v4QuintileOrder] : 0;
           break;
         case 'turnaround_score':
           aValue = a.turnaround_score !== null ? Number(a.turnaround_score) : -1;
           bValue = b.turnaround_score !== null ? Number(b.turnaround_score) : -1;
           break;
-        case 'turnaround_quintile':
-          aValue = a.turnaround_quintile !== null ? Number(a.turnaround_quintile) : 0;
-          bValue = b.turnaround_quintile !== null ? Number(b.turnaround_quintile) : 0;
+        case 'piotroski_score':
+          aValue = a.piotroski_score !== null ? Number(a.piotroski_score) : -1;
+          bValue = b.piotroski_score !== null ? Number(b.piotroski_score) : -1;
+          break;
+        case 'score_v4_quintile':
+          const quintileOrder = { Q5: 5, Q4: 4, Q3: 3, Q2: 2, Q1: 1 };
+          const aQuintile = a.score_v4_quintile || getQuintileFromV4(a.score_v4);
+          const bQuintile = b.score_v4_quintile || getQuintileFromV4(b.score_v4);
+          aValue = aQuintile ? quintileOrder[aQuintile as keyof typeof quintileOrder] : 0;
+          bValue = bQuintile ? quintileOrder[bQuintile as keyof typeof quintileOrder] : 0;
           break;
         case 'approved_at':
           aValue = a.approved_at ? new Date(a.approved_at).getTime() : 0;
@@ -403,7 +397,7 @@ export default function ICMemoPage() {
   const SortableHeader = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
     <th 
       className={cn(
-        "text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-muted/50 transition-calm select-none",
+        "text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-3 py-3 cursor-pointer hover:bg-muted/50 transition-calm select-none",
         className
       )}
       onClick={() => handleSort(field)}
@@ -581,12 +575,11 @@ export default function ICMemoPage() {
                     <SortableHeader field="style_tag">Style</SortableHeader>
                     <SortableHeader field="status">Status</SortableHeader>
                     <SortableHeader field="score_v4">Score v4.0</SortableHeader>
-                    <SortableHeader field="score_v4_quintile">v4 Quintile</SortableHeader>
                     <SortableHeader field="turnaround_score">Turnaround</SortableHeader>
-                    <SortableHeader field="turnaround_quintile">T Quintile</SortableHeader>
-                    <SortableHeader field="recommendation">Recommendation</SortableHeader>
+                    <SortableHeader field="piotroski_score">Piotroski</SortableHeader>
+                    <SortableHeader field="score_v4_quintile">Quintile</SortableHeader>
                     <SortableHeader field="approved_at">Approved</SortableHeader>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-3 py-3">
                       Actions
                     </th>
                   </tr>
@@ -595,21 +588,23 @@ export default function ICMemoPage() {
                   {sortedAndFilteredMemos.map((memo) => {
                     const statusInfo = statusConfig[memo.status];
                     const StatusIcon = statusInfo.icon;
-                    const score = calculateScore(memo.conviction);
-                    const quintile = calculateQuintile(score);
-                    const scoreRecommendation = getScoreBasedRecommendation(score);
+                    const quintile = memo.score_v4_quintile || getQuintileFromV4(memo.score_v4);
+                    const recommendation = memo.score_v4_recommendation || getRecommendationFromV4(quintile);
                     
                     return (
                       <tr key={memo.id} className="hover:bg-muted/20 transition-calm">
-                        <td className="px-4 py-4">
+                        {/* Company Column */}
+                        <td className="px-3 py-3">
                           <div>
                             <p className="font-medium text-foreground">{memo.ticker}</p>
-                            <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                            <p className="text-xs text-muted-foreground truncate max-w-[180px]">
                               {memo.company_name}
                             </p>
                           </div>
                         </td>
-                        <td className="px-4 py-4">
+                        
+                        {/* Style Column */}
+                        <td className="px-3 py-3">
                           <span className={cn(
                             "px-2 py-1 rounded text-xs font-medium",
                             "bg-muted text-muted-foreground"
@@ -617,7 +612,9 @@ export default function ICMemoPage() {
                             {memo.style_tag}
                           </span>
                         </td>
-                        <td className="px-4 py-4">
+                        
+                        {/* Status Column */}
+                        <td className="px-3 py-3">
                           <div className="flex items-center gap-2">
                             <div className={cn(
                               "flex items-center gap-1.5 px-2 py-1 rounded",
@@ -632,31 +629,27 @@ export default function ICMemoPage() {
                                 {statusInfo.label}
                               </span>
                             </div>
-                            {memo.status === "generating" && (
-                              <span className="text-xs text-muted-foreground">
-                                {memo.generation_progress}%
-                              </span>
-                            )}
                           </div>
                         </td>
+                        
                         {/* Score v4.0 Column */}
-                        <td className="px-4 py-4">
+                        <td className="px-3 py-3">
                           {memo.score_v4 !== null ? (
                             <div className="flex items-center gap-2">
-                              <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
+                              <div className="w-10 h-2 bg-muted rounded-full overflow-hidden">
                                 <div 
                                   className={cn(
                                     "h-full rounded-full",
-                                    memo.score_v4 >= 60 ? "bg-green-500" :
-                                    memo.score_v4 >= 40 ? "bg-yellow-500" : "bg-red-500"
+                                    Number(memo.score_v4) >= 60 ? "bg-green-500" :
+                                    Number(memo.score_v4) >= 40 ? "bg-yellow-500" : "bg-red-500"
                                   )}
                                   style={{ width: `${memo.score_v4}%` }}
                                 />
                               </div>
                               <span className={cn(
-                                "text-sm font-medium",
-                                memo.score_v4 >= 60 ? "text-green-400" :
-                                memo.score_v4 >= 40 ? "text-yellow-400" : "text-red-400"
+                                "text-sm font-medium tabular-nums",
+                                Number(memo.score_v4) >= 60 ? "text-green-400" :
+                                Number(memo.score_v4) >= 40 ? "text-yellow-400" : "text-red-400"
                               )}>
                                 {Number(memo.score_v4).toFixed(1)}
                               </span>
@@ -665,37 +658,25 @@ export default function ICMemoPage() {
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
                         </td>
-                        {/* Score v4.0 Quintile Column */}
-                        <td className="px-4 py-4">
-                          {memo.score_v4_quintile ? (
-                            <span className={cn(
-                              "px-2 py-1 rounded text-xs font-medium",
-                              quintileColors[memo.score_v4_quintile] || "bg-muted text-muted-foreground"
-                            )}>
-                              {memo.score_v4_quintile}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
-                        </td>
+                        
                         {/* Turnaround Score Column */}
-                        <td className="px-4 py-4">
+                        <td className="px-3 py-3">
                           {memo.turnaround_score !== null ? (
                             <div className="flex items-center gap-2">
-                              <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
+                              <div className="w-10 h-2 bg-muted rounded-full overflow-hidden">
                                 <div 
                                   className={cn(
                                     "h-full rounded-full",
-                                    memo.turnaround_score >= 60 ? "bg-blue-500" :
-                                    memo.turnaround_score >= 40 ? "bg-yellow-500" : "bg-orange-500"
+                                    Number(memo.turnaround_score) >= 60 ? "bg-blue-500" :
+                                    Number(memo.turnaround_score) >= 40 ? "bg-yellow-500" : "bg-orange-500"
                                   )}
                                   style={{ width: `${memo.turnaround_score}%` }}
                                 />
                               </div>
                               <span className={cn(
-                                "text-sm font-medium",
-                                memo.turnaround_score >= 60 ? "text-blue-400" :
-                                memo.turnaround_score >= 40 ? "text-yellow-400" : "text-orange-400"
+                                "text-sm font-medium tabular-nums",
+                                Number(memo.turnaround_score) >= 60 ? "text-blue-400" :
+                                Number(memo.turnaround_score) >= 40 ? "text-yellow-400" : "text-orange-400"
                               )}>
                                 {Number(memo.turnaround_score).toFixed(1)}
                               </span>
@@ -704,36 +685,63 @@ export default function ICMemoPage() {
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
                         </td>
-                        {/* Turnaround Quintile Column */}
-                        <td className="px-4 py-4">
-                          {memo.turnaround_quintile !== null ? (
-                            <span className={cn(
-                              "px-2 py-1 rounded text-xs font-medium",
-                              quintileColors[`Q${memo.turnaround_quintile}`] || "bg-muted text-muted-foreground"
-                            )}>
-                              Q{memo.turnaround_quintile}
-                            </span>
+                        
+                        {/* Piotroski Score Column (0-9) */}
+                        <td className="px-3 py-3">
+                          {memo.piotroski_score !== null ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-10 h-2 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                  className={cn(
+                                    "h-full rounded-full",
+                                    getPiotroskiBgColor(memo.piotroski_score)
+                                  )}
+                                  style={{ width: `${(memo.piotroski_score / 9) * 100}%` }}
+                                />
+                              </div>
+                              <span className={cn(
+                                "text-sm font-medium tabular-nums",
+                                getPiotroskiColor(memo.piotroski_score)
+                              )}>
+                                {memo.piotroski_score}/9
+                              </span>
+                            </div>
                           ) : (
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
                         </td>
-                        {/* Recommendation Column */}
-                        <td className="px-4 py-4">
-                          {memo.score_v4_recommendation ? (
-                            <span className={cn(
-                              "px-2 py-1 rounded text-xs font-medium uppercase",
-                              recommendationColors[memo.score_v4_recommendation.toLowerCase()] || "bg-muted text-muted-foreground"
-                            )}>
-                              {memo.score_v4_recommendation}
-                            </span>
+                        
+                        {/* Quintile Column (based on Score v4.0) */}
+                        <td className="px-3 py-3">
+                          {quintile ? (
+                            <div className="flex flex-col gap-1">
+                              <span className={cn(
+                                "px-2 py-0.5 rounded text-xs font-medium inline-block w-fit",
+                                quintileColors[quintile] || "bg-muted text-muted-foreground"
+                              )}>
+                                {quintile}
+                              </span>
+                              {recommendation && (
+                                <span className={cn(
+                                  "text-[10px] font-medium uppercase",
+                                  recommendationColors[recommendation.toLowerCase()] || "text-muted-foreground"
+                                )}>
+                                  {recommendation}
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
                         </td>
-                        <td className="px-4 py-4 text-sm text-muted-foreground">
+                        
+                        {/* Approved Date Column */}
+                        <td className="px-3 py-3 text-sm text-muted-foreground">
                           {formatDate(memo.approved_at)}
                         </td>
-                        <td className="px-4 py-4">
+                        
+                        {/* Actions Column */}
+                        <td className="px-3 py-3">
                           <Link
                             href={`/ic-memo/${memo.id}`}
                             className={cn(

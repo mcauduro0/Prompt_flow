@@ -52,6 +52,8 @@ icMemosRouter.get('/', async (req: Request, res: Response) => {
           turnaround_score: (memo as any).turnaroundScore || null,
           turnaround_quintile: (memo as any).turnaroundQuintile || null,
           turnaround_recommendation: (memo as any).turnaroundRecommendation || null,
+          // Piotroski F-Score
+          piotroski_score: (memo as any).piotroskiScore || null,
           approved_at: memo.approvedAt,
           created_at: memo.createdAt,
           completed_at: memo.completedAt,

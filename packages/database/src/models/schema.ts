@@ -487,6 +487,20 @@ export const icMemos = pgTable('ic_memos', {
     momentum_confirmation: number;
   }>(),
   
+  // Piotroski F-Score (0-9)
+  piotroskiScore: integer('piotroski_score'), // 0-9
+  piotroskiDetails: jsonb('piotroski_details').$type<{
+    roa: number;
+    cfo: number;
+    delta_roa: number;
+    accruals: number;
+    delta_leverage: number;
+    delta_liquidity: number;
+    no_equity_issue: number;
+    delta_margin: number;
+    delta_turnover: number;
+  }>(),
+  
   // Status tracking
   status: icMemoStatusEnum('status').default('pending').notNull(),
   generationProgress: integer('generation_progress').default(0).notNull(), // 0-100
