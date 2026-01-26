@@ -18,6 +18,8 @@ import { createDataAggregator, type AggregatedCompanyData } from '@arc/retriever
 import { telemetry } from '@arc/database';
 import { runROICDecompositionForICMemo } from './roic-decomposition-runner.js';
 import { calculateConvictionScoreV2, type ConvictionScoreV2Result } from '../scoring/conviction-score-v2.js';
+import { calculatePiotroskiFScore, getPiotroskiInterpretation } from '../scoring/piotroski-fscore.js';
+import { calculateTurnaroundScore, getCombinedRecommendation } from '../scoring/turnaround-score.js';
 
 // Supporting prompt definitions (hardcoded to avoid schema validation issues)
 const SUPPORTING_PROMPT_TEMPLATES: Record<string, string> = {
@@ -1005,15 +1007,48 @@ async function processICMemo(
     // Calculate Conviction Score v2.0 (quantitative + fundamental + sentiment)
     console.log(`[Lane C] Calculating Conviction Score v2.0 for ${ticker}...`);
     const scoreV2 = await calculateConvictionScoreV2(ticker, memoContent, supportingAnalyses);
-    const conviction = scoreV2.total;
-    const recommendation = scoreV2.recommendation.toLowerCase().replace(' ', '_'); // e.g., 'strong_buy'
     
-    console.log(`[Lane C] Conviction Score v2.0 for ${ticker}: Total=${conviction}, ` +
-      `Fund=${scoreV2.fundamental_score}, Quant=${scoreV2.quant_score}, Sent=${scoreV2.sentiment_score}, ` +
-      `Prob=${scoreV2.prob_outperformance}%, Rec=${scoreV2.recommendation}`);
+    // Calculate Piotroski F-Score (0-9)
+    console.log(`[Lane C] Calculating Piotroski F-Score for ${ticker}...`);
+    const piotroskiResult = await calculatePiotroskiFScore(ticker);
+    const piotroskiFScore = piotroskiResult?.fscore ?? 5;
+    const piotroskiInterpretation = getPiotroskiInterpretation(piotroskiFScore);
     
-    // Add v2.0 score breakdown to memo content
+    // Calculate Turnaround Score (0-100)
+    console.log(`[Lane C] Calculating Turnaround Score for ${ticker}...`);
+    const turnaroundResult = await calculateTurnaroundScore(ticker);
+    const turnaroundScore = turnaroundResult?.score ?? 50;
+    const turnaroundQuintile = turnaroundResult?.quintile ?? 3;
+    
+    // Get combined recommendation based on backtest findings
+    // Low Piotroski + High Turnaround = BEST
+    const combinedRecommendation = getCombinedRecommendation(piotroskiFScore, turnaroundQuintile);
+    
+    // Use Turnaround Score as the primary conviction metric (based on backtest)
+    const conviction = turnaroundScore;
+    const recommendation = combinedRecommendation.toLowerCase().replace(' ', '_');
+    
+    console.log(`[Lane C] Scores for ${ticker}:`);
+    console.log(`  - Conviction Score v2.0: ${scoreV2.total}`);
+    console.log(`  - Piotroski F-Score: ${piotroskiFScore}/9 (${piotroskiInterpretation})`);
+    console.log(`  - Turnaround Score: ${turnaroundScore} (Q${turnaroundQuintile})`);
+    console.log(`  - Combined Recommendation: ${combinedRecommendation}`);
+    
+    // Add all scores to memo content
     memoContent._conviction_score_v2 = scoreV2;
+    memoContent._piotroski_fscore = {
+      score: piotroskiFScore,
+      interpretation: piotroskiInterpretation,
+      details: piotroskiResult?.details ?? null,
+      metrics: piotroskiResult?.metrics ?? null
+    };
+    memoContent._turnaround_score = {
+      score: turnaroundScore,
+      quintile: turnaroundQuintile,
+      components: turnaroundResult?.components ?? null,
+      details: turnaroundResult?.details ?? null,
+      recommendation: turnaroundResult?.recommendation ?? 'HOLD'
+    };
 
     await icMemosRepository.updateProgress(memoId, 95);
 
