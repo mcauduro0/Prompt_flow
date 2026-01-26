@@ -714,9 +714,8 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
       try {
         const ideaId = uuidv4();
         
-        // Calculate conviction score (normalize to 0-100 scale)
-        // LLM returns 1-10, we scale to 0-100 for consistency
-        const convictionScore = idea.conviction ? Math.round(idea.conviction * 10) : 0;
+        // NOTE: Score is NOT set here - it will be calculated in Lane C (IC Memo)
+        // Lane A only performs initial screening (pass/fail based on conviction >= 6)
         
         await ideasRepository.create({
           ideaId,
@@ -738,18 +737,8 @@ export async function runDailyDiscovery(config: DiscoveryConfig = {}): Promise<D
             ebit_margin: idea.ebitMargin ?? null,
             net_debt_to_ebitda: idea.netDebtToEbitda ?? null,
           },
-          // Conviction score from LLM analysis
-          score: idea.conviction ? {
-            total: convictionScore,
-            edge_clarity: 0,
-            business_quality_prior: 0,
-            financial_resilience_prior: 0,
-            valuation_tension: 0,
-            catalyst_clarity: 0,
-            information_availability: 0,
-            complexity_penalty: 0,
-            disclosure_friction_penalty: 0,
-          } : undefined,
+          // Score is null - will be calculated in Lane C after full analysis
+          score: undefined,
           // Time horizon if available
           timeHorizon: idea.timeHorizon || '1_3_years',
           // Catalysts if available

@@ -1036,6 +1036,32 @@ async function processICMemo(
       conviction
     );
 
+    // Update the original idea with the final Conviction Score from Lane C
+    // This ensures the score is visible in Inbox/Queue/IC Memo views
+    if (packet.ideaId) {
+      try {
+        await ideasRepository.updateScores(
+          packet.ideaId,
+          {
+            total: conviction,
+            edge_clarity: 0,
+            business_quality_prior: 0,
+            financial_resilience_prior: 0,
+            valuation_tension: 0,
+            catalyst_clarity: 0,
+            information_availability: 0,
+            complexity_penalty: 0,
+            disclosure_friction_penalty: 0,
+          },
+          String(conviction),
+          String(conviction)
+        );
+        console.log(`[Lane C] Updated idea ${packet.ideaId} with final conviction score: ${conviction}`);
+      } catch (scoreError) {
+        console.warn(`[Lane C] Failed to update idea score:`, scoreError);
+      }
+    }
+
     console.log(`[Lane C] IC Memo completed for ${ticker} with conviction ${conviction}`);
     return { success: true };
   } catch (error) {

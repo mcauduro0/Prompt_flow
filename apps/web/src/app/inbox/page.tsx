@@ -366,8 +366,10 @@ export default function InboxPage() {
                   <div className="w-px h-4 bg-border" />
                   <div className="flex items-center gap-2 text-sm">
                     <TrendingUp className="w-4 h-4 text-emerald-400" />
-                    <span className="text-muted-foreground">Avg Conviction:</span>
-                    <span className="font-medium text-foreground">{stats.avg_conviction.toFixed(1)}/10</span>
+                    <span className="text-muted-foreground">Avg Score:</span>
+                    <span className="font-medium text-foreground">
+                      {stats.avg_conviction > 0 ? stats.avg_conviction.toFixed(0) : '—'}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <DollarSign className="w-4 h-4 text-amber-400" />
@@ -577,19 +579,21 @@ function IdeaCard({ idea, index, expanded, selected, selectionMode, onToggle, on
             </div>
           )}
           
-          {/* Conviction Score */}
-          {idea.convictionScore && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-annotation text-muted-foreground/50">Conv:</span>
+          {/* Conviction Score - Only shown after Lane C (IC Memo) completes */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-annotation text-muted-foreground/50">Score:</span>
+            {idea.convictionScore ? (
               <span className={cn(
                 "text-annotation font-medium",
-                idea.convictionScore >= 8 ? "text-emerald-400" :
-                idea.convictionScore >= 6 ? "text-amber-400" : "text-muted-foreground"
+                idea.convictionScore >= 80 ? "text-emerald-400" :
+                idea.convictionScore >= 60 ? "text-amber-400" : "text-muted-foreground"
               )}>
-                {idea.convictionScore}/10
+                {idea.convictionScore}
               </span>
-            </div>
-          )}
+            ) : (
+              <span className="text-annotation text-muted-foreground/60 italic">—</span>
+            )}
+          </div>
           
           {/* Style Tag */}
           <span className={cn(
