@@ -640,8 +640,13 @@ export default function ICMemoDetailPage() {
                   </div>
                   {memo.conviction !== null && (
                     <div className="text-right">
-                      <p className="text-sm uppercase tracking-wider opacity-70 mb-1">Conviction</p>
-                      <p className="text-3xl font-bold">{memo.conviction}</p>
+                      <p className="text-sm uppercase tracking-wider opacity-70 mb-1">Score v2.0</p>
+                      <p className="text-3xl font-bold">{memo.conviction.toFixed(1)}</p>
+                      <p className="text-xs opacity-60 mt-1">
+                        {memo.conviction >= 70 ? 'Strong Conviction' : 
+                         memo.conviction >= 50 ? 'Moderate Conviction' : 
+                         memo.conviction >= 30 ? 'Low Conviction' : 'Very Low'}
+                      </p>
                     </div>
                   )}
                 </div>

@@ -111,10 +111,12 @@ const formatDate = (dateStr: string | null): string => {
   });
 };
 
-// Calculate Score from Conviction (conviction is 0-50, score is 0-100)
+// Calculate Score from Conviction
+// Conviction Score v2.0 is already stored as 0-100 scale
 const calculateScore = (conviction: number | null): number | null => {
   if (conviction === null) return null;
-  return Math.round((conviction / 50) * 100 * 10) / 10;
+  // Conviction is now stored directly as 0-100 (Conviction Score v2.0)
+  return Math.round(conviction * 10) / 10;
 };
 
 // Calculate Quintile based on Score
