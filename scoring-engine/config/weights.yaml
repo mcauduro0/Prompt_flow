@@ -1,0 +1,213 @@
+# ARC Scoring Engine - Weights Configuration
+# Version: 1.0.0
+# Last Updated: 2026-01-27
+
+# =============================================================================
+# NORMALIZATION SETTINGS
+# =============================================================================
+normalization:
+  winsorize:
+    p_low: 0.05
+    p_high: 0.95
+  z_score:
+    use_robust: true  # Use median and MAD instead of mean and std
+    mad_min: 1e-6     # Minimum MAD to avoid division by zero
+  missing:
+    coverage_threshold: 0.7  # Minimum coverage ratio to consider score valid
+
+# =============================================================================
+# CONTRARIAN SCORE WEIGHTS
+# =============================================================================
+contrarian:
+  signals:
+    rsi14_invert:
+      weight: 0.40
+      direction: 1  # Already inverted in calculation
+      description: "RSI 14-period inverted (100 - RSI)"
+    mom12m_invert:
+      weight: 0.30
+      direction: 1  # Already inverted in calculation
+      description: "12-month momentum excluding last month, inverted"
+    dist_52wlow_invert:
+      weight: 0.30
+      direction: 1  # Already inverted in calculation
+      description: "Distance to 52-week low, inverted"
+
+# =============================================================================
+# TURNAROUND SCORE WEIGHTS
+# =============================================================================
+turnaround:
+  signals:
+    seq_roe_improve:
+      weight: 0.25
+      direction: 1
+      description: "Sequential ROE improvement (delta quarterly)"
+    seq_margin_improve:
+      weight: 0.25
+      direction: 1
+      description: "Sequential operating margin improvement"
+    earnings_surprise_norm:
+      weight: 0.30
+      direction: 1
+      description: "Earnings surprise normalized by historical std"
+    mom1m:
+      weight: 0.20
+      direction: 1
+      description: "1-month momentum (direct)"
+
+# =============================================================================
+# PIOTROSKI F-SCORE WEIGHTS
+# =============================================================================
+piotroski:
+  signals:
+    piotroski_raw:
+      weight: 1.0
+      direction: 1
+      description: "Piotroski F-Score (0-9)"
+  conversion: "linear"  # Options: "linear" (raw/9*100) or "percentile"
+
+# =============================================================================
+# QUALITY SCORE WEIGHTS
+# =============================================================================
+quality:
+  # Sub-block weights (must sum to 1.0)
+  subblocks:
+    structural:
+      weight: 0.30
+      signals:
+        moat:
+          weight: 0.25
+          type: "qualitative"
+          scale: [1, 5]
+        opportunity:
+          weight: 0.20
+          type: "qualitative"
+          scale: [1, 5]
+        value_creation_mechanism:
+          weight: 0.20
+          type: "qualitative"
+          scale: [1, 5]
+        sustainability:
+          weight: 0.15
+          type: "qualitative"
+          scale: [1, 5]
+        structural_vs_cyclical:
+          weight: 0.10
+          type: "qualitative"
+          scale: [1, 5]
+        why_now:
+          weight: 0.10
+          type: "qualitative"
+          scale: [1, 5]
+    
+    management:
+      weight: 0.20
+      signals:
+        management_quality:
+          weight: 0.40
+          type: "qualitative"
+          scale: [1, 5]
+        risks_qualitative:
+          weight: 0.30
+          type: "qualitative"
+          scale: [1, 5]
+        variant_perception:
+          weight: 0.30
+          type: "qualitative"
+          scale: [1, 5]
+    
+    financial:
+      weight: 0.35
+      signals:
+        roic_level:
+          weight: 0.20
+          type: "quantitative"
+          direction: 1
+        roic_stability:
+          weight: 0.15
+          type: "quantitative"
+          direction: 1
+        fcf_margin:
+          weight: 0.15
+          type: "quantitative"
+          direction: 1
+        fcf_conversion:
+          weight: 0.15
+          type: "quantitative"
+          direction: 1
+        net_leverage:
+          weight: 0.15
+          type: "quantitative"
+          direction: -1  # Lower is better
+        interest_coverage:
+          weight: 0.10
+          type: "quantitative"
+          direction: 1
+        earnings_volatility:
+          weight: 0.10
+          type: "quantitative"
+          direction: -1  # Lower is better
+    
+    valuation:
+      weight: 0.15
+      signals:
+        ev_ebitda_zscore:
+          weight: 0.35
+          type: "quantitative"
+          direction: -1  # Lower (cheaper) is better
+        pe_zscore:
+          weight: 0.35
+          type: "quantitative"
+          direction: -1  # Lower (cheaper) is better
+        fcf_yield:
+          weight: 0.30
+          type: "quantitative"
+          direction: 1  # Higher yield is better
+
+# =============================================================================
+# RISK PENALTIES
+# =============================================================================
+risk_penalties:
+  hard_filters:
+    adtv_min_percentile: 20  # Exclude below 20th percentile
+    price_min_usd: 1.0       # Exclude penny stocks
+    suspended: true          # Exclude suspended stocks
+  
+  soft_penalties:
+    net_leverage:
+      threshold_percentile: 90
+      max_penalty: 15
+      affected_scores: ["quality"]
+    
+    volatility_20d:
+      threshold_percentile: 95
+      max_penalty: 10
+      affected_scores: ["turnaround", "contrarian"]
+    
+    max_drawdown_1y:
+      threshold_percentile: 95
+      max_penalty: 10
+      affected_scores: ["contrarian"]
+    
+    bid_ask_spread:
+      threshold_percentile: 90
+      max_penalty: 10
+      affected_scores: ["all"]
+
+# =============================================================================
+# REBALANCE FREQUENCY
+# =============================================================================
+rebalance:
+  contrarian: "daily"
+  turnaround: "daily"  # With fundamentals forward-fill
+  quality: "on_report"  # Recalculate on new earnings report
+  piotroski: "on_report"
+
+# =============================================================================
+# OUTPUT SETTINGS
+# =============================================================================
+output:
+  include_raw_signals: true
+  include_normalized_signals: true
+  include_adjusted_scores: true
+  include_coverage_flags: true

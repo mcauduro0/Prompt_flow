@@ -1,6 +1,5 @@
 "use client";
-
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { 
   ClipboardCheck, 
@@ -33,7 +32,7 @@ interface ICMemo {
   generation_progress: number;
   recommendation: string | null;
   conviction: number | null;
-  // Score v4.0 (Contrarian/Turnaround Model) - Best performer in backtest
+  // Score v4.0 (Composite Score) - Calculated from weighted average
   score_v4: number | null;
   score_v4_quintile: string | null;
   score_v4_recommendation: string | null;
@@ -89,7 +88,9 @@ const statusConfig = {
   },
 };
 
+// Updated recommendation colors based on backtest results (Q3 is the sweet spot)
 const recommendationColors: Record<string, string> = {
+  "strong_buy": "text-emerald-400 bg-emerald-500/20",
   "strong buy": "text-emerald-400 bg-emerald-500/20",
   buy: "text-green-400 bg-green-500/15",
   hold: "text-yellow-400 bg-yellow-500/15",
@@ -98,12 +99,18 @@ const recommendationColors: Record<string, string> = {
   sell: "text-red-400 bg-red-500/15",
 };
 
+// Quintile colors - Q3 is now the best (based on backtest)
 const quintileColors: Record<string, string> = {
-  Q5: "text-green-400 bg-green-500/20",
-  Q4: "text-green-300 bg-green-400/15",
-  Q3: "text-yellow-400 bg-yellow-500/15",
-  Q2: "text-orange-400 bg-orange-500/15",
-  Q1: "text-red-400 bg-red-500/15",
+  "5": "text-green-400 bg-green-500/20",
+  "4": "text-yellow-400 bg-yellow-500/15",
+  "3": "text-emerald-400 bg-emerald-500/25", // Q3 is the sweet spot!
+  "2": "text-orange-400 bg-orange-500/15",
+  "1": "text-red-400 bg-red-500/15",
+  "Q5": "text-green-400 bg-green-500/20",
+  "Q4": "text-yellow-400 bg-yellow-500/15",
+  "Q3": "text-emerald-400 bg-emerald-500/25",
+  "Q2": "text-orange-400 bg-orange-500/15",
+  "Q1": "text-red-400 bg-red-500/15",
 };
 
 const formatDate = (dateStr: string | null): string => {
@@ -117,25 +124,28 @@ const formatDate = (dateStr: string | null): string => {
   });
 };
 
-// Get quintile based on Score v4.0
-const getQuintileFromV4 = (score: number | null): string | null => {
-  if (score === null) return null;
-  if (score >= 80) return "Q5";
-  if (score >= 60) return "Q4";
-  if (score >= 40) return "Q3";
-  if (score >= 20) return "Q2";
-  return "Q1";
+// Get quintile display from database value
+const getQuintileDisplay = (quintile: string | number | null): string | null => {
+  if (quintile === null || quintile === undefined) return null;
+  const q = String(quintile);
+  if (q.startsWith('Q')) return q;
+  return `Q${q}`;
 };
 
-// Get recommendation based on Score v4.0 quintile (Q4 is the sweet spot)
-const getRecommendationFromV4 = (quintile: string | null): string | null => {
+// Get recommendation display - use database value or derive from quintile
+const getRecommendationDisplay = (recommendation: string | null, quintile: string | number | null): string | null => {
+  if (recommendation) {
+    return recommendation.toUpperCase().replace('_', ' ');
+  }
   if (!quintile) return null;
-  switch (quintile) {
-    case 'Q5': return 'HOLD';
-    case 'Q4': return 'STRONG BUY';
-    case 'Q3': return 'BUY';
-    case 'Q2': return 'REDUCE';
-    case 'Q1': return 'AVOID';
+  const q = String(quintile).replace('Q', '');
+  // Based on backtest: Q3 is the sweet spot (20.66% CAGR, Sharpe 0.64)
+  switch (q) {
+    case '5': return 'BUY';
+    case '4': return 'HOLD';
+    case '3': return 'STRONG BUY'; // Q3 is the sweet spot!
+    case '2': return 'HOLD';
+    case '1': return 'AVOID';
     default: return 'HOLD';
   }
 };
@@ -214,6 +224,24 @@ const getPiotroskiBgColor = (score: number | null): string => {
   if (score >= 7) return "bg-green-500";
   if (score >= 5) return "bg-yellow-500";
   if (score >= 3) return "bg-orange-500";
+  return "bg-red-500";
+};
+
+// Get Score v4.0 color based on score (0-100)
+const getScoreV4Color = (score: number | null): string => {
+  if (score === null) return "text-muted-foreground";
+  if (score >= 65) return "text-green-400";
+  if (score >= 50) return "text-yellow-400";
+  if (score >= 40) return "text-orange-400";
+  return "text-red-400";
+};
+
+// Get Score v4.0 background color
+const getScoreV4BgColor = (score: number | null): string => {
+  if (score === null) return "bg-muted";
+  if (score >= 65) return "bg-green-500";
+  if (score >= 50) return "bg-yellow-500";
+  if (score >= 40) return "bg-orange-500";
   return "bg-red-500";
 };
 
@@ -302,354 +330,375 @@ export default function ICMemoPage() {
       : <ArrowDown className="w-3 h-3" />;
   };
 
-  // Filter out funds/ETFs and apply status filter, then sort
-  const sortedAndFilteredMemos = useMemo(() => {
-    // First, filter out funds/ETFs - only keep companies
-    let filtered = memos.filter(m => !isFundOrETF(m));
-    
-    // Then apply status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(m => m.status === statusFilter);
-    }
+  // Filter out funds/ETFs and apply status filter
+  const filteredMemos = useMemo(() => {
+    return memos.filter(memo => {
+      // Filter out funds/ETFs
+      if (isFundOrETF(memo)) return false;
+      
+      // Apply status filter
+      if (statusFilter !== "all" && memo.status !== statusFilter) return false;
+      
+      return true;
+    });
+  }, [memos, statusFilter]);
 
-    return filtered.sort((a, b) => {
-      let aValue: string | number | null;
-      let bValue: string | number | null;
+  // Sort memos
+  const sortedAndFilteredMemos = useMemo(() => {
+    return [...filteredMemos].sort((a, b) => {
+      let aVal: any;
+      let bVal: any;
 
       switch (sortField) {
         case 'ticker':
-          aValue = a.ticker;
-          bValue = b.ticker;
+          aVal = a.ticker || '';
+          bVal = b.ticker || '';
           break;
         case 'company_name':
-          aValue = a.company_name;
-          bValue = b.company_name;
+          aVal = a.company_name || '';
+          bVal = b.company_name || '';
           break;
         case 'style_tag':
-          aValue = a.style_tag;
-          bValue = b.style_tag;
+          aVal = a.style_tag || '';
+          bVal = b.style_tag || '';
           break;
         case 'status':
-          aValue = a.status;
-          bValue = b.status;
+          aVal = a.status || '';
+          bVal = b.status || '';
           break;
         case 'score_v4':
-          aValue = a.score_v4 !== null ? Number(a.score_v4) : -1;
-          bValue = b.score_v4 !== null ? Number(b.score_v4) : -1;
+          aVal = Number(a.score_v4) || 0;
+          bVal = Number(b.score_v4) || 0;
           break;
         case 'turnaround_score':
-          aValue = a.turnaround_score !== null ? Number(a.turnaround_score) : -1;
-          bValue = b.turnaround_score !== null ? Number(b.turnaround_score) : -1;
+          aVal = Number(a.turnaround_score) || 0;
+          bVal = Number(b.turnaround_score) || 0;
           break;
         case 'piotroski_score':
-          aValue = a.piotroski_score !== null ? Number(a.piotroski_score) : -1;
-          bValue = b.piotroski_score !== null ? Number(b.piotroski_score) : -1;
+          aVal = Number(a.piotroski_score) || 0;
+          bVal = Number(b.piotroski_score) || 0;
           break;
         case 'score_v4_quintile':
-          const quintileOrder = { Q5: 5, Q4: 4, Q3: 3, Q2: 2, Q1: 1 };
-          const aQuintile = a.score_v4_quintile || getQuintileFromV4(a.score_v4);
-          const bQuintile = b.score_v4_quintile || getQuintileFromV4(b.score_v4);
-          aValue = aQuintile ? quintileOrder[aQuintile as keyof typeof quintileOrder] : 0;
-          bValue = bQuintile ? quintileOrder[bQuintile as keyof typeof quintileOrder] : 0;
+          aVal = String(a.score_v4_quintile || '').replace('Q', '') || '0';
+          bVal = String(b.score_v4_quintile || '').replace('Q', '') || '0';
           break;
         case 'approved_at':
-          aValue = a.approved_at ? new Date(a.approved_at).getTime() : 0;
-          bValue = b.approved_at ? new Date(b.approved_at).getTime() : 0;
+          aVal = a.approved_at ? new Date(a.approved_at).getTime() : 0;
+          bVal = b.approved_at ? new Date(b.approved_at).getTime() : 0;
           break;
         default:
-          aValue = '';
-          bValue = '';
+          aVal = 0;
+          bVal = 0;
       }
 
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortDirection === 'asc' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+      if (typeof aVal === 'string') {
+        const comparison = aVal.localeCompare(bVal);
+        return sortDirection === 'asc' ? comparison : -comparison;
       }
 
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-      }
-
-      return 0;
+      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
     });
-  }, [memos, statusFilter, sortField, sortDirection]);
+  }, [filteredMemos, sortField, sortDirection]);
 
-  // Calculate stats for companies only
-  const companyStats = useMemo(() => {
-    const companies = memos.filter(m => !isFundOrETF(m));
-    const fundsRemoved = memos.length - companies.length;
-    
-    const byStatus = {
-      pending: companies.filter(m => m.status === 'pending').length,
-      generating: companies.filter(m => m.status === 'generating').length,
-      complete: companies.filter(m => m.status === 'complete').length,
-      failed: companies.filter(m => m.status === 'failed').length,
-    };
-    
-    return {
-      total: companies.length,
-      fundsRemoved,
-      by_status: byStatus,
-    };
-  }, [memos]);
-
-  const SortableHeader = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
-    <th 
-      className={cn(
-        "text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-3 py-3 cursor-pointer hover:bg-muted/50 transition-calm select-none",
-        className
-      )}
-      onClick={() => handleSort(field)}
-    >
-      <div className="flex items-center gap-1.5">
-        {children}
-        {getSortIcon(field)}
-      </div>
-    </th>
-  );
+  // Calculate quintile distribution
+  const quintileDistribution = useMemo(() => {
+    const dist: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+    filteredMemos.forEach(memo => {
+      if (memo.score_v4_quintile) {
+        const q = String(memo.score_v4_quintile).replace('Q', '');
+        if (dist[q] !== undefined) {
+          dist[q]++;
+        }
+      }
+    });
+    return dist;
+  }, [filteredMemos]);
 
   return (
     <AppLayout>
-      <div className="p-8">
+      <div className="p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className={cn(
-              "flex items-center justify-center rounded-md",
-              "bg-accent/10 border border-accent/20",
-              "w-10 h-10"
-            )}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-accent/10">
               <ClipboardCheck className="w-5 h-5 text-accent" />
             </div>
             <div>
-              <h1 className="text-2xl font-medium text-foreground">IC Memo</h1>
+              <h1 className="text-xl font-medium text-foreground">IC Memos</h1>
               <p className="text-sm text-muted-foreground">
-                Investment Committee Memos - Companies Only
+                Investment Committee Memos with Composite Scores
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-500/10 border border-blue-500/20">
-              <Building2 className="w-4 h-4 text-blue-400" />
-              <span className="text-xs text-blue-400">
-                {companyStats.fundsRemoved} funds filtered out
-              </span>
-            </div>
-            
+          
+          <div className="flex items-center gap-2">
             <button
               onClick={handleRefresh}
               disabled={refreshing}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-md",
-                "border border-border text-sm",
-                "hover:bg-muted/50 transition-calm",
+                "flex items-center gap-2 px-3 py-2 rounded-md",
+                "bg-muted hover:bg-muted/80 transition-calm",
+                "text-sm text-muted-foreground",
                 refreshing && "opacity-50 cursor-not-allowed"
               )}
             >
               <RefreshCw className={cn("w-4 h-4", refreshing && "animate-spin")} />
               Refresh
             </button>
-
+            
             <button
               onClick={handleTriggerRun}
-              disabled={triggeringRun || (companyStats.by_status?.pending || 0) === 0}
+              disabled={triggeringRun}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-md",
-                "bg-accent text-accent-foreground text-sm",
-                "hover:bg-accent/90 transition-calm",
-                (triggeringRun || (companyStats.by_status?.pending || 0) === 0) && "opacity-50 cursor-not-allowed"
+                "flex items-center gap-2 px-3 py-2 rounded-md",
+                "bg-accent text-accent-foreground hover:bg-accent/90 transition-calm",
+                "text-sm font-medium",
+                triggeringRun && "opacity-50 cursor-not-allowed"
               )}
             >
-              {triggeringRun ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Play className="w-4 h-4" />
-              )}
+              <Play className={cn("w-4 h-4", triggeringRun && "animate-pulse")} />
               Run Lane C
             </button>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className={cn(
-            "p-4 rounded-lg border border-border",
-            "bg-card"
-          )}>
-            <div className="flex items-center gap-2 mb-1">
-              <Building2 className="w-4 h-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Companies</p>
+        {stats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="p-4 rounded-lg bg-card border border-border">
+              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-2xl font-medium text-foreground">{stats.total}</p>
             </div>
-            <p className="text-2xl font-medium">{companyStats.total}</p>
+            <div className="p-4 rounded-lg bg-card border border-border">
+              <p className="text-sm text-muted-foreground">Complete</p>
+              <p className="text-2xl font-medium text-green-500">{stats.by_status.complete || 0}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-card border border-border">
+              <p className="text-sm text-muted-foreground">Pending</p>
+              <p className="text-2xl font-medium text-yellow-500">{stats.by_status.pending || 0}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-card border border-border">
+              <p className="text-sm text-muted-foreground">Generating</p>
+              <p className="text-2xl font-medium text-blue-500">{stats.by_status.generating || 0}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-card border border-border">
+              <p className="text-sm text-muted-foreground">Failed</p>
+              <p className="text-2xl font-medium text-red-500">{stats.by_status.failed || 0}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-card border border-border">
+              <p className="text-sm text-muted-foreground">Companies</p>
+              <p className="text-2xl font-medium text-foreground">{filteredMemos.length}</p>
+            </div>
           </div>
-          
-          <div className={cn(
-            "p-4 rounded-lg border border-border",
-            "bg-yellow-500/5"
-          )}>
-            <p className="text-sm text-yellow-600 mb-1">Pending</p>
-            <p className="text-2xl font-medium text-yellow-600">
-              {companyStats.by_status?.pending || 0}
-            </p>
-          </div>
-          
-          <div className={cn(
-            "p-4 rounded-lg border border-border",
-            "bg-blue-500/5"
-          )}>
-            <p className="text-sm text-blue-600 mb-1">Generating</p>
-            <p className="text-2xl font-medium text-blue-600">
-              {companyStats.by_status?.generating || 0}
-            </p>
-          </div>
-          
-          <div className={cn(
-            "p-4 rounded-lg border border-border",
-            "bg-green-500/5"
-          )}>
-            <p className="text-sm text-green-600 mb-1">Complete</p>
-            <p className="text-2xl font-medium text-green-600">
-              {companyStats.by_status?.complete || 0}
-            </p>
-          </div>
-        </div>
+        )}
 
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-2 mb-6 border-b border-border pb-4">
-          {["all", "pending", "generating", "complete", "failed"].map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setStatusFilter(filter)}
-              className={cn(
-                "px-4 py-2 rounded-md text-sm transition-calm",
-                statusFilter === filter
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              )}
-            >
-              {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              {filter !== "all" && companyStats.by_status?.[filter as keyof typeof companyStats.by_status] !== undefined && (
-                <span className="ml-2 text-xs opacity-70">
-                  ({companyStats.by_status[filter as keyof typeof companyStats.by_status]})
+        {/* Quintile Distribution */}
+        <div className="p-4 rounded-lg bg-card border border-border">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">Quintile Distribution (Composite Score)</h3>
+          <div className="flex items-center gap-4">
+            {['1', '2', '3', '4', '5'].map(q => (
+              <div key={q} className="flex items-center gap-2">
+                <span className={cn(
+                  "px-2 py-0.5 rounded text-xs font-medium",
+                  quintileColors[q] || "bg-muted text-muted-foreground"
+                )}>
+                  Q{q}
                 </span>
-              )}
-            </button>
-          ))}
+                <span className="text-sm text-muted-foreground">{quintileDistribution[q]}</span>
+                {q === '3' && <span className="text-[10px] text-emerald-400 font-medium">★ SWEET SPOT</span>}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Memos Table */}
+        {/* Filters */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Status:</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {['all', 'complete', 'pending', 'generating', 'failed'].map(status => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-sm transition-calm",
+                  statusFilter === status
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                )}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Loading State */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-accent" />
           </div>
         ) : sortedAndFilteredMemos.length === 0 ? (
-          <div className="text-center py-20">
-            <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              {statusFilter === "all" 
-                ? "No IC Memos yet. Approve research packets to generate IC Memos."
-                : `No ${statusFilter} IC Memos.`}
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No IC Memos Found</h3>
+            <p className="text-sm text-muted-foreground">
+              {statusFilter !== "all" 
+                ? `No memos with status "${statusFilter}"`
+                : "No IC memos have been generated yet"}
             </p>
-            <Link 
-              href="/research"
-              className={cn(
-                "inline-flex items-center gap-2 mt-4",
-                "px-4 py-2 rounded-md",
-                "bg-accent text-accent-foreground text-sm",
-                "hover:bg-accent/90 transition-calm"
-              )}
-            >
-              <FileText className="w-4 h-4" />
-              Go to Research
-            </Link>
           </div>
         ) : (
-          <div className="border border-border rounded-lg overflow-hidden">
-            <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
+          <div className="rounded-lg border border-border overflow-hidden">
+            <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-muted/30 sticky top-0 z-10">
+                <thead className="bg-muted/50">
                   <tr>
-                    <SortableHeader field="ticker">Company</SortableHeader>
-                    <SortableHeader field="style_tag">Style</SortableHeader>
-                    <SortableHeader field="status">Status</SortableHeader>
-                    <SortableHeader field="score_v4">Score v4.0</SortableHeader>
-                    <SortableHeader field="turnaround_score">Turnaround</SortableHeader>
-                    <SortableHeader field="piotroski_score">Piotroski</SortableHeader>
-                    <SortableHeader field="score_v4_quintile">Quintile</SortableHeader>
-                    <SortableHeader field="approved_at">Approved</SortableHeader>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-3 py-3">
+                    <th className="px-3 py-3 text-left">
+                      <button 
+                        onClick={() => handleSort('ticker')}
+                        className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-calm"
+                      >
+                        Ticker {getSortIcon('ticker')}
+                      </button>
+                    </th>
+                    <th className="px-3 py-3 text-left">
+                      <button 
+                        onClick={() => handleSort('company_name')}
+                        className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-calm"
+                      >
+                        Company {getSortIcon('company_name')}
+                      </button>
+                    </th>
+                    <th className="px-3 py-3 text-left">
+                      <button 
+                        onClick={() => handleSort('style_tag')}
+                        className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-calm"
+                      >
+                        Style {getSortIcon('style_tag')}
+                      </button>
+                    </th>
+                    <th className="px-3 py-3 text-left">
+                      <button 
+                        onClick={() => handleSort('status')}
+                        className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-calm"
+                      >
+                        Status {getSortIcon('status')}
+                      </button>
+                    </th>
+                    <th className="px-3 py-3 text-left">
+                      <button 
+                        onClick={() => handleSort('score_v4')}
+                        className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-calm"
+                      >
+                        Composite {getSortIcon('score_v4')}
+                      </button>
+                    </th>
+                    <th className="px-3 py-3 text-left">
+                      <button 
+                        onClick={() => handleSort('turnaround_score')}
+                        className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-calm"
+                      >
+                        Turnaround {getSortIcon('turnaround_score')}
+                      </button>
+                    </th>
+                    <th className="px-3 py-3 text-left">
+                      <button 
+                        onClick={() => handleSort('piotroski_score')}
+                        className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-calm"
+                      >
+                        Piotroski {getSortIcon('piotroski_score')}
+                      </button>
+                    </th>
+                    <th className="px-3 py-3 text-left">
+                      <button 
+                        onClick={() => handleSort('score_v4_quintile')}
+                        className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-calm"
+                      >
+                        Quintile {getSortIcon('score_v4_quintile')}
+                      </button>
+                    </th>
+                    <th className="px-3 py-3 text-left">
+                      <button 
+                        onClick={() => handleSort('approved_at')}
+                        className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-calm"
+                      >
+                        Approved {getSortIcon('approved_at')}
+                      </button>
+                    </th>
+                    <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {sortedAndFilteredMemos.map((memo) => {
-                    const statusInfo = statusConfig[memo.status];
-                    const StatusIcon = statusInfo.icon;
-                    const quintile = memo.score_v4_quintile || getQuintileFromV4(memo.score_v4);
-                    const recommendation = memo.score_v4_recommendation || getRecommendationFromV4(quintile);
+                    const StatusIcon = statusConfig[memo.status]?.icon || AlertCircle;
+                    const quintile = getQuintileDisplay(memo.score_v4_quintile);
+                    const recommendation = getRecommendationDisplay(memo.score_v4_recommendation, memo.score_v4_quintile);
                     
                     return (
-                      <tr key={memo.id} className="hover:bg-muted/20 transition-calm">
-                        {/* Company Column */}
+                      <tr key={memo.id} className="hover:bg-muted/30 transition-calm">
+                        {/* Ticker Column */}
                         <td className="px-3 py-3">
-                          <div>
-                            <p className="font-medium text-foreground">{memo.ticker}</p>
-                            <p className="text-xs text-muted-foreground truncate max-w-[180px]">
-                              {memo.company_name}
-                            </p>
+                          <span className="font-medium text-foreground">{memo.ticker}</span>
+                        </td>
+                        
+                        {/* Company Name Column */}
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                              {memo.company_name || memo.ticker}
+                            </span>
                           </div>
                         </td>
                         
-                        {/* Style Column */}
+                        {/* Style Tag Column */}
                         <td className="px-3 py-3">
-                          <span className={cn(
-                            "px-2 py-1 rounded text-xs font-medium",
-                            "bg-muted text-muted-foreground"
-                          )}>
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground">
                             {memo.style_tag}
                           </span>
                         </td>
                         
                         {/* Status Column */}
                         <td className="px-3 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className={cn(
-                              "flex items-center gap-1.5 px-2 py-1 rounded",
-                              statusInfo.bgColor
+                          <div className={cn(
+                            "flex items-center gap-1.5 px-2 py-1 rounded w-fit",
+                            statusConfig[memo.status]?.bgColor
+                          )}>
+                            <StatusIcon className={cn(
+                              "w-3.5 h-3.5",
+                              statusConfig[memo.status]?.color,
+                              memo.status === 'generating' && "animate-spin"
+                            )} />
+                            <span className={cn(
+                              "text-xs font-medium",
+                              statusConfig[memo.status]?.color
                             )}>
-                              <StatusIcon className={cn(
-                                "w-3.5 h-3.5",
-                                statusInfo.color,
-                                memo.status === "generating" && "animate-spin"
-                              )} />
-                              <span className={cn("text-xs font-medium", statusInfo.color)}>
-                                {statusInfo.label}
-                              </span>
-                            </div>
+                              {statusConfig[memo.status]?.label}
+                            </span>
                           </div>
                         </td>
                         
-                        {/* Score v4.0 Column */}
+                        {/* Composite Score Column (Score v4.0) */}
                         <td className="px-3 py-3">
                           {memo.score_v4 !== null ? (
                             <div className="flex items-center gap-2">
-                              <div className="w-10 h-2 bg-muted rounded-full overflow-hidden">
+                              <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
                                 <div 
                                   className={cn(
                                     "h-full rounded-full",
-                                    Number(memo.score_v4) >= 60 ? "bg-green-500" :
-                                    Number(memo.score_v4) >= 40 ? "bg-yellow-500" : "bg-red-500"
+                                    getScoreV4BgColor(Number(memo.score_v4))
                                   )}
-                                  style={{ width: `${memo.score_v4}%` }}
+                                  style={{ width: `${Number(memo.score_v4)}%` }}
                                 />
                               </div>
                               <span className={cn(
                                 "text-sm font-medium tabular-nums",
-                                Number(memo.score_v4) >= 60 ? "text-green-400" :
-                                Number(memo.score_v4) >= 40 ? "text-yellow-400" : "text-red-400"
+                                getScoreV4Color(Number(memo.score_v4))
                               )}>
                                 {Number(memo.score_v4).toFixed(1)}
                               </span>
@@ -711,20 +760,22 @@ export default function ICMemoPage() {
                           )}
                         </td>
                         
-                        {/* Quintile Column (based on Score v4.0) */}
+                        {/* Quintile Column (based on Composite Score) */}
                         <td className="px-3 py-3">
                           {quintile ? (
                             <div className="flex flex-col gap-1">
                               <span className={cn(
                                 "px-2 py-0.5 rounded text-xs font-medium inline-block w-fit",
-                                quintileColors[quintile] || "bg-muted text-muted-foreground"
+                                quintileColors[memo.score_v4_quintile || ''] || quintileColors[quintile] || "bg-muted text-muted-foreground"
                               )}>
                                 {quintile}
                               </span>
                               {recommendation && (
                                 <span className={cn(
                                   "text-[10px] font-medium uppercase",
-                                  recommendationColors[recommendation.toLowerCase()] || "text-muted-foreground"
+                                  recommendationColors[recommendation.toLowerCase().replace(' ', '_')] || 
+                                  recommendationColors[recommendation.toLowerCase()] || 
+                                  "text-muted-foreground"
                                 )}>
                                   {recommendation}
                                 </span>

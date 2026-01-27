@@ -44,3 +44,12 @@ coverage/
 tmp/
 temp/
 .cache/
+.env.production
+scoring-engine/calculate_all_scores_v2.py
+scoring-engine/integration/arc_integration.py
+**/__pycache__/
+nohup.out
+*.log
+data/
+scoring-engine/outputs/
+scoring-engine/calculate_all_scores.py
