@@ -54,6 +54,16 @@ icMemosRouter.get('/', async (req: Request, res: Response) => {
           turnaround_recommendation: (memo as any).turnaroundRecommendation || null,
           // Piotroski F-Score
           piotroski_score: (memo as any).piotroskiScore || null,
+          // Quality Score (14 factors)
+          quality_score: (memo as any).qualityScore || null,
+          quality_score_quintile: (memo as any).qualityScoreQuintile || null,
+          // Contrarian Score (inverted momentum)
+          contrarian_score: (memo as any).contrarianScore || null,
+          contrarian_score_quintile: (memo as any).contrarianScoreQuintile || null,
+          // Turnaround Score Quintile
+          turnaround_score_quintile: (memo as any).turnaroundScoreQuintile || null,
+          // Piotroski Score Quintile
+          piotroski_score_quintile: (memo as any).piotroskiScoreQuintile || null,
           approved_at: memo.approvedAt,
           created_at: memo.createdAt,
           completed_at: memo.completedAt,

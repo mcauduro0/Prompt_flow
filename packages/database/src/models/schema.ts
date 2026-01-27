@@ -489,6 +489,20 @@ export const icMemos = pgTable('ic_memos', {
   
   // Piotroski F-Score (0-9)
   piotroskiScore: integer('piotroski_score'), // 0-9
+  
+  // Quality Score (14 factors)
+  qualityScore: numeric("quality_score", { precision: 5, scale: 2 }), // 0-100
+  qualityScoreQuintile: integer("quality_score_quintile"), // 1-5
+  
+  // Contrarian Score (inverted momentum signals)
+  contrarianScore: numeric("contrarian_score", { precision: 5, scale: 2 }), // 0-100
+  contrarianScoreQuintile: integer("contrarian_score_quintile"), // 1-5
+  
+  // Turnaround Score Quintile
+  turnaroundScoreQuintile: integer("turnaround_score_quintile"), // 1-5
+  
+  // Piotroski Score Quintile
+  piotroskiScoreQuintile: integer("piotroski_score_quintile"), // 1-5
   piotroskiDetails: jsonb('piotroski_details').$type<{
     roa: number;
     cfo: number;
