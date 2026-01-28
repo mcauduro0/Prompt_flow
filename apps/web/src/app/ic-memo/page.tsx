@@ -585,7 +585,7 @@ export default function ICMemoPage() {
                         {memo.quality_score !== null ? (
                           <div className="flex flex-col items-center gap-1">
                             <span className={cn("font-mono font-bold", getScoreColor(memo.quality_score))}>
-                              {memo.quality_score.toFixed(1)}
+                              {Number(memo.quality_score).toFixed(1)}
                             </span>
                             <span className={cn(
                               "text-xs px-2 py-0.5 rounded-full font-medium",
@@ -603,7 +603,7 @@ export default function ICMemoPage() {
                         {memo.contrarian_score !== null ? (
                           <div className="flex flex-col items-center gap-1">
                             <span className={cn("font-mono font-bold", getScoreColor(memo.contrarian_score))}>
-                              {memo.contrarian_score.toFixed(1)}
+                              {Number(memo.contrarian_score).toFixed(1)}
                             </span>
                             <span className={cn(
                               "text-xs px-2 py-0.5 rounded-full font-medium",
@@ -621,7 +621,7 @@ export default function ICMemoPage() {
                         {memo.turnaround_score !== null ? (
                           <div className="flex flex-col items-center gap-1">
                             <span className={cn("font-mono font-bold", getScoreColor(memo.turnaround_score))}>
-                              {memo.turnaround_score.toFixed(1)}
+                              {Number(memo.turnaround_score).toFixed(1)}
                             </span>
                             <span className={cn(
                               "text-xs px-2 py-0.5 rounded-full font-medium",
