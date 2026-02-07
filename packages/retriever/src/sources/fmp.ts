@@ -461,6 +461,87 @@ export class FMPClient {
     const cagr = Math.pow(newestRevenue / oldestRevenue, 1 / actualYears) - 1;
     return cagr * 100; // Return as percentage
   }
+  /**
+   * Get real-time quote for a ticker (includes price, volume, market cap, etc.)
+   * This is the primary method for getting current price data
+   */
+  async getQuote(ticker: string): Promise<RetrieverResult<{
+    ticker: string;
+    price: number;
+    open: number;
+    high: number;
+    low: number;
+    previousClose: number;
+    volume: number;
+    avgVolume: number;
+    marketCap: number;
+    pe: number;
+    eps: number;
+    yearHigh: number;
+    yearLow: number;
+    priceAvg50: number;
+    priceAvg200: number;
+    exchange: string;
+    name: string;
+  }>> {
+    const result = await this.fetch<any[]>(`/quote/${ticker}`);
+    if (!result.success || !result.data?.[0]) {
+      return { ...result, data: undefined };
+    }
+    const q = result.data[0];
+    return {
+      success: true,
+      data: {
+        ticker: q.symbol,
+        price: q.price,
+        open: q.open,
+        high: q.dayHigh,
+        low: q.dayLow,
+        previousClose: q.previousClose,
+        volume: q.volume,
+        avgVolume: q.avgVolume,
+        marketCap: q.marketCap,
+        pe: q.pe,
+        eps: q.eps,
+        yearHigh: q.yearHigh,
+        yearLow: q.yearLow,
+        priceAvg50: q.priceAvg50,
+        priceAvg200: q.priceAvg200,
+        exchange: q.exchange,
+        name: q.name,
+      },
+      source: "fmp",
+      retrievedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Get latest stock price in StockPrice format (compatible with Polygon interface)
+   * This provides a fallback when Polygon does not have data for international stocks
+   */
+  async getLatestPrice(ticker: string): Promise<RetrieverResult<import("../types.js").StockPrice>> {
+    const quoteResult = await this.getQuote(ticker);
+    if (!quoteResult.success || !quoteResult.data) {
+      return { ...quoteResult, data: undefined };
+    }
+    const q = quoteResult.data;
+    return {
+      success: true,
+      data: {
+        ticker: q.ticker,
+        date: new Date().toISOString().split("T")[0],
+        open: q.open,
+        high: q.high,
+        low: q.low,
+        close: q.price,
+        volume: q.volume,
+        adjustedClose: q.price,
+      },
+      source: "fmp",
+      retrievedAt: new Date().toISOString(),
+    };
+  }
+
 }
 
 /**

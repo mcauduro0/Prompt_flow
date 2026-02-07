@@ -17,7 +17,8 @@ import {
   BookOpen,
   PieChart,
   Server,
-  ClipboardCheck
+  ClipboardCheck,
+  Brain
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,7 @@ const navItems: NavItem[] = [
   // Management
   { path: "/prompts", label: "Prompts", icon: BookOpen, section: "manage" },
   { path: "/portfolio", label: "Portfolio", icon: PieChart, section: "manage" },
+  { path: "/decision-dashboard", label: "Decisions", icon: Brain, section: "manage" },
   
   // System
   { path: "/telemetry", label: "Telemetry", icon: Activity, section: "system" },

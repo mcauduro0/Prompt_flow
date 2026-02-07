@@ -1,53 +1,66 @@
 "use client";
+
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { 
-  ClipboardCheck, 
-  RefreshCw, 
-  Play, 
-  Eye, 
+import Link from "next/link";
+import {
+  ClipboardCheck,
   Loader2,
+  RefreshCw,
+  Play,
   CheckCircle,
   XCircle,
   Clock,
-  AlertCircle,
   FileText,
-  ArrowUpDown,
+  Eye,
+  Filter,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Zap,
+  Star,
   ArrowUp,
   ArrowDown,
-  Building2,
-  Filter,
-  TrendingUp,
-  TrendingDown,
-  Target,
-  Zap
+  ArrowUpDown,
+  Shield,
+  Layers,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { AppLayout } from "@/components/layout/AppLayout";
 
+// Types
 interface ICMemo {
   id: string;
-  packet_id: string;
-  idea_id: string;
   ticker: string;
-  company_name: string;
-  style_tag: string;
-  status: 'pending' | 'generating' | 'complete' | 'failed';
-  generation_progress: number;
+  company_name: string | null;
+  style_tag: string | null;
+  status: "pending" | "generating" | "complete" | "failed";
+  progress: number;
   recommendation: string | null;
   conviction: number | null;
   // Quality Score (14 factors)
   quality_score: number | null;
   quality_score_quintile: number | null;
-  // Contrarian Score (inverted momentum signals)
-  contrarian_score: number | null;
-  contrarian_score_quintile: number | null;
+  // Momentum Score (inverted momentum signals)
+  momentum_score: number | null;
+  momentum_score_quintile: number | null;
   // Turnaround Score (improvement signals)
   turnaround_score: number | null;
   turnaround_score_quintile: number | null;
   // Piotroski F-Score (0-9)
   piotroski_score: number | null;
   piotroski_score_quintile: number | null;
+  // Composite Score (equal weights)
+  composite_score: number | null;
+  composite_score_quintile: number | null;
+  // V3 Fields - Moat & Cluster
+  moat_strength_score: number | null;
+  moat_durability_score: number | null;
+  roic_durability_score: number | null;
+  capital_efficiency_classification: string | null;
+  thesis_cluster_id: number | null;
+  thesis_cluster_label: string | null;
+  early_warning_indicators: string[] | null;
   // Legacy fields
   score_v4: number | null;
   score_v4_quintile: string | null;
@@ -68,7 +81,7 @@ interface ICMemoStats {
   };
 }
 
-type SortField = 'ticker' | 'company_name' | 'style_tag' | 'status' | 'quality_score' | 'contrarian_score' | 'turnaround_score' | 'piotroski_score' | 'approved_at';
+type SortField = 'ticker' | 'company_name' | 'style_tag' | 'status' | 'quality_score' | 'momentum_score' | 'turnaround_score' | 'piotroski_score' | 'composite_score' | 'moat_strength_score' | 'approved_at';
 type SortDirection = 'asc' | 'desc';
 
 const statusConfig = {
@@ -130,6 +143,35 @@ const getPiotroskiColor = (score: number | null): string => {
   return "text-red-400";
 };
 
+// Moat color (0-10 scale)
+const getMoatColor = (score: number | null): string => {
+  if (score === null) return "text-muted-foreground";
+  if (score >= 7) return "text-green-400";
+  if (score >= 5) return "text-lime-400";
+  if (score >= 3) return "text-yellow-400";
+  return "text-red-400";
+};
+
+// Cluster badge colors
+const getClusterColor = (clusterId: number | null): string => {
+  if (clusterId === null) return "bg-muted text-muted-foreground";
+  const colors = [
+    "bg-blue-500/20 text-blue-400",
+    "bg-purple-500/20 text-purple-400",
+    "bg-green-500/20 text-green-400",
+    "bg-orange-500/20 text-orange-400",
+    "bg-pink-500/20 text-pink-400",
+    "bg-cyan-500/20 text-cyan-400",
+    "bg-yellow-500/20 text-yellow-400",
+    "bg-red-500/20 text-red-400",
+    "bg-indigo-500/20 text-indigo-400",
+    "bg-teal-500/20 text-teal-400",
+    "bg-amber-500/20 text-amber-400",
+    "bg-emerald-500/20 text-emerald-400",
+  ];
+  return colors[clusterId % colors.length];
+};
+
 const formatDate = (dateStr: string | null): string => {
   if (!dateStr) return "-";
   const date = new Date(dateStr);
@@ -159,6 +201,8 @@ export default function ICMemoPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [triggeringRun, setTriggeringRun] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [clusterFilter, setClusterFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>('quality_score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -173,7 +217,6 @@ export default function ICMemoPage() {
         const memosData = await memosRes.json();
         setMemos(memosData);
       }
-
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setStats(statsData);
@@ -200,17 +243,12 @@ export default function ICMemoPage() {
   const handleTriggerRun = async () => {
     setTriggeringRun(true);
     try {
-      const res = await fetch("/api/ic-memos/run-lane-c", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ maxMemos: 5 }),
-      });
-      
+      const res = await fetch("/api/ic-memos/trigger-run", { method: "POST" });
       if (res.ok) {
         setTimeout(fetchData, 2000);
       }
     } catch (error) {
-      console.error("Error triggering Lane C run:", error);
+      console.error("Error triggering run:", error);
     } finally {
       setTriggeringRun(false);
     }
@@ -218,7 +256,7 @@ export default function ICMemoPage() {
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
       setSortDirection('desc');
@@ -226,30 +264,35 @@ export default function ICMemoPage() {
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return <ArrowUpDown className="w-3 h-3 opacity-50" />;
-    }
-    return sortDirection === 'asc' 
-      ? <ArrowUp className="w-3 h-3" />
-      : <ArrowDown className="w-3 h-3" />;
+    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 opacity-50" />;
+    return sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
   };
 
-  // Calculate quintile distribution for each score
+  // Get unique clusters for filter
+  const uniqueClusters = useMemo(() => {
+    const clusters = new Map<number, string>();
+    memos.forEach(m => {
+      if (m.thesis_cluster_id !== null && m.thesis_cluster_label) {
+        clusters.set(m.thesis_cluster_id, m.thesis_cluster_label);
+      }
+    });
+    return Array.from(clusters.entries()).sort((a, b) => a[0] - b[0]);
+  }, [memos]);
+
+  // Quintile distribution
   const quintileDistribution = useMemo(() => {
-    const completeMemos = memos.filter(m => m.status === 'complete' && !isFundOrETF(m));
-    
     const distribution = {
       quality: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-      contrarian: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      momentum: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
       turnaround: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-      piotroski: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      composite: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
     };
     
-    completeMemos.forEach(memo => {
+    memos.forEach(memo => {
       if (memo.quality_score_quintile) distribution.quality[memo.quality_score_quintile as 1|2|3|4|5]++;
-      if (memo.contrarian_score_quintile) distribution.contrarian[memo.contrarian_score_quintile as 1|2|3|4|5]++;
+      if (memo.momentum_score_quintile) distribution.momentum[memo.momentum_score_quintile as 1|2|3|4|5]++;
       if (memo.turnaround_score_quintile) distribution.turnaround[memo.turnaround_score_quintile as 1|2|3|4|5]++;
-      if (memo.piotroski_score_quintile) distribution.piotroski[memo.piotroski_score_quintile as 1|2|3|4|5]++;
+      if (memo.composite_score_quintile) distribution.composite[memo.composite_score_quintile as 1|2|3|4|5]++;
     });
     
     return distribution;
@@ -260,9 +303,17 @@ export default function ICMemoPage() {
     return memos.filter(memo => {
       if (isFundOrETF(memo)) return false;
       if (statusFilter !== "all" && memo.status !== statusFilter) return false;
+      if (clusterFilter !== "all" && String(memo.thesis_cluster_id) !== clusterFilter) return false;
+      // Search filter by ticker or company name
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesTicker = memo.ticker?.toLowerCase().includes(query);
+        const matchesCompany = memo.company_name?.toLowerCase().includes(query);
+        if (!matchesTicker && !matchesCompany) return false;
+      }
       return true;
     });
-  }, [memos, statusFilter]);
+  }, [memos, statusFilter, searchQuery, clusterFilter]);
 
   const sortedAndFilteredMemos = useMemo(() => {
     return [...filteredMemos].sort((a, b) => {
@@ -290,9 +341,9 @@ export default function ICMemoPage() {
           aVal = Number(a.quality_score) || 0;
           bVal = Number(b.quality_score) || 0;
           break;
-        case 'contrarian_score':
-          aVal = Number(a.contrarian_score) || 0;
-          bVal = Number(b.contrarian_score) || 0;
+        case 'momentum_score':
+          aVal = Number(a.momentum_score) || 0;
+          bVal = Number(b.momentum_score) || 0;
           break;
         case 'turnaround_score':
           aVal = Number(a.turnaround_score) || 0;
@@ -301,6 +352,14 @@ export default function ICMemoPage() {
         case 'piotroski_score':
           aVal = Number(a.piotroski_score) || 0;
           bVal = Number(b.piotroski_score) || 0;
+          break;
+        case 'composite_score':
+          aVal = Number(a.composite_score) || 0;
+          bVal = Number(b.composite_score) || 0;
+          break;
+        case 'moat_strength_score':
+          aVal = Number(a.moat_strength_score) || 0;
+          bVal = Number(b.moat_strength_score) || 0;
           break;
         case 'approved_at':
           aVal = a.approved_at ? new Date(a.approved_at).getTime() : 0;
@@ -340,7 +399,7 @@ export default function ICMemoPage() {
               IC Memos
             </h1>
             <p className="text-muted-foreground mt-1">
-              Investment Committee Memos with 4 Factor Scores
+              Investment Committee Memos with 4 Factor Scores + Moat &amp; Cluster Analysis
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -368,7 +427,7 @@ export default function ICMemoPage() {
         </div>
 
         {/* Score Legend */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-5 gap-4">
           {/* Quality Score */}
           <div className="bg-card border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -380,8 +439,7 @@ export default function ICMemoPage() {
             </p>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map(q => (
-                <div key={q} className={cn(
-                  "flex-1 text-center py-1 rounded text-xs font-medium",
+                <div key={q} className={cn("flex-1 text-center py-1 rounded text-xs font-medium",
                   getQuintileColor(q)
                 )}>
                   Q{q}: {quintileDistribution.quality[q as 1|2|3|4|5]}
@@ -390,22 +448,21 @@ export default function ICMemoPage() {
             </div>
           </div>
 
-          {/* Contrarian Score */}
+          {/* Momentum Score */}
           <div className="bg-card border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <TrendingDown className="w-5 h-5 text-purple-400" />
-              <h3 className="font-semibold">Contrarian Score</h3>
+              <h3 className="font-semibold">Momentum Score</h3>
             </div>
             <p className="text-xs text-muted-foreground mb-3">
               RSI inverted, Momentum 12m inverted, 52W Low inverted
             </p>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map(q => (
-                <div key={q} className={cn(
-                  "flex-1 text-center py-1 rounded text-xs font-medium",
+                <div key={q} className={cn("flex-1 text-center py-1 rounded text-xs font-medium",
                   getQuintileColor(q)
                 )}>
-                  Q{q}: {quintileDistribution.contrarian[q as 1|2|3|4|5]}
+                  Q{q}: {quintileDistribution.momentum[q as 1|2|3|4|5]}
                 </div>
               ))}
             </div>
@@ -422,8 +479,7 @@ export default function ICMemoPage() {
             </p>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map(q => (
-                <div key={q} className={cn(
-                  "flex-1 text-center py-1 rounded text-xs font-medium",
+                <div key={q} className={cn("flex-1 text-center py-1 rounded text-xs font-medium",
                   getQuintileColor(q)
                 )}>
                   Q{q}: {quintileDistribution.turnaround[q as 1|2|3|4|5]}
@@ -439,45 +495,90 @@ export default function ICMemoPage() {
               <h3 className="font-semibold">Piotroski F-Score</h3>
             </div>
             <p className="text-xs text-muted-foreground mb-3">
-              9 binary criteria: Profitability, Leverage, Efficiency
+              9-factor financial strength (0-9)
             </p>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map(q => (
-                <div key={q} className={cn(
-                  "flex-1 text-center py-1 rounded text-xs font-medium",
+                <div key={q} className={cn("flex-1 text-center py-1 rounded text-xs font-medium",
                   getQuintileColor(q)
                 )}>
-                  Q{q}: {quintileDistribution.piotroski[q as 1|2|3|4|5]}
+                  Q{q}: {quintileDistribution.composite[q as 1|2|3|4|5]}
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Moat Score - NEW */}
+          <div className="bg-card border rounded-lg p-4 ring-1 ring-amber-500/30">
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className="w-5 h-5 text-amber-400" />
+              <h3 className="font-semibold">Moat Score</h3>
+              <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded-full">NEW</span>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Competitive advantage strength &amp; durability (0-10)
+            </p>
+            <div className="flex gap-1 text-xs text-muted-foreground">
+              <div className="flex-1 text-center py-1 rounded bg-red-500/10 text-red-400">0-3: Weak</div>
+              <div className="flex-1 text-center py-1 rounded bg-yellow-500/10 text-yellow-400">4-6: Mod</div>
+              <div className="flex-1 text-center py-1 rounded bg-green-500/10 text-green-400">7-10: Strong</div>
+            </div>
+          </div>
         </div>
 
-        {/* Status Filter */}
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Status:</span>
-          <div className="flex gap-1">
-            {["all", "complete", "generating", "pending", "failed"].map((status) => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={cn(
-                  "px-3 py-1 text-xs rounded-full transition-colors",
-                  statusFilter === status
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted hover:bg-muted/80"
-                )}
-              >
-                {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
-                {status !== "all" && stats?.by_status?.[status as keyof typeof stats.by_status] && (
-                  <span className="ml-1 opacity-70">
-                    ({stats.by_status[status as keyof typeof stats.by_status]})
-                  </span>
-                )}
-              </button>
-            ))}
+        {/* Filters */}
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <input
+              type="text"
+              placeholder="Search ticker or company..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-3 pr-3 py-2 text-sm bg-muted rounded-lg border-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Status:</span>
+            <div className="flex gap-1 flex-wrap">
+              {["all", "complete", "generating", "pending", "failed"].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={cn(
+                    "px-3 py-1 text-xs rounded-full transition-colors",
+                    statusFilter === status
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted hover:bg-muted/80"
+                  )}
+                >
+                  {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+                  {status !== "all" && stats?.by_status?.[status as keyof typeof stats.by_status] && (
+                    <span className="ml-1 opacity-70">
+                      ({stats.by_status[status as keyof typeof stats.by_status]})
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Cluster Filter - NEW */}
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-muted-foreground" />
+            <select
+              value={clusterFilter}
+              onChange={(e) => setClusterFilter(e.target.value)}
+              className="text-xs bg-muted rounded-lg px-2 py-1.5 border-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="all">All Clusters</option>
+              {uniqueClusters.map(([id, label]) => (
+                <option key={id} value={String(id)}>C{id}: {label}</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -488,96 +589,95 @@ export default function ICMemoPage() {
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-3 text-sm font-medium">
-                    <button
-                      onClick={() => handleSort('ticker')}
-                      className="flex items-center gap-1 hover:text-foreground"
-                    >
+                    <button onClick={() => handleSort('ticker')} className="flex items-center gap-1 hover:text-foreground">
                       Ticker {getSortIcon('ticker')}
                     </button>
                   </th>
                   <th className="text-left p-3 text-sm font-medium">
-                    <button
-                      onClick={() => handleSort('company_name')}
-                      className="flex items-center gap-1 hover:text-foreground"
-                    >
+                    <button onClick={() => handleSort('company_name')} className="flex items-center gap-1 hover:text-foreground">
                       Company {getSortIcon('company_name')}
                     </button>
                   </th>
                   <th className="text-left p-3 text-sm font-medium">
-                    <button
-                      onClick={() => handleSort('status')}
-                      className="flex items-center gap-1 hover:text-foreground"
-                    >
+                    <button onClick={() => handleSort('status')} className="flex items-center gap-1 hover:text-foreground">
                       Status {getSortIcon('status')}
                     </button>
                   </th>
                   <th className="text-center p-3 text-sm font-medium">
-                    <button
-                      onClick={() => handleSort('quality_score')}
-                      className="flex items-center gap-1 hover:text-foreground justify-center"
-                    >
+                    <button onClick={() => handleSort('quality_score')} className="flex items-center gap-1 hover:text-foreground justify-center">
                       <Target className="w-3 h-3 text-blue-400" />
                       Quality {getSortIcon('quality_score')}
                     </button>
                   </th>
                   <th className="text-center p-3 text-sm font-medium">
-                    <button
-                      onClick={() => handleSort('contrarian_score')}
-                      className="flex items-center gap-1 hover:text-foreground justify-center"
-                    >
+                    <button onClick={() => handleSort('momentum_score')} className="flex items-center gap-1 hover:text-foreground justify-center">
                       <TrendingDown className="w-3 h-3 text-purple-400" />
-                      Contrarian {getSortIcon('contrarian_score')}
+                      Momentum {getSortIcon('momentum_score')}
                     </button>
                   </th>
                   <th className="text-center p-3 text-sm font-medium">
-                    <button
-                      onClick={() => handleSort('turnaround_score')}
-                      className="flex items-center gap-1 hover:text-foreground justify-center"
-                    >
+                    <button onClick={() => handleSort('turnaround_score')} className="flex items-center gap-1 hover:text-foreground justify-center">
                       <TrendingUp className="w-3 h-3 text-green-400" />
                       Turnaround {getSortIcon('turnaround_score')}
                     </button>
                   </th>
                   <th className="text-center p-3 text-sm font-medium">
-                    <button
-                      onClick={() => handleSort('piotroski_score')}
-                      className="flex items-center gap-1 hover:text-foreground justify-center"
-                    >
+                    <button onClick={() => handleSort('piotroski_score')} className="flex items-center gap-1 hover:text-foreground justify-center">
                       <Zap className="w-3 h-3 text-yellow-400" />
                       Piotroski {getSortIcon('piotroski_score')}
                     </button>
                   </th>
-                  <th className="text-center p-3 text-sm font-medium">Actions</th>
+                  <th className="text-center p-3 text-sm font-medium bg-primary/10">
+                    <button onClick={() => handleSort('composite_score')} className="flex items-center gap-1 hover:text-foreground justify-center">
+                      <Star className="w-3 h-3 text-amber-400" />
+                      Composite {getSortIcon('composite_score')}
+                    </button>
+                  </th>
+                  <th className="text-center p-3 text-sm font-medium bg-amber-500/5">
+                    <button onClick={() => handleSort('moat_strength_score')} className="flex items-center gap-1 hover:text-foreground justify-center">
+                      <Shield className="w-3 h-3 text-amber-400" />
+                      Moat {getSortIcon('moat_strength_score')}
+                    </button>
+                  </th>
+                  <th className="text-center p-3 text-sm font-medium">
+                    <div className="flex items-center gap-1 justify-center">
+                      <Layers className="w-3 h-3 text-cyan-400" />
+                      Cluster
+                    </div>
+                  </th>
+                  <th className="text-center p-3 text-sm font-medium">
+                    <div className="flex items-center gap-1 justify-center">
+                      <AlertTriangle className="w-3 h-3 text-orange-400" />
+                      Warnings
+                    </div>
+                  </th>
+                  <th className="text-center p-3 text-sm font-medium">View</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedAndFilteredMemos.map((memo) => {
                   const StatusIcon = statusConfig[memo.status]?.icon || Clock;
-                  
                   return (
-                    <tr key={memo.id} className="border-b hover:bg-muted/30 transition-colors">
+                    <tr
+                      key={memo.id}
+                      className="border-b hover:bg-muted/30 transition-colors"
+                    >
                       <td className="p-3">
-                        <span className="font-mono font-medium">{memo.ticker}</span>
+                        <span className="font-mono font-bold text-sm">
+                          {memo.ticker}
+                        </span>
                       </td>
                       <td className="p-3">
-                        <div className="max-w-[200px] truncate" title={memo.company_name}>
-                          {memo.company_name}
-                        </div>
-                        {memo.style_tag && (
-                          <span className="text-xs text-muted-foreground">{memo.style_tag}</span>
-                        )}
+                        <span className="text-sm text-muted-foreground truncate max-w-[150px] block">
+                          {memo.company_name || "-"}
+                        </span>
                       </td>
                       <td className="p-3">
-                        <div className={cn(
-                          "flex items-center gap-1.5 text-xs px-2 py-1 rounded-full w-fit",
-                          statusConfig[memo.status]?.bgColor,
-                          statusConfig[memo.status]?.color
-                        )}>
-                          <StatusIcon className={cn(
-                            "w-3 h-3",
-                            memo.status === 'generating' && "animate-spin"
-                          )} />
-                          {statusConfig[memo.status]?.label}
+                        <div className="flex items-center gap-1.5">
+                          <StatusIcon className={cn("w-4 h-4", statusConfig[memo.status]?.color, memo.status === 'generating' && "animate-spin")} />
+                          <span className={cn("text-xs", statusConfig[memo.status]?.color)}>
+                            {statusConfig[memo.status]?.label}
+                          </span>
                         </div>
                       </td>
                       {/* Quality Score */}
@@ -587,8 +687,7 @@ export default function ICMemoPage() {
                             <span className={cn("font-mono font-bold", getScoreColor(memo.quality_score))}>
                               {Number(memo.quality_score).toFixed(1)}
                             </span>
-                            <span className={cn(
-                              "text-xs px-2 py-0.5 rounded-full font-medium",
+                            <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium",
                               getQuintileColor(memo.quality_score_quintile)
                             )}>
                               Q{memo.quality_score_quintile}
@@ -598,18 +697,17 @@ export default function ICMemoPage() {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </td>
-                      {/* Contrarian Score */}
+                      {/* Momentum Score */}
                       <td className="p-3 text-center">
-                        {memo.contrarian_score !== null ? (
+                        {memo.momentum_score !== null ? (
                           <div className="flex flex-col items-center gap-1">
-                            <span className={cn("font-mono font-bold", getScoreColor(memo.contrarian_score))}>
-                              {Number(memo.contrarian_score).toFixed(1)}
+                            <span className={cn("font-mono font-bold", getScoreColor(memo.momentum_score))}>
+                              {Number(memo.momentum_score).toFixed(1)}
                             </span>
-                            <span className={cn(
-                              "text-xs px-2 py-0.5 rounded-full font-medium",
-                              getQuintileColor(memo.contrarian_score_quintile)
+                            <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium",
+                              getQuintileColor(memo.momentum_score_quintile)
                             )}>
-                              Q{memo.contrarian_score_quintile}
+                              Q{memo.momentum_score_quintile}
                             </span>
                           </div>
                         ) : (
@@ -623,8 +721,7 @@ export default function ICMemoPage() {
                             <span className={cn("font-mono font-bold", getScoreColor(memo.turnaround_score))}>
                               {Number(memo.turnaround_score).toFixed(1)}
                             </span>
-                            <span className={cn(
-                              "text-xs px-2 py-0.5 rounded-full font-medium",
+                            <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium",
                               getQuintileColor(memo.turnaround_score_quintile)
                             )}>
                               Q{memo.turnaround_score_quintile}
@@ -641,8 +738,7 @@ export default function ICMemoPage() {
                             <span className={cn("font-mono font-bold", getPiotroskiColor(memo.piotroski_score))}>
                               {memo.piotroski_score}/9
                             </span>
-                            <span className={cn(
-                              "text-xs px-2 py-0.5 rounded-full font-medium",
+                            <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium",
                               getQuintileColor(memo.piotroski_score_quintile)
                             )}>
                               Q{memo.piotroski_score_quintile}
@@ -650,6 +746,65 @@ export default function ICMemoPage() {
                           </div>
                         ) : (
                           <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      {/* Composite Score */}
+                      <td className="p-3 text-center bg-primary/5">
+                        {memo.composite_score !== null ? (
+                          <div className="flex flex-col items-center gap-1">
+                            <span className={cn("font-mono font-bold", getScoreColor(memo.composite_score))}>
+                              {Number(memo.composite_score).toFixed(1)}
+                            </span>
+                            <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium",
+                              getQuintileColor(memo.composite_score_quintile)
+                            )}>
+                              Q{memo.composite_score_quintile}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      {/* Moat Score - NEW */}
+                      <td className="p-3 text-center bg-amber-500/5">
+                        {memo.moat_strength_score !== null ? (
+                          <div className="flex flex-col items-center gap-1">
+                            <span className={cn("font-mono font-bold", getMoatColor(memo.moat_strength_score))}>
+                              {Number(memo.moat_strength_score).toFixed(1)}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              D:{Number(memo.moat_durability_score || 0).toFixed(0)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      {/* Cluster - NEW */}
+                      <td className="p-3 text-center">
+                        {memo.thesis_cluster_label ? (
+                          <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap",
+                            getClusterColor(memo.thesis_cluster_id)
+                          )}>
+                            {memo.thesis_cluster_label.length > 20 
+                              ? memo.thesis_cluster_label.substring(0, 20) + '...' 
+                              : memo.thesis_cluster_label}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
+                      </td>
+                      {/* Early Warnings - NEW */}
+                      <td className="p-3 text-center">
+                        {memo.early_warning_indicators && memo.early_warning_indicators.length > 0 ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <AlertTriangle className="w-3 h-3 text-orange-400" />
+                            <span className="text-xs text-orange-400 font-medium">
+                              {memo.early_warning_indicators.length}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-green-400">OK</span>
                         )}
                       </td>
                       <td className="p-3 text-center">
@@ -669,7 +824,6 @@ export default function ICMemoPage() {
               </tbody>
             </table>
           </div>
-
           {sortedAndFilteredMemos.length === 0 && (
             <div className="p-8 text-center text-muted-foreground">
               <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -682,6 +836,7 @@ export default function ICMemoPage() {
         <div className="text-sm text-muted-foreground text-center">
           Showing {sortedAndFilteredMemos.length} of {memos.length} memos
           {stats && ` • ${stats.by_status.complete || 0} complete`}
+          {clusterFilter !== "all" && ` • Cluster filter active`}
         </div>
       </div>
     </AppLayout>

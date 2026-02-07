@@ -58,8 +58,11 @@ icMemosRouter.get('/', async (req: Request, res: Response) => {
           quality_score: (memo as any).qualityScore || null,
           quality_score_quintile: (memo as any).qualityScoreQuintile || null,
           // Contrarian Score (inverted momentum)
-          contrarian_score: (memo as any).contrarianScore || null,
-          contrarian_score_quintile: (memo as any).contrarianScoreQuintile || null,
+          momentum_score: (memo as any).momentumScore || null,
+          momentum_score_quintile: (memo as any).momentumScoreQuintile || null,
+          // Composite Score (equal weights)
+          composite_score: (memo as any).compositeScore || null,
+          composite_score_quintile: (memo as any).compositeScoreQuintile || null,
           // Turnaround Score Quintile
           turnaround_score_quintile: (memo as any).turnaroundScoreQuintile || null,
           // Piotroski Score Quintile
@@ -68,6 +71,14 @@ icMemosRouter.get('/', async (req: Request, res: Response) => {
           created_at: memo.createdAt,
           completed_at: memo.completedAt,
           has_content: !!memo.memoContent,
+          // V3 Fields
+          moat_strength_score: (memo as any).moatStrengthScore ? parseFloat((memo as any).moatStrengthScore) : null,
+          moat_durability_score: (memo as any).moatDurabilityScore ? parseFloat((memo as any).moatDurabilityScore) : null,
+          roic_durability_score: (memo as any).roicDurabilityScore ? parseFloat((memo as any).roicDurabilityScore) : null,
+          capital_efficiency_classification: (memo as any).capitalEfficiencyClassification || null,
+          thesis_cluster_id: (memo as any).thesisClusterId || null,
+          thesis_cluster_label: (memo as any).thesisClusterLabel || null,
+          early_warning_indicators: (memo as any).earlyWarningIndicators || null,
           supportingAnalyses: memo.supportingAnalyses,
         };
       })
@@ -91,6 +102,249 @@ icMemosRouter.get('/stats', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error fetching IC memo stats:', error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// GET /api/ic-memos/decision-dashboard - Get all IC Memos with v2 fields for decision dashboard
+icMemosRouter.get('/decision-dashboard', async (req: Request, res: Response) => {
+  try {
+    const {
+      thesis_type,
+      portfolio_role,
+      risk_category,
+      min_investability,
+      max_investability,
+      sort_by = 'investabilityScoreStandalone',
+      sort_order = 'desc',
+      limit = '1000',
+    } = req.query;
+    
+    const memos = await icMemosRepository.getAll();
+    let filteredMemos = memos.filter((memo: any) => memo.status === 'complete');
+    
+    // Apply filters
+    if (thesis_type) {
+      filteredMemos = filteredMemos.filter((memo: any) => 
+        memo.thesisPrimaryType === thesis_type
+      );
+    }
+    
+    if (portfolio_role) {
+      filteredMemos = filteredMemos.filter((memo: any) => 
+        memo.portfolioRole === portfolio_role
+      );
+    }
+    
+    if (risk_category) {
+      filteredMemos = filteredMemos.filter((memo: any) => 
+        memo.riskPrimaryCategory === risk_category
+      );
+    }
+    
+    if (min_investability) {
+      const minScore = parseFloat(min_investability as string);
+      filteredMemos = filteredMemos.filter((memo: any) => 
+        parseFloat(memo.investabilityScoreStandalone || '0') >= minScore
+      );
+    }
+    
+    if (max_investability) {
+      const maxScore = parseFloat(max_investability as string);
+      filteredMemos = filteredMemos.filter((memo: any) => 
+        parseFloat(memo.investabilityScoreStandalone || '0') <= maxScore
+      );
+    }
+    
+    // Sort - Map snake_case to camelCase for field access
+    const sortFieldMap: Record<string, string> = {
+      'investability_score_standalone': 'investabilityScoreStandalone',
+      'quality_score': 'qualityScore',
+      'composite_score': 'compositeScore',
+      'asymmetry_score': 'asymmetryScore',
+      'expected_return_probability_weighted_pct': 'expectedReturnProbabilityWeightedPct',
+      'ticker': 'ticker',
+      // Also support camelCase directly
+      'investabilityScoreStandalone': 'investabilityScoreStandalone',
+      'qualityScore': 'qualityScore',
+      'compositeScore': 'compositeScore',
+      'asymmetryScore': 'asymmetryScore',
+      'expectedReturnProbabilityWeightedPct': 'expectedReturnProbabilityWeightedPct',
+      'moatStrengthScore': 'moatStrengthScore',
+    };
+    const sortField = sortFieldMap[sort_by as string] || sort_by as string;
+    const sortAsc = sort_order === 'asc';
+    
+    filteredMemos.sort((a: any, b: any) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+      
+      if (typeof aVal === 'string' && !isNaN(parseFloat(aVal))) {
+        aVal = parseFloat(aVal);
+        bVal = parseFloat(bVal);
+      }
+      
+      if (aVal === null || aVal === undefined) return sortAsc ? -1 : 1;
+      if (bVal === null || bVal === undefined) return sortAsc ? 1 : -1;
+      
+      if (aVal < bVal) return sortAsc ? -1 : 1;
+      if (aVal > bVal) return sortAsc ? 1 : -1;
+      return 0;
+    });
+    
+    const limitNum = parseInt(limit as string);
+    filteredMemos = filteredMemos.slice(0, limitNum);
+    
+    const response = filteredMemos.map((memo: any) => ({
+      id: memo.memoId,
+      ticker: memo.ticker,
+      company_name: memo.companyName,
+      thesis_primary_type: memo.thesisPrimaryType,
+      thesis_time_horizon_months: memo.thesisTimeHorizonMonths,
+      thesis_style_vector: memo.thesisStyleVector,
+      investability_score_standalone: parseFloat(memo.investabilityScoreStandalone || '0'),
+      quality_score: parseFloat(memo.qualityScore || '0'),
+      momentum_score: parseFloat(memo.momentumScore || '0'),
+      turnaround_score: parseFloat(memo.turnaroundScore || '0'),
+      piotroski_score: memo.piotroskiScore,
+      composite_score: parseFloat(memo.compositeScore || '0'),
+      conviction: memo.conviction,
+      quality_score_quintile: memo.qualityScoreQuintile,
+      momentum_score_quintile: memo.momentumScoreQuintile,
+      turnaround_score_quintile: memo.turnaroundScoreQuintile,
+      piotroski_score_quintile: memo.piotroskiScoreQuintile,
+      composite_score_quintile: memo.compositeScoreQuintile,
+      asymmetry_score: parseFloat(memo.asymmetryScore || '0'),
+      expected_return_probability_weighted_pct: parseFloat(memo.expectedReturnProbabilityWeightedPct || '0'),
+      base_case_upside_pct: parseFloat(memo.baseCaseUpsidePct || '0'),
+      bull_case_upside_pct: parseFloat(memo.bullCaseUpsidePct || '0'),
+      bear_case_downside_pct: parseFloat(memo.bearCaseDownsidePct || '0'),
+      risk_primary_category: memo.riskPrimaryCategory,
+      industry_structure: memo.industryStructure,
+      catalyst_type: memo.catalystType,
+      catalyst_strength: memo.catalystStrength,
+      catalyst_clarity_score: parseFloat(memo.catalystClarityScore || '0'),
+      portfolio_role: memo.portfolioRole,
+      suggested_position_size_min_pct: parseFloat(memo.suggestedPositionSizeMinPct || '0'),
+      suggested_position_size_max_pct: parseFloat(memo.suggestedPositionSizeMaxPct || '0'),
+      recommendation: memo.recommendation,
+      style_tag: memo.styleTag,
+      created_at: memo.createdAt,
+      completed_at: memo.completedAt,
+      schema_version: memo.schemaVersion,
+      // V3 Fields
+      moat_strength_score: memo.moatStrengthScore ? parseFloat(memo.moatStrengthScore) : null,
+      moat_durability_score: memo.moatDurabilityScore ? parseFloat(memo.moatDurabilityScore) : null,
+      roic_durability_score: memo.roicDurabilityScore ? parseFloat(memo.roicDurabilityScore) : null,
+      capital_efficiency_classification: memo.capitalEfficiencyClassification || null,
+      thesis_cluster_id: memo.thesisClusterId || null,
+      thesis_cluster_label: memo.thesisClusterLabel || null,
+      early_warning_indicators: memo.earlyWarningIndicators || null,
+    }));
+    
+    res.json({
+      total: response.length,
+      filters_applied: {
+        thesis_type: thesis_type || null,
+        portfolio_role: portfolio_role || null,
+        risk_category: risk_category || null,
+        min_investability: min_investability || null,
+        max_investability: max_investability || null,
+      },
+      sort: { field: sortField, order: sort_order },
+      data: response,
+    });
+  } catch (error) {
+    console.error('Error fetching decision dashboard data:', error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// GET /api/ic-memos/decision-dashboard/stats - Get aggregated statistics
+icMemosRouter.get('/decision-dashboard/stats', async (req: Request, res: Response) => {
+  try {
+    const memos = await icMemosRepository.getAll();
+    const completeMemos = memos.filter((memo: any) => memo.status === 'complete');
+    
+    const thesisTypeDistribution: Record<string, number> = {};
+    const portfolioRoleDistribution: Record<string, number> = {};
+    const riskCategoryDistribution: Record<string, number> = {};
+    const catalystTypeDistribution: Record<string, number> = {};
+    const clusterDistribution: Record<string, number> = {};
+    const capitalEfficiencyDistribution: Record<string, number> = {};
+    let totalMoatStrength = 0;
+    let totalMoatDurability = 0;
+    let totalRoicDurability = 0;
+    let moatCount = 0;
+    
+    let totalInvestability = 0;
+    let totalAsymmetry = 0;
+    let totalQuality = 0;
+    let count = 0;
+    
+    for (const memo of completeMemos) {
+      const m = memo as any;
+      
+      if (m.thesisPrimaryType) {
+        thesisTypeDistribution[m.thesisPrimaryType] = (thesisTypeDistribution[m.thesisPrimaryType] || 0) + 1;
+      }
+      if (m.portfolioRole) {
+        portfolioRoleDistribution[m.portfolioRole] = (portfolioRoleDistribution[m.portfolioRole] || 0) + 1;
+      }
+      if (m.riskPrimaryCategory) {
+        riskCategoryDistribution[m.riskPrimaryCategory] = (riskCategoryDistribution[m.riskPrimaryCategory] || 0) + 1;
+      }
+      if (m.thesisClusterLabel) {
+        clusterDistribution[m.thesisClusterLabel] = (clusterDistribution[m.thesisClusterLabel] || 0) + 1;
+      }
+      if (m.capitalEfficiencyClassification) {
+        capitalEfficiencyDistribution[m.capitalEfficiencyClassification] = (capitalEfficiencyDistribution[m.capitalEfficiencyClassification] || 0) + 1;
+      }
+      if (m.moatStrengthScore) {
+        totalMoatStrength += parseFloat(m.moatStrengthScore);
+        totalMoatDurability += parseFloat(m.moatDurabilityScore || '0');
+        totalRoicDurability += parseFloat(m.roicDurabilityScore || '0');
+        moatCount++;
+      }
+      if (m.catalystType) {
+        catalystTypeDistribution[m.catalystType] = (catalystTypeDistribution[m.catalystType] || 0) + 1;
+      }
+      
+      if (m.investabilityScoreStandalone) {
+        totalInvestability += parseFloat(m.investabilityScoreStandalone);
+        count++;
+      }
+      if (m.asymmetryScore) {
+        totalAsymmetry += parseFloat(m.asymmetryScore);
+      }
+      if (m.qualityScore) {
+        totalQuality += parseFloat(m.qualityScore);
+      }
+    }
+    
+    res.json({
+      total_memos: completeMemos.length,
+      averages: {
+        investability_score: count > 0 ? Math.round((totalInvestability / count) * 100) / 100 : 0,
+        asymmetry_score: count > 0 ? Math.round((totalAsymmetry / count) * 100) / 100 : 0,
+        quality_score: count > 0 ? Math.round((totalQuality / count) * 100) / 100 : 0,
+      },
+      distributions: {
+        thesis_type: thesisTypeDistribution,
+        portfolio_role: portfolioRoleDistribution,
+        risk_category: riskCategoryDistribution,
+        catalyst_type: catalystTypeDistribution,
+        cluster: clusterDistribution,
+        capital_efficiency: capitalEfficiencyDistribution,
+      },
+      v3_averages: {
+        moat_strength: moatCount > 0 ? Math.round((totalMoatStrength / moatCount) * 100) / 100 : 0,
+        moat_durability: moatCount > 0 ? Math.round((totalMoatDurability / moatCount) * 100) / 100 : 0,
+        roic_durability: moatCount > 0 ? Math.round((totalRoicDurability / moatCount) * 100) / 100 : 0,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching decision dashboard stats:', error);
     res.status(500).json({ error: (error as Error).message });
   }
 });

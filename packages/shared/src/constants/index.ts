@@ -67,10 +67,10 @@ export const LANE_B_DAILY_PROMOTIONS_TARGET = 50;
 export const LANE_B_DAILY_PROMOTIONS_MAX = 200;
 
 /** Weekly deep packets hard cap: 500 */
-export const LANE_B_WEEKLY_DEEP_PACKETS = 500;
+export const LANE_B_WEEKLY_DEEP_PACKETS = 5000;
 
 /** Max concurrent research jobs - increased for faster processing */
-export const LANE_B_MAX_CONCURRENCY = 10;
+export const LANE_B_MAX_CONCURRENCY = 20;
 
 /** Time budget per name (minutes) */
 export const LANE_B_TIME_PER_NAME_MIN = 60;

@@ -2,7 +2,6 @@
  * ARC Investment Factory - API Server
  * Express API for the investment research platform
  */
-
 import express from 'express';
 import cors from 'cors';
 import { checkDatabaseConnection } from '@arc/database';
@@ -22,6 +21,10 @@ import { manualIdeasRouter } from './routes/manual-ideas.js';
 import { portfolioSystematicRouter } from './routes/portfolio-systematic.js';
 import { portfolioRulesRouter } from './routes/portfolio-rules.js';
 import { portfolioPositionsRouter } from './routes/portfolio-positions.js';
+import { portfolioGeneratorRouter } from './routes/portfolio-generator.js';
+import { backtestEngineRouter } from './routes/backtest-engine.js';
+import { portfolioMarketDataRouter } from './routes/portfolio-market-data.js';
+import { learningLoopRouter } from './routes/learning-loop.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -49,10 +52,15 @@ app.use('/api/system', systemRouter);
 app.use('/api/ic-memos', icMemosRouter);
 app.use("/api/qa-v2", qaV2Router);
 app.use('/api/manual-ideas', manualIdeasRouter);
+
 // Portfolio routes - more specific routes MUST come before generic /api/portfolio
 app.use('/api/portfolio/systematic', portfolioSystematicRouter);
 app.use('/api/portfolio/rules', portfolioRulesRouter);
 app.use('/api/portfolio/positions', portfolioPositionsRouter);
+app.use('/api/portfolio/generator', portfolioGeneratorRouter);
+app.use('/api/portfolio/market-data', portfolioMarketDataRouter);
+app.use('/api/backtest', backtestEngineRouter);
+app.use('/api/learning-loop', learningLoopRouter);
 app.use('/api/portfolio', portfolioRouter);
 
 // Error handling
@@ -69,7 +77,7 @@ async function start() {
     console.error('Failed to connect to database');
     process.exit(1);
   }
-
+  
   app.listen(PORT, () => {
     console.log(`API server running on port ${PORT}`);
   });

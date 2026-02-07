@@ -494,9 +494,13 @@ export const icMemos = pgTable('ic_memos', {
   qualityScore: numeric("quality_score", { precision: 5, scale: 2 }), // 0-100
   qualityScoreQuintile: integer("quality_score_quintile"), // 1-5
   
-  // Contrarian Score (inverted momentum signals)
-  contrarianScore: numeric("contrarian_score", { precision: 5, scale: 2 }), // 0-100
-  contrarianScoreQuintile: integer("contrarian_score_quintile"), // 1-5
+  // Momentum Score (inverted momentum signals)
+  momentumScore: numeric("momentum_score", { precision: 5, scale: 2 }), // 0-100
+  momentumScoreQuintile: integer("momentum_score_quintile"), // 1-5
+
+  // Composite Score (equal weights: Quality + Momentum + Turnaround + Piotroski)
+  compositeScore: numeric("composite_score", { precision: 10, scale: 2 }), // 0-100
+  compositeScoreQuintile: integer("composite_score_quintile"), // 1-5
   
   // Turnaround Score Quintile
   turnaroundScoreQuintile: integer("turnaround_score_quintile"), // 1-5
@@ -514,6 +518,85 @@ export const icMemos = pgTable('ic_memos', {
     delta_margin: number;
     delta_turnover: number;
   }>(),
+  
+  // ============================================================================
+  // SCHEMA V2 FIELDS - Decision Dashboard & Learning Loop
+  // ============================================================================
+  
+  // Thesis Classification
+  thesisPrimaryType: text('thesis_primary_type'), // quality_compounder, value, turnaround, contrarian, special_situation, macro_proxy
+  thesisTimeHorizonMonths: integer('thesis_time_horizon_months'),
+  thesisStyleVector: jsonb('thesis_style_vector').$type<{
+    quality_exposure: number;
+    cyclicality_exposure: number;
+    structural_risk_exposure: number;
+    macro_dependency: number;
+    execution_dependency: number;
+  }>(),
+  
+  // Asymmetry & Expected Value
+  asymmetryScore: numeric('asymmetry_score', { precision: 5, scale: 2 }), // 0-100
+  expectedReturnProbabilityWeightedPct: numeric('expected_return_probability_weighted_pct', { precision: 8, scale: 4 }),
+  baseCaseUpsidePct: numeric('base_case_upside_pct', { precision: 8, scale: 4 }),
+  bullCaseUpsidePct: numeric('bull_case_upside_pct', { precision: 8, scale: 4 }),
+  bearCaseDownsidePct: numeric('bear_case_downside_pct', { precision: 8, scale: 4 }),
+  
+  // Risk Classification
+  riskPrimaryCategory: text('risk_primary_category'), // structural, cyclical, regulatory, financial, execution, macro
+  industryStructure: text('industry_structure'), // fragmented, oligopoly, monopoly, disrupted
+  
+  // Catalyst Analysis
+  catalystType: text('catalyst_type'), // earnings, regulatory, strategic, macro, technical
+  catalystStrength: text('catalyst_strength'), // weak, medium, strong
+  catalystClarityScore: numeric('catalyst_clarity_score', { precision: 4, scale: 2 }), // 0-10
+  
+  // Portfolio Fit
+  portfolioRole: text('portfolio_role'), // core, opportunistic, tactical, monitor_only
+  suggestedPositionSizeMinPct: numeric('suggested_position_size_min_pct', { precision: 5, scale: 2 }),
+  suggestedPositionSizeMaxPct: numeric('suggested_position_size_max_pct', { precision: 5, scale: 2 }),
+  
+  // Investability Scores
+  investabilityScoreStandalone: numeric('investability_score_standalone', { precision: 5, scale: 2 }), // 0-100
+  investabilityScoreMarginal: numeric('investability_score_marginal', { precision: 5, scale: 2 }), // 0-100
+  
+  // Learning Loop
+  postMortemStatus: text('post_mortem_status'), // pending, success, failure, ongoing
+  realizedReturnPct: numeric('realized_return_pct', { precision: 8, scale: 4 }),
+  holdingPeriodDays: integer('holding_period_days'),
+  modelErrorFlag: boolean('model_error_flag'),
+  postMortemNotes: text('post_mortem_notes'),
+  
+  // Inference Metadata
+  inferredFields: jsonb('inferred_fields').$type<string[]>(),
+  inferenceConfidence: jsonb('inference_confidence').$type<Record<string, number>>(),
+  lastInferenceAt: timestamp('last_inference_at'),
+  schemaVersion: text('schema_version'),
+
+  // ============================================================================
+  // SCHEMA V3 FIELDS - Hybrid Scoring Architecture (Moat, Clusters, Risk Vectors)
+  // ============================================================================
+
+  // Moat Analysis
+  moatStrengthScore: numeric('moat_strength_score', { precision: 5, scale: 2 }),
+  moatDurabilityScore: numeric('moat_durability_score', { precision: 5, scale: 2 }),
+  roicDurabilityScore: numeric('roic_durability_score', { precision: 5, scale: 2 }),
+  capitalEfficiencyClassification: text('capital_efficiency_classification'), // asset_light, capital_intensive, balanced
+
+  // Risk Vectors & Early Warnings
+  riskConcentrationVector: jsonb('risk_concentration_vector').$type<Record<string, number>>(),
+  earlyWarningIndicators: jsonb('early_warning_indicators').$type<string[]>(),
+
+  // Semantic Clustering
+  thesisClusterId: integer('thesis_cluster_id'),
+  thesisClusterLabel: text('thesis_cluster_label'),
+  thesisClusterConfidence: numeric('thesis_cluster_confidence', { precision: 5, scale: 4 }),
+
+  // New Quintiles (V2)
+  compositeQuintile: integer('composite_quintile'), // 1-5
+  qualityQuintile: integer('quality_quintile'), // 1-5
+  momentumQuintile: integer('momentum_quintile'), // 1-5
+  convictionQuintile: integer('conviction_quintile'), // 1-5
+  investabilityQuintile: integer('investability_quintile'), // 1-5
   
   // Status tracking
   status: icMemoStatusEnum('status').default('pending').notNull(),

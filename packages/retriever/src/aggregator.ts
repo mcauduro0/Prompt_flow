@@ -98,10 +98,19 @@ export class DataAggregator {
       errors.push(`Metrics: ${metricsResult.error}`);
     }
 
-    if (priceResult.success) {
+    // Try Polygon first, fallback to FMP for international stocks
+    if (priceResult.success && priceResult.data) {
       result.latestPrice = priceResult.data;
     } else {
-      errors.push(`Price: ${priceResult.error}`);
+      // Polygon failed (common for international stocks), try FMP as fallback
+      console.log(`[DataAggregator] Polygon price failed for ${ticker}, trying FMP fallback...`);
+      const fmpPriceResult = await this.fmpClient.getLatestPrice(ticker);
+      if (fmpPriceResult.success && fmpPriceResult.data) {
+        result.latestPrice = fmpPriceResult.data;
+        console.log(`[DataAggregator] FMP fallback successful for ${ticker}: price=${fmpPriceResult.data.close}`);
+      } else {
+        errors.push(`Price: Polygon failed (${priceResult.error}), FMP fallback also failed (${fmpPriceResult.error})`);
+      }
     }
 
     // Fetch financials if requested

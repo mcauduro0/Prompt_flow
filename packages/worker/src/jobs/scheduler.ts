@@ -102,6 +102,7 @@ export class JobScheduler {
       'lane_b_research',
       // Lane C types
       'manual_lane_c_trigger',
+      'manual_lane_c_batch_trigger',
       'ic_bundle',
       'ic_bundle_generation',
     ];
@@ -525,6 +526,51 @@ export class JobScheduler {
 
       // ========================================
       // Lane C Manual Triggers (Individual IC Memo with ROIC)
+      // ========================================
+      // Lane C Batch Manual Triggers
+      // ========================================
+      const laneCBatchRuns = await runsRepository.getByType('manual_lane_c_batch_trigger', 10);
+      const pendingLaneCBatchRuns = laneCBatchRuns.filter(r => r.status === 'pending');
+      
+      for (const run of pendingLaneCBatchRuns) {
+        console.log(`[Scheduler] Found manual Lane C batch trigger: ${run.runId}`);
+        const startedAt = new Date().toISOString();
+        
+        await runsRepository.updateStatus(run.runId, 'running');
+        await runsRepository.updatePayload(run.runId, {
+          ...(run.payload as object || {}),
+          startedAt,
+        });
+        
+        try {
+          const payload = run.payload as { memoIds?: string[]; includeROIC?: boolean } | null;
+          const memoIds = payload?.memoIds || [];
+          
+          console.log(`[Scheduler] Processing Lane C batch for ${memoIds.length} memos`);
+          
+          // Import and run Lane C runner
+          const { runLaneC } = await import('../orchestrator/lane-c-runner.js');
+          const result = await runLaneC({
+            memoIds,
+            maxMemos: memoIds.length,
+          });
+          
+          const completedAt = new Date().toISOString();
+          await runsRepository.updateStatus(run.runId, 'completed');
+          await runsRepository.updatePayload(run.runId, {
+            ...(payload as object || {}),
+            startedAt,
+            completedAt,
+            durationMs: new Date(completedAt).getTime() - new Date(startedAt).getTime(),
+            result,
+          });
+          
+          console.log(`[Scheduler] Manual Lane C batch completed: ${run.runId}`, result);
+        } catch (error) {
+          await runsRepository.updateStatus(run.runId, 'failed', (error as Error).message);
+          console.error(`[Scheduler] Manual Lane C batch failed: ${run.runId}`, error);
+        }
+      }
       // ========================================
       const laneCRuns = await runsRepository.getByType('manual_lane_c_trigger', 10);
       const pendingLaneCRuns = laneCRuns.filter(r => r.status === 'pending');

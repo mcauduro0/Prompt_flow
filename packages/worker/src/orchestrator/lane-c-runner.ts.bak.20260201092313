@@ -1017,21 +1017,11 @@ async function processICMemo(
     const piotroskiFScore = piotroskiResult?.fscore ?? 5;
     const piotroskiInterpretation = getPiotroskiInterpretation(piotroskiFScore);
     
-    // Alert if median was used for Piotroski F-Score
-    if (!piotroskiResult) {
-      console.warn(`[Lane C] ⚠️ DATA QUALITY ALERT: ${ticker} Piotroski F-Score filled with median (5) - No financial data available`);
-    }
-    
     // Calculate Turnaround Score (0-100)
     console.log(`[Lane C] Calculating Turnaround Score for ${ticker}...`);
     const turnaroundResult = await calculateTurnaroundScore(ticker);
     const turnaroundScore = turnaroundResult?.score ?? 50;
     const turnaroundQuintile = turnaroundResult?.quintile ?? 3;
-    
-    // Alert if median was used for Turnaround Score
-    if (!turnaroundResult) {
-      console.warn(`[Lane C] ⚠️ DATA QUALITY ALERT: ${ticker} Turnaround Score filled with median (50) - No financial data available`);
-    }
     
     // Calculate Conviction Score v4.0 (Contrarian/Turnaround Model)
     // Based on backtest: Q4 (scores 60-80) generated +3,577% cumulative return
@@ -1107,22 +1097,12 @@ async function processICMemo(
     const qualityScoreQuintile = qualityResult?.quintile ?? null;
     console.log(`  - Quality Score: ${qualityScore} (Q${qualityScoreQuintile})`);
     
-    // Alert if Quality Score is null
-    if (!qualityResult) {
-      console.warn(`[Lane C] ⚠️ DATA QUALITY ALERT: ${ticker} Quality Score is null - No financial data available`);
-    }
-    
     // Calculate Momentum Score
     console.log(`[Lane C] Calculating Momentum Score for ${ticker}...`);
     const momentumResult = await calculateMomentumScore(ticker);
     const momentumScore = momentumResult?.score ?? null;
     const momentumScoreQuintile = momentumResult?.quintile ?? null;
     console.log(`  - Momentum Score: ${momentumScore} (Q${momentumScoreQuintile})`);
-    
-    // Alert if median was used for momentum score
-    if (momentumResult?.usedMedian) {
-      console.warn(`[Lane C] ⚠️ DATA QUALITY ALERT: ${ticker} momentum score filled with median (50) - No price data available from Polygon or FMP`);
-    }
     
     // Calculate Composite Score (equal weights: 25% each)
     console.log(`[Lane C] Calculating Composite Score for ${ticker}...`);
@@ -1266,10 +1246,8 @@ async function calculateQualityScore(ticker: string): Promise<{ score: number; q
     factors.push(Math.min(Math.max(cr * 25, 0), 100));
     
     // Debt/Equity (target: < 0.5)
-    // Note: Negative D/E means negative equity - should score 0, not high
     const de = r.debtEquityRatio || 0;
-    const deScore = de < 0 ? 0 : Math.min(Math.max(100 - de * 50, 0), 100);
-    factors.push(deScore);
+    factors.push(Math.max(100 - de * 50, 0));
     
     // FCF Yield (target: 5%+)
     const fcfYield = (m.freeCashFlowYield || 0) * 100;
@@ -1277,9 +1255,7 @@ async function calculateQualityScore(ticker: string): Promise<{ score: number; q
     
     if (factors.length < 4) return null;
     
-    // Calculate average score and ensure it's clamped to 0-100
-    const rawScore = factors.reduce((a, b) => a + b, 0) / factors.length;
-    const score = Math.round(Math.min(Math.max(rawScore, 0), 100) * 100) / 100;
+    const score = Math.round(factors.reduce((a, b) => a + b, 0) / factors.length * 100) / 100;
     
     // Calculate quintile (1-5, 5 is best)
     let quintile = 1;
@@ -1299,26 +1275,7 @@ async function calculateQualityScore(ticker: string): Promise<{ score: number; q
  * Calculate Momentum Score based on price momentum and RSI
  * Higher RSI and momentum = higher score (captures strength, not oversold)
  */
-async function calculateMomentumScore(ticker: string): Promise<{ score: number; quintile: number; source?: string; usedMedian?: boolean } | null> {
-  // First try Polygon.io
-  const polygonResult = await calculateMomentumScorePolygon(ticker);
-  if (polygonResult) {
-    return { ...polygonResult, source: 'polygon' };
-  }
-  
-  // Fallback to FMP
-  const fmpResult = await calculateMomentumScoreFMP(ticker);
-  if (fmpResult) {
-    console.log(`[Lane C] Using FMP fallback for momentum score: ${ticker}`);
-    return { ...fmpResult, source: 'fmp' };
-  }
-  
-  // If both fail, log warning and return median with alert flag
-  console.warn(`[Lane C] ⚠️ ALERT: Using median (50) for momentum score: ${ticker} - No data available from Polygon or FMP`);
-  return { score: 50, quintile: 3, source: 'median', usedMedian: true };
-}
-
-async function calculateMomentumScorePolygon(ticker: string): Promise<{ score: number; quintile: number } | null> {
+async function calculateMomentumScore(ticker: string): Promise<{ score: number; quintile: number } | null> {
   try {
     const POLYGON_API_KEY = process.env.POLYGON_API_KEY;
     if (!POLYGON_API_KEY) return null;
@@ -1333,75 +1290,53 @@ async function calculateMomentumScorePolygon(ticker: string): Promise<{ score: n
     if (!data?.results || data.results.length < 14) return null;
     
     const prices = data.results.map((r: any) => r.c);
-    return calculateMomentumFromPrices(prices);
+    
+    // Calculate RSI (14 days)
+    const deltas: number[] = [];
+    for (let i = 0; i < prices.length - 1; i++) {
+      deltas.push(prices[i] - prices[i + 1]);
+    }
+    
+    const gains = deltas.slice(0, 14).filter(d => d > 0);
+    const losses = deltas.slice(0, 14).filter(d => d < 0).map(d => Math.abs(d));
+    
+    const avgGain = gains.length > 0 ? gains.reduce((a, b) => a + b, 0) / 14 : 0;
+    const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / 14 : 0;
+    
+    let rsi = 50;
+    if (avgLoss === 0) {
+      rsi = 100;
+    } else {
+      const rs = avgGain / avgLoss;
+      rsi = 100 - (100 / (1 + rs));
+    }
+    
+    // Calculate 12M momentum
+    let mom12m = 0;
+    if (prices.length >= 252) {
+      mom12m = ((prices[0] / prices[251]) - 1) * 100;
+    } else if (prices.length >= 200) {
+      mom12m = ((prices[0] / prices[prices.length - 1]) - 1) * 100;
+    }
+    
+    // Combine RSI and Momentum
+    const rsiScore = rsi;
+    const momScore = Math.min(Math.max(50 + mom12m, 0), 100);
+    
+    const score = Math.round((rsiScore * 0.5 + momScore * 0.5) * 100) / 100;
+    
+    // Calculate quintile
+    let quintile = 1;
+    if (score >= 70) quintile = 5;
+    else if (score >= 55) quintile = 4;
+    else if (score >= 45) quintile = 3;
+    else if (score >= 30) quintile = 2;
+    
+    return { score, quintile };
   } catch (error) {
-    console.warn(`[Lane C] Polygon failed for ${ticker}:`, error);
+    console.warn(`[Lane C] Failed to calculate Momentum Score for ${ticker}:`, error);
     return null;
   }
-}
-
-async function calculateMomentumScoreFMP(ticker: string): Promise<{ score: number; quintile: number } | null> {
-  try {
-    const FMP_API_KEY = process.env.FMP_API_KEY;
-    if (!FMP_API_KEY) return null;
-    
-    const url = `https://financialmodelingprep.com/api/v3/historical-price-full/${ticker}?apikey=${FMP_API_KEY}`;
-    const resp = await fetch(url);
-    const data = await resp.json() as any;
-    
-    if (!data?.historical || data.historical.length < 14) return null;
-    
-    const prices = data.historical.map((r: any) => r.close);
-    return calculateMomentumFromPrices(prices);
-  } catch (error) {
-    console.warn(`[Lane C] FMP failed for ${ticker}:`, error);
-    return null;
-  }
-}
-
-function calculateMomentumFromPrices(prices: number[]): { score: number; quintile: number } {
-  // Calculate RSI (14 days)
-  const deltas: number[] = [];
-  for (let i = 0; i < prices.length - 1; i++) {
-    deltas.push(prices[i] - prices[i + 1]);
-  }
-  
-  const gains = deltas.slice(0, 14).filter(d => d > 0);
-  const losses = deltas.slice(0, 14).filter(d => d < 0).map(d => Math.abs(d));
-  
-  const avgGain = gains.length > 0 ? gains.reduce((a, b) => a + b, 0) / 14 : 0;
-  const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / 14 : 0;
-  
-  let rsi = 50;
-  if (avgLoss === 0) {
-    rsi = 100;
-  } else {
-    const rs = avgGain / avgLoss;
-    rsi = 100 - (100 / (1 + rs));
-  }
-  
-  // Calculate 12M momentum
-  let mom12m = 0;
-  if (prices.length >= 252) {
-    mom12m = ((prices[0] / prices[251]) - 1) * 100;
-  } else if (prices.length >= 200) {
-    mom12m = ((prices[0] / prices[prices.length - 1]) - 1) * 100;
-  }
-  
-  // Combine RSI and Momentum
-  const rsiScore = rsi;
-  const momScore = Math.min(Math.max(50 + mom12m, 0), 100);
-  
-  const score = Math.round((rsiScore * 0.5 + momScore * 0.5) * 100) / 100;
-  
-  // Calculate quintile (will be recalculated cross-sectionally later)
-  let quintile = 1;
-  if (score >= 70) quintile = 5;
-  else if (score >= 55) quintile = 4;
-  else if (score >= 45) quintile = 3;
-  else if (score >= 30) quintile = 2;
-  
-  return { score, quintile };
 }
 
 /**

@@ -83,7 +83,7 @@ export const icMemosRepository = {
   /**
    * Get all IC Memos
    */
-  async getAll(limit = 100): Promise<ICMemo[]> {
+  async getAll(limit = 1000): Promise<ICMemo[]> {
     return db
       .select()
       .from(icMemos)
@@ -106,7 +106,7 @@ export const icMemosRepository = {
   /**
    * Get completed IC Memos
    */
-  async getCompleted(limit = 100): Promise<ICMemo[]> {
+  async getCompleted(limit = 1000): Promise<ICMemo[]> {
     return db
       .select()
       .from(icMemos)
@@ -248,6 +248,14 @@ export const icMemosRepository = {
       turnaroundQuintile?: number;
       turnaroundRecommendation?: string;
       turnaroundComponents?: any;
+      qualityScore?: number;
+      qualityScoreQuintile?: number;
+      momentumScore?: number;
+      momentumScoreQuintile?: number;
+      piotroskiScore?: number;
+      piotroskiScoreQuintile?: number;
+      compositeScore?: number;
+      compositeScoreQuintile?: number;
     }
   ): Promise<ICMemo | undefined> {
     const updateData: any = {
@@ -275,6 +283,30 @@ export const icMemosRepository = {
       updateData.turnaroundQuintile = scores.turnaroundQuintile;
       updateData.turnaroundRecommendation = scores.turnaroundRecommendation;
       updateData.turnaroundComponents = normalizeJsonbField(scores.turnaroundComponents);
+    }
+    
+    // Add Quality Score if provided
+    if (scores?.qualityScore !== undefined) {
+      updateData.qualityScore = String(scores.qualityScore);
+      updateData.qualityScoreQuintile = scores.qualityScoreQuintile;
+    }
+    
+    // Add Momentum Score if provided
+    if (scores?.momentumScore !== undefined) {
+      updateData.momentumScore = String(scores.momentumScore);
+      updateData.momentumScoreQuintile = scores.momentumScoreQuintile;
+    }
+    
+    // Add Piotroski Score if provided
+    if (scores?.piotroskiScore !== undefined) {
+      updateData.piotroskiScore = scores.piotroskiScore;
+      updateData.piotroskiScoreQuintile = scores.piotroskiScoreQuintile;
+    }
+    
+    // Add Composite Score if provided
+    if (scores?.compositeScore !== undefined) {
+      updateData.compositeScore = String(scores.compositeScore);
+      updateData.compositeScoreQuintile = scores.compositeScoreQuintile;
     }
     
     const [result] = await db
@@ -441,5 +473,50 @@ export const icMemosRepository = {
       .where(eq(icMemos.memoId, memoId))
       .returning();
     return result;
+  },
+
+  /**
+   * Update only quintiles for a memo (cross-sectional recalculation)
+   */
+  async updateQuintiles(
+    memoId: string,
+    quintiles: {
+      qualityScoreQuintile?: number | null;
+      momentumScoreQuintile?: number | null;
+      turnaroundScoreQuintile?: number | null;
+      piotroskiScoreQuintile?: number | null;
+      compositeScoreQuintile?: number | null;
+    }
+  ): Promise<void> {
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
+    if (quintiles.qualityScoreQuintile !== undefined) {
+      updateData.qualityScoreQuintile = quintiles.qualityScoreQuintile;
+    }
+    if (quintiles.momentumScoreQuintile !== undefined) {
+      updateData.momentumScoreQuintile = quintiles.momentumScoreQuintile;
+    }
+    if (quintiles.turnaroundScoreQuintile !== undefined) {
+      updateData.turnaroundScoreQuintile = quintiles.turnaroundScoreQuintile;
+    }
+    if (quintiles.piotroskiScoreQuintile !== undefined) {
+      updateData.piotroskiScoreQuintile = quintiles.piotroskiScoreQuintile;
+    }
+    if (quintiles.compositeScoreQuintile !== undefined) {
+      updateData.compositeScoreQuintile = quintiles.compositeScoreQuintile;
+    }
+    await db
+      .update(icMemos)
+      .set(updateData)
+      .where(eq(icMemos.memoId, memoId));
+  },
+
+  async updateV3Scores(memoId: string, v3Data: any): Promise<void> {
+    const updateData: any = { updatedAt: new Date() };
+    for (const [key, value] of Object.entries(v3Data)) {
+      if (value !== undefined) updateData[key] = value;
+    }
+    await db.update(icMemos).set(updateData).where(eq(icMemos.memoId, memoId));
   },
 };
